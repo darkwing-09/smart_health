@@ -93,11 +93,15 @@ Every finding classified as Level 2 (Attention) or higher must contain all seven
 - Firebase Cloud Messaging (FCM) push notifications for Level 3 and Level 4 alerts.
 - ReportLab daily PDF generation with dynamic stoic closing quote.
 
-### V1 Scope
-- WhatsApp Business Cloud API integration for Level 3/4 alerts (pending Meta HSM approval).
-- Fitbit adapter via OAuth2 PKCE.
-- Care Navigation Graph: verified hospital/doctor discovery and exportable Doctor Visit Summary.
-- User manual symptom journal with prompt injection sanitization.
+### Phase 5 / V1 Scope (Clinical Readiness & Care Navigation)
+- Granular patient consent lifecycle (`ClinicalConsent`) with purpose specification and revocability (DPDP Act 2023).
+- Deterministic specialty-routing rules (`SpecialtyRouter`) evaluating physiological deviations without diagnostic claims.
+- 5-stage Doctor Visit Summary lifecycle: `DRAFT -> REVIEW -> REDACT -> APPROVE -> EXPORT`.
+- Patient-controlled redaction masking for sensitive metrics and individual findings.
+- ReportLab vector PDF compilation of clinical briefs with embedded SHA-256 integrity seal.
+- Upgraded Care Navigation Graph with clinician consultation notes, patient uncertainty explanation, and human approval gating.
+- Verified hospital and clinic directory search with explicit user authorization.
+
 
 ### V2/V3 Scope (Deferred)
 - Garmin Health API integration (pending B2B partnership approval).

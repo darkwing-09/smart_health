@@ -83,35 +83,50 @@ Personal Health OS strictly segregates and preserves the four layers of truth ac
 
 ```mermaid
 flowchart TD
-    subgraph Layer1 [1. Source Data]
+    subgraph Layer1 [1. Source Data & Timeline]
         A[Wearable Sensor] --> B[Health Connect Payload]
         B --> C[Immutable Raw Measurement in Hypertable]
+        C --> T[TimelineService: Unified Domain Query Abstraction]
     end
 
-    subgraph Layer2 [2. Deterministic Analysis]
+    subgraph Layer2 [2. Deterministic Analysis & Context]
+        C --> DQ[DataQualityEngine: Biological Bounds & Sensor Detachment]
+        C --> CX[ContextEngine: Concurrent Exertion & Behavioral State]
         C --> D[BaselineService: Rolling EWMA & Circadian Bins]
         D --> E[AnomalyDetector: Z-Scores, CUSUM, Hard Gates]
-        E --> F[Candidate Finding Created]
+        D --> TR[TrendEngine: OLS Multi-Day Slope & Baseline Drift]
+        E --> F[Candidate Finding Created with Mathematical Provenance]
     end
 
-    subgraph Layer3 [3. AI Interpretation]
-        F --> G[LangGraph Health Intelligence Node]
-        G --> H[Grounded 7-Part Plain Language Explanation]
+    subgraph Layer3 [3. AI Interpretation & Reasoning]
+        F --> G[LangGraph Health Intelligence Node V2]
+        T --> G
+        TR --> G
+        CX --> G
+        DQ --> G
+        G --> H[Grounded 8-Part Structured Explanation + 7-Part Legacy Schema]
         H --> I[Safety Guardrail: Rule H1 Zero Diagnosis Verification]
     end
 
     subgraph Layer4 [4. User & Action State]
         I --> J[Finding State Machine: NEW -> NOTIFIED]
-        J --> K[Anti-Fatigue FCM / WhatsApp Notification]
+        J --> NS[NotificationService: Multi-Channel Deduplication & Idempotency]
+        NS --> K[Push / In-App Notification Dispatch]
         K --> L[User Review & Approval]
-        L --> M[Immutable Audit Log & Action Record]
+        L --> AG[ActionGate: Human-in-the-Loop Consequential Action Gating]
+        AG --> M[Immutable Audit Log & Action Record]
+        L --> CS[ConsentService: Granular DPDP 2023 Scopes & Expiry]
+        CS --> SR[SpecialtyRouter: Deterministic Clinical Routing]
+        SR --> CN[CareNavigationGraph: Clinician Synthesis & Patient Rationale]
+        CN --> DVS[DoctorVisitSummaryService: 5-Stage Lifecycle & Redaction]
+        DVS --> PDF[DoctorVisitSummaryPdfService: ReportLab Vector PDF + SHA-256 Seal]
     end
 ```
 
 1. **Source Data:** What the device physically recorded. Preserved immutably in the `measurements` hypertable with original value, original unit, device ID, source timestamp, and data quality flag.
 2. **Deterministic Analysis:** What our Python statistical code calculated. Rolling 30-day baseline statistics, circadian hour profiles, and z-score mathematical deviations. An LLM is never permitted to calculate or guess these metrics.
 3. **AI Interpretation:** What an agent inferred from the analytical results. Grounded strictly in the deterministic data without adding unmeasured assumptions. Structured into the mandatory 7-part explanation and passed through safety guardrails.
-4. **User & Action State:** What the user approved and what actions were taken. Recorded in `user_approvals`, `appointment_requests`, and `audit_logs`. No consequential action occurs without an explicit user authorization token.
+4. **User & Action State:** What the user approved and what actions were taken. Recorded in `clinical_consents`, `clinical_summaries`, `user_approvals`, `appointment_requests`, and `audit_logs`. No consequential action or data disclosure occurs without an explicit user authorization token and active consent.
 
 ---
 

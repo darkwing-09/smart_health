@@ -132,9 +132,22 @@ CREATE TABLE findings (
     status VARCHAR(32) NOT NULL DEFAULT 'new', -- 'new', 'notified', 'acknowledged', 'escalated', 'resolved'
     first_detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    resolved_at TIMESTAMPTZ
+    resolved_at TIMESTAMPTZ,
+    -- Analytical Provenance & Evidence
+    observed_value DOUBLE PRECISION,
+    baseline_value DOUBLE PRECISION,
+    deviation DOUBLE PRECISION,
+    standard_deviation DOUBLE PRECISION,
+    reading_timestamp TIMESTAMPTZ,
+    timezone VARCHAR(64),
+    activity_context JSONB,
+    data_quality VARCHAR(32) DEFAULT 'nominal',
+    confidence DOUBLE PRECISION DEFAULT 1.0,
+    source_measurement_ids JSONB DEFAULT '[]'::jsonb,
+    evidence JSONB DEFAULT '{}'::jsonb
 );
 CREATE INDEX idx_findings_user_status ON findings(user_id, status, severity);
+CREATE UNIQUE INDEX idx_findings_dedup ON findings(user_id, metric_type, rule_id, reading_timestamp);
 
 CREATE TABLE finding_explanations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,15 +175,21 @@ CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     finding_id UUID REFERENCES findings(id) ON DELETE SET NULL,
-    channel VARCHAR(32) NOT NULL, -- 'fcm', 'whatsapp'
+    channel VARCHAR(32) NOT NULL, -- 'in_app', 'push', 'email', 'whatsapp_future'
     severity VARCHAR(32) NOT NULL,
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     delivery_status VARCHAR(32) NOT NULL DEFAULT 'SENT', -- 'SENT', 'DELIVERED', 'FAILED'
     sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    acknowledged_at TIMESTAMPTZ
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    acknowledged_at TIMESTAMPTZ,
+    payload JSONB NOT NULL DEFAULT '{}',
+    failure_info TEXT,
+    idempotency_key VARCHAR(128)
 );
 CREATE INDEX idx_notifications_user_sent ON notifications(user_id, sent_at DESC);
+CREATE UNIQUE INDEX idx_notifications_idempotency ON notifications(idempotency_key);
+CREATE INDEX idx_notifications_finding_channel ON notifications(finding_id, channel);
 ```
 
 ### 2.5 Daily Reports
@@ -261,3 +280,49 @@ CREATE TABLE audit_logs (
 );
 CREATE INDEX idx_audit_logs_user_time ON audit_logs(user_id, timestamp DESC);
 ```
+
+### 2.8 Clinical Consent & Doctor Visit Summaries (Phase 5)
+
+```sql
+CREATE TABLE clinical_consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    consent_version VARCHAR(32) NOT NULL DEFAULT '1.0.0',
+    purpose VARCHAR(64) NOT NULL, -- 'doctor_consultation', 'second_opinion', 'personal_archive'
+    permitted_metrics JSONB NOT NULL DEFAULT '[]',
+    permitted_finding_ids JSONB NOT NULL DEFAULT '["*"]',
+    scope_date_start TIMESTAMPTZ NOT NULL,
+    scope_date_end TIMESTAMPTZ NOT NULL,
+    include_context BOOLEAN NOT NULL DEFAULT TRUE,
+    include_sensor_quality BOOLEAN NOT NULL DEFAULT TRUE,
+    include_ai_synthesis BOOLEAN NOT NULL DEFAULT TRUE,
+    recipient_name VARCHAR(128),
+    recipient_facility VARCHAR(255),
+    granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    status VARCHAR(32) NOT NULL DEFAULT 'active', -- 'active', 'revoked', 'expired'
+    ip_address INET,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_clinical_consents_user_status ON clinical_consents(user_id, status);
+
+CREATE TABLE clinical_summaries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    consent_id UUID NOT NULL REFERENCES clinical_consents(id) ON DELETE CASCADE,
+    status VARCHAR(32) NOT NULL DEFAULT 'draft', -- 'draft', 'reviewed', 'redacted', 'approved', 'revoked'
+    summary_payload JSONB NOT NULL DEFAULT '{}',
+    redaction_mask JSONB NOT NULL DEFAULT '{}',
+    recommended_specialties JSONB NOT NULL DEFAULT '[]',
+    routing_rationale TEXT NOT NULL DEFAULT '',
+    approval_token VARCHAR(128),
+    approved_at TIMESTAMPTZ,
+    pdf_storage_path TEXT,
+    checksum_sha256 VARCHAR(64),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_clinical_summaries_user_status ON clinical_summaries(user_id, status);
+```
+

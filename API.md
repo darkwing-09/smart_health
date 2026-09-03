@@ -237,49 +237,123 @@ Downloads the vector PDF document directly.
 
 ---
 
-### 3.6 Care Navigation & Hospital Research
+### 3.6 Care Navigation, Clinical Consent & Doctor Visit Summaries (Phase 5)
 
-#### `POST /v1/care/research`
-Initiates research into nearby medical facilities for an authorized finding or specialty.
+#### `POST /v1/care/consent`
+Grants explicit, granular patient consent for clinical data sharing (DPDP Act 2023 compliant).
 - **Request Body:**
   ```json
   {
-    "latitude": 17.4334,
-    "longitude": 78.4111,
-    "radius_km": 10,
-    "specialty_hint": "Cardiology",
-    "finding_id": "fnd_88310a",
-    "user_authorization": true
+    "purpose": "doctor_consultation",
+    "scope_date_start": "2026-08-28T00:00:00Z",
+    "scope_date_end": "2026-09-04T00:00:00Z",
+    "permitted_metrics": ["heart_rate", "steps", "sleep_session"],
+    "recipient_name": "Dr. Mehta",
+    "recipient_facility": "Apollo Hospitals",
+    "duration_days": 7
   }
   ```
-- **Response (`200 OK`):**
+- **Response (`201 Created`):**
   ```json
   {
-    "request_id": "care_req_1092",
-    "recommended_specialty": "Cardiology",
-    "providers": [
-      {
-        "hospital_id": "hsp_4091",
-        "name": "Apollo Hospitals Jubilee Hills",
-        "address": "Road No 72, Film Nagar, Hyderabad",
-        "distance_km": 3.8,
-        "phone": "+91-40-2360-7777",
-        "verified_source": "OpenStreetMap / National Health Directory"
-      }
-    ]
+    "consent_id": "cns_9281a0",
+    "user_id": "usr_1029",
+    "consent_version": "1.0.0",
+    "purpose": "doctor_consultation",
+    "permitted_metrics": ["heart_rate", "steps", "sleep_session"],
+    "scope_date_start": "2026-08-28T00:00:00Z",
+    "scope_date_end": "2026-09-04T00:00:00Z",
+    "granted_at": "2026-09-04T02:00:00Z",
+    "expires_at": "2026-09-11T02:00:00Z",
+    "status": "active",
+    "recipient_name": "Dr. Mehta"
   }
   ```
 
-#### `POST /v1/care/requests/{request_id}/prepare-summary`
-Compiles a structured Doctor Visit Summary that the user can export, print, or share.
+#### `GET /v1/care/consent/{consent_id}`
+Inspects active consent parameters, remaining validity, and permitted data scopes.
+
+#### `DELETE /v1/care/consent/{consent_id}`
+Immediately revokes active consent. Downstream PDF export or data sharing is blocked immediately.
 - **Response (`200 OK`):**
   ```json
   {
-    "summary_id": "sum_88301",
-    "patient_shareable_text": "PATIENT HEALTH SUMMARY:\nPrimary Observation: Sustained nocturnal resting heart rate elevation (104 bpm vs baseline 58 bpm).\nTelemetry Period: 2026-09-04.\nGenerated for consultation at Apollo Hospitals.",
-    "pdf_export_url": "/v1/care/summaries/sum_88301/pdf"
+    "consent_id": "cns_9281a0",
+    "status": "revoked",
+    "revoked_at": "2026-09-04T02:15:00Z"
   }
   ```
+
+#### `POST /v1/care/summary/draft`
+Compiles longitudinal evidence into an initial Doctor Visit Summary draft.
+- **Request Body:**
+  ```json
+  {
+    "consent_id": "cns_9281a0"
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "summary_id": "sum_88301",
+    "user_id": "usr_1029",
+    "consent_id": "cns_9281a0",
+    "status": "draft",
+    "approval_token": null,
+    "checksum_sha256": "4b2e81fa9...",
+    "recommended_specialties": ["Cardiology / Electrophysiology", "Internal Medicine"],
+    "routing_rationale": "Sustained nocturnal resting vital elevation outside baseline.",
+    "summary_payload": { ... },
+    "created_at": "2026-09-04T02:05:00Z"
+  }
+  ```
+
+#### `GET /v1/care/summary/{summary_id}`
+Retrieves and previews the structured summary, redactions, and current approval state.
+
+#### `POST /v1/care/summary/{summary_id}/redact`
+Applies patient redactions to specific findings or metric categories.
+- **Request Body:**
+  ```json
+  {
+    "redact_finding_ids": ["fnd_88310a"],
+    "redact_metrics": ["steps"]
+  }
+  ```
+- **Response (`200 OK`):** Updated summary with `status: "redacted"` and updated SHA-256 checksum.
+
+#### `POST /v1/care/summary/{summary_id}/approve`
+Patient signs off on the finalized document. Issues cryptographically secure `approval_token`.
+- **Request Body:**
+  ```json
+  {
+    "confirm_approval": true
+  }
+  ```
+- **Response (`200 OK`):** Summary with `status: "approved"`, `approval_token: "appr_7f39b1a..."`.
+
+#### `GET /v1/care/summary/{summary_id}/export/pdf`
+Downloads the sealed vector PDF. Requires `status == "approved"` and active consent.
+- **Headers:** `Accept: application/pdf`
+- **Response (`200 OK`):** Binary vector PDF with SHA-256 seal and non-diagnostic disclaimers.
+
+#### `GET /v1/care/routing`
+Evaluates deterministic specialty routing based strictly on objective mathematical deviations.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "primary_specialty": "Cardiology / Electrophysiology",
+    "secondary_specialties": ["Internal Medicine", "General Practice"],
+    "rule_id": "RULE_SPEC_NOCTURNAL_CARDIO",
+    "clinical_rationale": "Observed sustained resting heart rate deviation of 98 bpm (+40 bpm above baseline).",
+    "urgency_tier": "prompt",
+    "disclaimer": "CLINICAL ADVISORY: Recommended specialties are deterministic routing suggestions..."
+  }
+  ```
+
+#### `POST /v1/care/research`
+Initiates research into verified nearby facilities (Requires explicit user authorization).
+
 
 ---
 

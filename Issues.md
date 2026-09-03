@@ -87,3 +87,52 @@ This document tracks all active defects, architectural questions, security conce
 - **Description:** Vision specifies automated booking "where technically and legally possible." Currently deferred per ADR-003 due to absence of public APIs and severe liability concerns.
 - **Impact:** Care navigation remains research-only for MVP and V1.
 - **Mitigation / Next Steps:** Marked as **DEFERRED — NOT MVP**. Revisit in Phase 6 after formal B2B healthcare partnerships are evaluated.
+
+---
+
+## 5. Runtime Audit Findings & Resolved Issues
+
+### `ISSUE-009`: Host Port Collisions on PostgreSQL 5432 and Redis 6379
+- **Category:** Environment & Infrastructure
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Host machine was already running unrelated active Docker containers (`acharya_postgres` and `acharya_redis`) on default ports `5432` and `6379`.
+- **Resolution:** Mapped host ports in `docker-compose.yml` to `5435:5432` for `healthos_postgres` and `6380:6379` for `healthos_redis`, while keeping container-internal communication on standard ports. Updated local `.env` and `alembic.ini`. Verified zero interference with existing containers.
+
+### `ISSUE-010`: Alembic `env.py` AttributeError `alembic_config_section`
+- **Category:** Database Migrations
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** `alembic/env.py` attempted to access non-existent attribute `config.alembic_config_section`, failing migration execution.
+- **Resolution:** Corrected attribute to standard `config.config_ini_section`. Live migration `20260904_0001` completed successfully with code 0.
+
+### `ISSUE-011`: Local Python Virtual Environment Dependency Gaps
+- **Category:** Local Development Environment
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Global Python 3.13 lacked `structlog`, `arq`, and testing dependencies, causing CLI imports to fail.
+- **Resolution:** Bootstrapped reproducible `.venv` via `uv` with all 79 production dependencies including `fastapi`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `redis`, `arq`, `langgraph`, and `reportlab`.
+
+### `ISSUE-012`: Missing Android SDK on Development Host
+- **Category:** Mobile Build Toolchain
+- **Priority:** `P1`
+- **Status:** `OPEN` / `BLOCKED`
+- **Description:** Host machine has no Android SDK installed (`ANDROID_HOME` unset). Kotlin source code is authored and statically contract-verified against backend schemas, but local Gradle build cannot be executed on this host.
+- **Status:** Marked **⚠️ BLOCKED — ANDROID BUILD TOOLCHAIN UNAVAILABLE**. Android compilation must be performed in CI/CD container or machine with Android SDK.
+
+### `ISSUE-013`: Async Session Pool Isolation in Pytest Concurrency
+- **Category:** Testing Infrastructure
+- **Priority:** `P2`
+- **Status:** `RESOLVED`
+- **Description:** Default SQLAlchemy connection pool maintains open socket connections across tests, triggering `asyncpg.InterfaceError: cannot perform operation: another operation is in progress` when pytest-asyncio switches event loops.
+- **Resolution:** Initialized dedicated test engines with `poolclass=NullPool`, ensuring instant socket closure upon test completion. Verified all 37 integration and unit tests run with zero concurrency conflicts.
+
+### `ISSUE-014`: Redaction Mask Handling for Null Optional Payload Lists
+- **Category:** Clinical Data Service
+- **Priority:** `P2`
+- **Status:** `RESOLVED`
+- **Description:** When Pydantic schemas serialized optional redaction lists (`redact_finding_ids: None`, `redact_metrics: None`), `DoctorVisitSummaryService.redact_summary` passed `None` into `set()`, raising `TypeError: 'NoneType' object is not iterable`.
+- **Resolution:** Updated redaction parser to use fallback `(redaction_mask.get(...) or [])`, ensuring safe handling of explicit null values in HTTP payloads. Verified across all 46 automated integration tests.
+
+
+

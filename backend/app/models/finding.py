@@ -34,10 +34,24 @@ class Finding(Base):
     )
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Analytical Provenance Fields
+    observed_value: Mapped[Optional[float]] = mapped_column(nullable=True)
+    baseline_value: Mapped[Optional[float]] = mapped_column(nullable=True)
+    deviation: Mapped[Optional[float]] = mapped_column(nullable=True)
+    standard_deviation: Mapped[Optional[float]] = mapped_column(nullable=True)
+    reading_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    timezone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    activity_context: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    data_quality: Mapped[Optional[str]] = mapped_column(String(32), default="nominal", nullable=True)
+    confidence: Mapped[Optional[float]] = mapped_column(default=1.0, nullable=True)
+    source_measurement_ids: Mapped[Optional[list]] = mapped_column(JSON, default=list, nullable=True)
+    evidence: Mapped[Optional[dict]] = mapped_column(JSON, default=dict, nullable=True)
+
     explanations: Mapped[List["FindingExplanation"]] = relationship("FindingExplanation", back_populates="finding", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_findings_user_status", "user_id", "status", "severity"),
+        Index("idx_findings_dedup", "user_id", "metric_type", "rule_id", "reading_timestamp", unique=True),
     )
 
 

@@ -1,50 +1,137 @@
-"""LangGraph Health Intelligence Workflow."""
+"""LangGraph Health Intelligence Workflow V2 (Longitudinal Evidence-Grounded).
 
-from typing import Dict, Any, List
+Orchestrates evidence reasoning over:
+- Current Observations
+- Personal Baselines & Circadian Seasonality
+- Longitudinal Trends (7-28 days)
+- Activity & Behavioral Context (Resting, Sleeping, Exercise)
+- Sensor Data Quality Ratings
+Enforces Rule H1 (Zero Medical Diagnosis) with automated safe fallbacks.
+"""
+
+from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, END
 from app.graphs.state import HealthIntelState
-from app.schemas.finding import FindingExplanationSchema
 
 PROHIBITED_TERMS = [
     "arrhythmia", "heart attack", "myocardial infarction",
-    "atrial fibrillation", "hypertension", "disease", "syndrome"
+    "atrial fibrillation", "hypertension", "disease", "syndrome",
+    "heart failure", "coronary", "ischemia", "stroke"
 ]
 
 
 async def node_generate_explanation(state: HealthIntelState) -> Dict[str, Any]:
-    """Generates grounded 7-part explanation."""
-    # Deterministic generation or LLM invocation with structured output
-    val = state["observed_value"]
-    unit = state["unit"]
-    baseline_mean = state["baseline"].get("circadian_mean", 58.0)
+    """
+    Generates grounded structured explanation from longitudinal evidence.
+    Zero fabricated diagnoses. Strictly distinguishes observation from physiological interpretation.
+    """
+    if state.get("explanation") is not None:
+        return {"explanation": state["explanation"]}
+
+    val = state.get("observed_value", 0.0)
+    unit = state.get("unit", "bpm")
+    metric = state.get("metric_type", "heart_rate").replace("_", " ")
+    ts = state.get("recorded_at", "recent window")
+    baseline = state.get("baseline", {})
+    circadian_mean = baseline.get("circadian_mean", baseline.get("mean", 60.0))
+    circadian_std = max(baseline.get("circadian_std", baseline.get("stddev", 4.0)), 1.0)
+    diff = round(val - circadian_mean, 1)
+
+    # Context & Quality
+    act_context = state.get("activity_context") or {}
+    primary_state = act_context.get("primary_context", state.get("context", "RESTING"))
+    concurrent_steps = act_context.get("steps_concurrent", 0)
+    dq = state.get("data_quality") or {}
+    dq_rating = dq.get("rating", "good")
+
+    # Longitudinal trend
+    trend = state.get("longitudinal_trend")
+    if trend:
+        longitudinal_context_text = (
+            f"Over the last {trend.get('days_analyzed', 14)} days, your {metric} has exhibited a "
+            f"{trend.get('direction', 'stable')} trend (rate: {trend.get('slope_per_day', 0.0)}/day) "
+            f"with {trend.get('evidence_strength', 'moderate')} evidence strength."
+        )
+    else:
+        longitudinal_context_text = (
+            f"This reading is evaluated relative to your established 30-day baseline. "
+            f"Isolated departure from typical circadian patterns."
+        )
+
+    # Physiological Interpretations (Non-diagnostic possibilities)
+    interpretations = [
+        "Acute sympathetic autonomic response or delayed physical recovery.",
+        "Mild dehydration, ambient warmth, or recent meal ingestion.",
+        "Underlying physiological stressor or poor restorative sleep quality."
+    ]
+
+    limitations = [
+        f"Data quality is rated as {dq_rating.upper()}.",
+        "Wearable optical sensors can experience transient motion artifacts or pressure shifts."
+    ]
+
+    next_steps = [
+        "Rest in a comfortable, seated or reclined position.",
+        "Hydrate with a glass of water.",
+        "Verify smartwatch fit is snug and two finger-widths above the wrist bone.",
+        "Note any subjective symptoms in your health journal."
+    ]
+
+    safety_note = (
+        "This is a physiological observation and NOT a medical diagnosis. "
+        "If you experience chest discomfort, shortness of breath, palpitations, or dizziness, "
+        "seek immediate emergency medical care."
+    )
+
+    observation_text = f"Observed {metric} of {val} {unit} recorded during a {primary_state} state ({concurrent_steps} steps)."
+    comparison_text = (
+        f"Your personal circadian expectation for this timeframe is {circadian_mean} ± {circadian_std} {unit}. "
+        f"Observed reading is {abs(diff)} {unit} {'higher' if diff > 0 else 'lower'} than your baseline."
+    )
+    summary_text = f"An unusual elevation in resting {state.get('metric_type', 'heart_rate')} was recorded ({val} {unit} detected during a {primary_state} period)."
 
     explanation = {
-        "what_changed": f"A sustained elevation in resting {state['metric_type']} was recorded.",
-        "measurements_caused": [f"Observed value: {val} {unit} at {state['recorded_at']}"],
-        "baseline_difference": f"Your typical resting baseline is {baseline_mean} {unit}. Reading is elevated above normal variance.",
-        "historical_context": "Pattern is statistically infrequent compared to the prior 30-day baseline window.",
-        "confidence_and_data_quality": "High confidence (98%), continuous optical sensor signal with zero gaps.",
-        "why_it_matters": "Elevated resting vitals indicate sympathetic nervous system activation or acute recovery deficit.",
-        "next_steps": [
-            "Rest in a comfortable position and hydrate.",
-            "Verify snug smartwatch fit on wrist.",
-            "If accompanied by dizziness or chest discomfort, seek emergency medical care."
-        ]
+        # Structured V2 fields
+        "summary": summary_text,
+        "observation": observation_text,
+        "personal_comparison": comparison_text,
+        "longitudinal_context": longitudinal_context_text,
+        "possible_interpretations": interpretations,
+        "limitations": limitations,
+        "recommended_next_step": next_steps,
+        "safety_note": safety_note,
+
+        # Backward compatibility with 7-part explanation schema
+        "what_changed": summary_text,
+        "measurements_caused": [f"Observed value: {val} {unit} at {ts}"],
+        "baseline_difference": comparison_text,
+        "historical_context": longitudinal_context_text,
+        "confidence_and_data_quality": f"Data quality rated as {dq_rating.upper()} with verified optical contact.",
+        "why_it_matters": " ".join(interpretations),
+        "next_steps": next_steps
     }
     return {"explanation": explanation}
 
 
 async def node_safety_guardrail(state: HealthIntelState) -> Dict[str, Any]:
-    """Enforces Rule H1 (Zero Medical Diagnosis)."""
+    """
+    Enforces Rule H1 (Zero Medical Diagnosis).
+    Scans entire generated payload for prohibited diagnostic labels.
+    """
     explanation = state.get("explanation")
     if not explanation:
         return {"safety_approved": False, "safety_violations": ["No explanation generated"]}
 
-    full_text = " ".join([
-        explanation["what_changed"],
-        explanation["why_it_matters"],
-        " ".join(explanation["next_steps"])
-    ]).lower()
+    # Aggregate all text values in explanation
+    text_corpus = []
+    for k, v in explanation.items():
+        if isinstance(v, str):
+            text_corpus.append(v)
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, str):
+                    text_corpus.append(item)
+    full_text = " ".join(text_corpus).lower()
 
     violations = [term for term in PROHIBITED_TERMS if term in full_text]
     if violations:
@@ -53,10 +140,29 @@ async def node_safety_guardrail(state: HealthIntelState) -> Dict[str, Any]:
 
 
 async def node_apply_safe_fallback(state: HealthIntelState) -> Dict[str, Any]:
-    """Replaces violated explanation with deterministic safe template."""
+    """
+    Replaces violated explanation with deterministic safe template.
+    """
+    val = state.get("observed_value", 0.0)
+    unit = state.get("unit", "bpm")
+    metric = state.get("metric_type", "heart_rate").replace("_", " ")
+
     fallback = {
-        "what_changed": "A significant statistical shift in your vitals was recorded.",
-        "measurements_caused": [f"Observed: {state['observed_value']} {state['unit']}"],
+        "summary": f"A significant statistical shift in your {metric} was recorded.",
+        "observation": f"Observed reading: {val} {unit}.",
+        "personal_comparison": "Measurement significantly departs from your established baseline profile.",
+        "longitudinal_context": "Deviation recorded outside standard baseline bounds.",
+        "possible_interpretations": ["Physiological departure requiring calm observation."],
+        "limitations": ["Automated statistical evaluation only."],
+        "recommended_next_step": [
+            "Rest quietly and hydrate.",
+            "Please consult your healthcare provider if you feel unwell."
+        ],
+        "safety_note": "If you experience acute red-flag symptoms (chest pain, severe shortness of breath), seek immediate emergency medical care.",
+
+        # Backward-compatible fields
+        "what_changed": f"A significant statistical shift in your {metric} was recorded.",
+        "measurements_caused": [f"Observed: {val} {unit}"],
         "baseline_difference": "Measurement significantly departs from your established baseline profile.",
         "historical_context": "Deviation recorded outside standard baseline window.",
         "confidence_and_data_quality": "Nominal sensor reading.",

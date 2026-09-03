@@ -121,3 +121,15 @@ In the event of an unauthorized data disclosure, compromised API token, or vulne
 3. **Remediation & Forensic Analysis (T+4h):** Analyze immutable audit logs to identify all accessed records; patch vulnerability and verify via automated test suite.
 4. **Notification Protocol (T+24h):** If sensitive personal data was compromised, notify affected users and regulatory authorities in compliance with statutory disclosure obligations under the Indian DPDP Act.
 5. **Post-Mortem:** Author comprehensive Root Cause Analysis (RCA); record in `Decisions.md` and `Issues.md`.
+
+---
+
+## 8. Clinical Disclosure Privacy & Revocation Controls (Phase 5)
+
+Phase 5 implements strict technical controls governing patient disclosure to healthcare providers:
+1. **Granular Purpose Limitation:** Consent (`ClinicalConsent`) requires explicit declaration of purpose (`doctor_consultation`, `second_opinion`), permitted metrics, permitted findings, and scope dates.
+2. **Immediate Revocation Defense:** Invoking `DELETE /v1/care/consent/{id}` marks the consent `revoked`. All subsequent attempts to download or export summaries associated with that consent are instantly blocked with `HTTP 403 Forbidden` (`Consent is no longer active`).
+3. **Patient-Controlled Redactions:** Before authorizing any document, patients can mask individual finding entries or entire biometric types (`redact_finding_ids`, `redact_metrics`). Redacted values are rendered as `[REDACTED BY PATIENT]`.
+4. **Cryptographic Checksum Verification:** Every summary calculates a canonical SHA-256 digest (`checksum_sha256`). Redaction recalculates this digest. The checksum is printed directly onto the vector PDF document to prevent undetectable post-export alteration.
+5. **Human Approval Gating:** PDF compilation is blocked with `HTTP 400 Bad Request` until the patient explicitly approves the draft via `POST /v1/care/summary/{id}/approve`, generating a cryptographically secure `approval_token`.
+

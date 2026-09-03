@@ -150,15 +150,16 @@ This document formally specifies all 12 autonomous, semi-autonomous, and determi
 ---
 
 ### 9. Care Navigation Agent (LangGraph Workflow Coordinator)
-- **Mission:** Guide the user through reviewing care options and structuring clinical inquiry summaries.
-- **Engine Type:** **LangGraph Coordinator**.
-- **Responsibilities:** Format clinical findings and biometric timelines into an easily scannable "Doctor Visit Summary" for the patient to share.
-- **Inputs:** Research Agent findings, active user medical concerns, historical metric graphs.
-- **Outputs:** Structured clinical summary document (`AppointmentRequest`).
-- **Tools & Permissions:** Read access to user timeline; write access to `appointment_requests`.
-- **Decision Boundaries:** Prepares outreach material exclusively for the user to send; hands off communication to the patient.
-- **Failure Behavior:** Emits printable PDF summary for manual handover if digital channel handoff fails.
-- **What It Must NEVER Do:** Transmit data to any doctor or hospital without user review and confirmation.
+- **Mission:** Guide the patient through clinical evidence review, deterministic specialty routing, physician note synthesis, and human-in-the-loop care summaries.
+- **Engine Type:** **LangGraph Stateful Graph (`CareNavigationGraph`)**.
+- **Responsibilities:** Ingest structured summary payload and deterministic specialty routing decisions (`SpecialtyRouter`); synthesize professional physician consultation notes and calm patient uncertainty explanations; enforce Rule H1 non-diagnostic guardrails; coordinate patient redactions and require explicit patient approval tokens prior to generating outreach materials or exporting vector PDFs.
+- **Inputs:** Active `ClinicalConsent`, structured `summary_payload`, `SpecialtyRoutingDecision`, patient approval flag, and `approval_token`.
+- **Outputs:** Validated `ClinicalSummary` entity with canonical SHA-256 digest, physician notes, patient rationale, and patient-approved `outreach_draft`.
+- **Tools & Permissions:** Read access to `clinical_consents`, `timeline`, `findings`, `baselines`; write access to `clinical_summaries` and `audit_logs`.
+- **Decision Boundaries:** Specialty suggestions are evaluated deterministically (zero LLM routing). External outreach generation is strictly gated until the patient explicitly reviews and authorizes the brief.
+- **Failure Behavior:** Emits safe fallback telemetry template citing raw mathematical deviations if synthesis fails or safety policies are breached.
+- **What It Must NEVER Do:** Declare a medical diagnosis; autonomously contact clinics or send data without verified patient consent and explicit sign-off; allow export of unapproved or revoked summaries.
+
 
 ---
 

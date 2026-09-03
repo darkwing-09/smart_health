@@ -123,3 +123,148 @@ A recorded architectural decision must never be modified or reversed silently. A
 - **Reasoning:** ARQ is built natively on Python `asyncio` and Redis. It shares the exact same async event loop, connection pool patterns, and Pydantic schemas as FastAPI, making task dispatch and async execution completely seamless.
 - **Consequences:** Redis 7 is required as both the cache layer and the ARQ job broker. All background tasks must be idempotent.
 - **Status:** Accepted.
+
+---
+
+## ADR-011: Non-Conflicting Host Port Segregation (PostgreSQL 5435 / Redis 6380)
+- **Date:** 2026-09-04
+- **Decision:** Expose Docker Compose services on dedicated host ports (`5435:5432` for TimescaleDB, `6380:6379` for Redis) while strictly preserving default ports (`5432` and `6379`) for inter-container Docker networking.
+- **Context:** Developers and multi-project workstations frequently run unrelated existing databases or caches on standard ports `5432` and `6379`. Forcing standard host ports broke initial container startup due to collision with host services (`acharya_postgres`, `acharya_redis`).
+- **Alternatives considered:**
+  - Stop or terminate existing foreign containers: Rejected as high-risk, violating least-privilege safety protocols.
+  - Require host-network mode: Breaks isolated multi-container DNS and portability.
+- **Reasoning:** Port mapping allows developer host tools (Alembic CLI, local pytest, pgAdmin) to target `localhost:5435` and `localhost:6380` via `.env`, while Docker services (`backend`, `worker`) communicate across internal Docker DNS (`db:5432`, `redis:6379`) using standard ports.
+- **Consequences:** `.env.example` documents `5435` and `6380`. Docker Compose environment variables override these for internal container networking.
+- **Status:** Accepted.
+
+---
+
+## ADR-012: NullPool Engine Isolation for Pytest AsyncPG Integration Testing
+- **Date:** 2026-09-04
+- **Decision:** Use SQLAlchemy `poolclass=NullPool` with FastAPI `dependency_overrides[get_db]` for async integration testing against live PostgreSQL/TimescaleDB.
+- **Context:** In `pytest-asyncio`, test cases run on distinct event loops or concurrent task contexts. Default pooled asyncpg connections are bound to the specific event loop in which they were created; sharing pooled connections across test cases throws `asyncpg.InterfaceError: cannot perform operation: another operation is in progress`.
+- **Alternatives considered:**
+  - Mock database: Rejected per explicit architectural rule requiring genuine database integration tests without mocks.
+  - Session-scoped event loop: Can lead to state leakage between test cases and deprecation warnings in modern `pytest-asyncio`.
+- **Reasoning:** `NullPool` opens a fresh connection per session and disposes of it immediately upon commit/close, preventing connection bleeding across event loops while ensuring 100% genuine database persistence and index validation.
+- **Consequences:** Integration test suite executes safely against live TimescaleDB without interface deadlocks.
+- **Status:** Accepted.
+
+---
+
+## ADR-013: Deterministic Analytical Provenance and Idempotent Finding Identity
+- **Date:** 2026-09-04
+- **Decision:** Every detected anomaly persisted to the `findings` table must store complete mathematical provenance (`observed_value`, `baseline_value`, `deviation`, `standard_deviation`, `reading_timestamp`, `timezone`, `activity_context`, `data_quality`, `confidence`, `source_measurement_ids`, and `evidence`), backed by a database-level unique constraint `(user_id, metric_type, rule_id, reading_timestamp)`.
+- **Context:** Anomaly detection must be fully auditable without LLM involvement. Background worker pipelines (hourly crons or acute event triggers) may run repeatedly across overlapping windows; without deterministic identity and database-level unique constraints, duplicate findings and alert storms would result.
+- **Alternatives considered:**
+  - Store only LLM-generated text explanation in database: Rejected as unauditable, non-reproducible, and violates core system principles.
+  - Rely solely on in-memory application checks (`if exists`): Rejected as vulnerable to race conditions under concurrent worker executions.
+- **Reasoning:** Storing raw mathematical inputs directly on the finding enables instant retrospective clinical auditing and exact reconstruction of why a rule fired. The unique index with `ON CONFLICT DO NOTHING` guarantees complete idempotency across repeated worker runs.
+- **Consequences:** Findings schema and migration `20260904_0002` added these columns. LLMs generate secondary explanatory text only, never the primary finding.
+- **Status:** Accepted.
+
+---
+
+## ADR-014: Timezone-Aware Circadian Seasonality Profiling
+- **Date:** 2026-09-04
+- **Decision:** The Baseline Intelligence engine must convert UTC measurement timestamps to the patient's local wall-clock timezone before aggregating into the 24-hour circadian seasonality profile (00:00–23:00).
+- **Context:** Normal human physiology exhibits strong diurnal and circadian rhythms (e.g. nocturnal sleeping heart rate is substantially lower than afternoon active heart rate). If circadian bins are calculated using UTC timestamps, patients in non-UTC timezones (e.g., India `Asia/Kolkata` UTC+5:30) have their circadian curves shifted by several hours, confounding morning waking vitals with nocturnal rest.
+- **Alternatives considered:**
+  - Standardize all circadian bins on UTC: Rejected because 03:00 UTC corresponds to 08:30 AM in India, completely corrupting nocturnal baseline models.
+  - Compute single 24-hour aggregate mean without circadian bins: Rejected because nocturnal resting tachycardia cannot be distinguished from normal daytime elevation without hourly circadian baselines.
+- **Reasoning:** Grounding the 24-hour profile in the patient's local timezone accurately captures their biological circadian rhythm regardless of geographical location.
+- **Consequences:** `users.timezone` is a mandatory analytical dependency. Fallback to UTC occurs only when timezone is invalid or unspecified.
+- **Status:** Accepted.
+
+---
+
+## ADR-015: Longitudinal Personal Health Timeline Domain Abstraction
+- **Date:** 2026-09-04
+- **Decision:** Implement the Personal Health Timeline as a high-performance unified query and domain abstraction over existing `measurements`, `findings`, and `baselines` tables rather than duplicating telemetry into a secondary timeline table.
+- **Context:** Storing billions of wearable time-series samples across duplicate database tables introduces severe storage bloat, synchronization lag, and dual-write inconsistency risks.
+- **Alternatives considered:**
+  - Materialize a separate `timeline_events` table: Rejected due to 2x storage overhead and dual-write failure points.
+  - Query only raw measurements without timeline abstraction: Rejected because client applications and downstream LangGraph agents need unified chronological context combining observations with analytical findings.
+- **Reasoning:** A domain abstraction provides a clean, unified view (`TimelineEvent`, `TimelineContextWindow`) backed by hypertable index scans, answering queries like "What was happening around this anomaly?" with sub-10ms query latency.
+- **Consequences:** TimelineService coordinates queries across hypertable partitions and finding tables on demand.
+- **Status:** Accepted.
+
+---
+
+## ADR-016: Deterministic Data Quality & Activity Context Classification
+- **Date:** 2026-09-04
+- **Decision:** Data quality evaluation (`excellent`, `good`, `limited`, `poor`, `invalid`) and activity context classification (`RESTING`, `WALKING`, `RUNNING`, `EXERCISE`, `SLEEPING`, `POST_EXERCISE`, `UNKNOWN`) must be computed strictly via deterministic mathematical rules and biological bounds, with zero LLM involvement.
+- **Context:** Anomaly detection and baseline computation fail if noisy, detached, or biologically impossible data silently enters statistical pipelines.
+- **Alternatives considered:**
+  - Prompt LLM to infer whether the user was exercising or sleeping: Rejected as non-deterministic, cost-inefficient, and prone to hallucination.
+  - Trust client-reported flags blindly: Rejected because wearable manufacturers use differing, uncalibrated heuristics.
+- **Reasoning:** Mathematical thresholding of concurrent steps, circadian hours, and sensor confidence provides reproducible, auditable quality ratings and prevents poor-quality data from generating false alert storms.
+- **Consequences:** `DataQualityEngine` and `ContextEngine` gate all downstream anomaly detection and baseline modeling.
+- **Status:** Accepted.
+
+---
+
+## ADR-017: Multi-Day Longitudinal Trend & Baseline Drift Modeling
+- **Date:** 2026-09-04
+- **Decision:** Implement deterministic longitudinal trend detection using ordinary least squares regression over 7-to-28-day daily aggregates, strictly differentiating `POINT_ANOMALY`, `TREND`, `BASELINE_SHIFT`, and `SAFETY_FINDING`.
+- **Context:** An acute, isolated spike (e.g. nocturnal resting tachycardia for 1 hour) is fundamentally different from a gradual, progressive elevation in resting heart rate over 14 days (e.g. overtraining, chronic stress, or illness incubation). Conflating these leads to incorrect clinical communication.
+- **Alternatives considered:**
+  - Treat all deviations as point anomalies: Rejected because gradual trends are missed until they breach extreme z-score cutoffs.
+  - Rely on LLMs to describe trend charts: Rejected because slope, $R^2$, and drift z-scores must be exact and auditable.
+- **Reasoning:** Computing slope, coefficient of determination ($R^2$), and drift z-scores over daily aggregates provides unambiguous evidence of progressive physiological drift.
+- **Consequences:** `TrendEngine` produces structured `LongitudinalTrendReport` instances with evidence strength ratings (`strong`, `moderate`, `weak`).
+- **Status:** Accepted.
+
+---
+
+## ADR-018: Human-in-the-Loop Consequential Action Gating
+- **Date:** 2026-09-04
+- **Decision:** Formally categorize system actions into `INFORMATIONAL_ACTION`, `RECOMMENDATION`, and `EXTERNAL_ACTION`. Autonomous execution of `EXTERNAL_ACTION` (such as doctor outreach, WhatsApp messaging, appointment booking, or medical record sharing) is strictly prohibited without an explicit user approval token.
+- **Context:** AI health assistants must never initiate real-world clinical outreach or external communication without verified human patient consent (Rule H3, ADR-003, DPDP Act 2023).
+- **Alternatives considered:**
+  - Allow autonomous low-risk clinic inquiries: Rejected due to patient privacy risks, false alarms, and lack of clinical authorization.
+- **Reasoning:** The `ActionGate` service intercepts all external action intents and verifies the presence of an authorized user approval token, writing immutable entries to `audit_logs`.
+- **Consequences:** External actions cannot be executed autonomously under any circumstances.
+- **Status:** Accepted.
+
+---
+
+## ADR-019: Granular Clinical Consent Lifecycle & DPDP Act 2023 Compliance
+- **Date:** 2026-09-04
+- **Decision:** Implement granular, revocable patient consent (`ClinicalConsent`) specifying purpose, permitted metrics, permitted findings, date range scope, and mandatory TTL expiration. Revoking consent immediately terminates downstream data export and sharing.
+- **Context:** Under India's Digital Personal Data Protection (DPDP) Act 2023 and medical privacy best practices, health telemetry can only be processed and shared for explicit, consented purposes. Blanket, perpetual, or irrevocable consents are non-compliant.
+- **Alternatives considered:**
+  - Blanket account-level data sharing toggle: Rejected as non-compliant with DPDP Act data minimization and purpose limitation mandates.
+  - Relying on client-side state alone: Rejected because revocation must be enforced server-side against all downstream pipelines.
+- **Reasoning:** Storing consent records with immutable audit trails (`consent_granted`, `consent_revoked`) and gating all Doctor Visit Summary exports through `ConsentService.validate_consent_active` guarantees strict legal compliance.
+- **Consequences:** All clinical briefs require an active, non-expired, non-revoked consent record.
+- **Status:** Accepted.
+
+---
+
+## ADR-020: Deterministic Specialty-Routing Engine vs Prohibited Medical Diagnosis
+- **Date:** 2026-09-04
+- **Decision:** Clinical specialty recommendations (e.g. Cardiology, Internal Medicine, Sleep Medicine) must be evaluated exclusively via deterministic rule-based logic (`SpecialtyRouter`) and never by LLM inference. All outputs must carry mandatory non-diagnostic disclaimers.
+- **Context:** Suggesting a clinical specialty to consult must not cross the boundary into diagnosing medical conditions (Rule H1). LLMs are prone to diagnostic drift and hallucinated clinical classifications.
+- **Alternatives considered:**
+  - LLM-based triage and specialty classification: Rejected due to diagnostic hallucination and regulatory medical device liability.
+  - Zero specialty suggestions: Rejected because patients benefit from knowing whether their wearable vital shifts warrant primary care vs cardiology consultation.
+- **Reasoning:** Rule-based mapping of objective sensor deviations (e.g., nocturnal tachycardia without motion -> Cardiology; multi-day gradual drift -> Internal Medicine) provides consistent, explainable routing without asserting pathology.
+- **Consequences:** `SpecialtyRouter` produces deterministic routing decisions with statutory disclaimers.
+- **Status:** Accepted.
+
+---
+
+## ADR-021: Five-Stage Doctor Visit Summary Lifecycle (DRAFT -> REVIEW -> REDACT -> APPROVE -> EXPORT) & Cryptographic Checksums
+- **Date:** 2026-09-04
+- **Decision:** Enforce a strict 5-stage state machine for clinical summaries. The patient must have the power to preview the draft, redact sensitive metrics or findings, and explicitly issue an approval token before vector PDF export is permitted. Documents are sealed with SHA-256 integrity checksums.
+- **Context:** Patients must retain full agency over what physiological data is disclosed to healthcare providers. System-generated summaries must not be exportable without verified patient review.
+- **Alternatives considered:**
+  - Direct 1-click PDF download: Rejected because patients cannot redact sensitive windows or verify included findings prior to dissemination.
+- **Reasoning:** The `DoctorVisitSummaryService` verifies state transitions (`draft -> reviewed -> redacted -> approved -> exported`), recalculates SHA-256 hashes upon redaction, and blocks unapproved exports with HTTP 400.
+- **Consequences:** Every clinical brief exported is evidence-grounded, patient-approved, tamper-evident, and auditable.
+- **Status:** Accepted.
+
+
+
+

@@ -7,7 +7,7 @@ from app.models.baseline import Baseline
 from app.models.finding import Finding, FindingExplanation
 from app.models.notification import Notification
 from app.models.report import Report
-from app.models.care import Hospital, UserApproval, AppointmentRequest
+from app.models.care import Hospital, UserApproval, AppointmentRequest, ClinicalConsent, ClinicalSummary
 from app.models.audit import AgentExecution, AuditLog
 
 __all__ = [
@@ -24,6 +24,8 @@ __all__ = [
     "Hospital",
     "UserApproval",
     "AppointmentRequest",
+    "ClinicalConsent",
+    "ClinicalSummary",
     "AgentExecution",
     "AuditLog"
 ]
