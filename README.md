@@ -189,3 +189,4 @@ Interactive API documentation will be available at `http://localhost:8000/docs`.
 > Personal Health OS is an assistive software tool designed for personal wellness tracking, longitudinal pattern recognition, and informational health navigation. It is **NOT** a diagnostic system, does **NOT** substitute for professional medical advice, diagnosis, or treatment, and should never be used during an acute medical emergency. In the event of a medical crisis, users must immediately contact their regional emergency medical services (e.g., 112 / 911 / 108).
 # smart_health
 # smart_health
+# smart_health
