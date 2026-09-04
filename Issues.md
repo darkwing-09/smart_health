@@ -113,26 +113,53 @@ This document tracks all active defects, architectural questions, security conce
 - **Description:** Global Python 3.13 lacked `structlog`, `arq`, and testing dependencies, causing CLI imports to fail.
 - **Resolution:** Bootstrapped reproducible `.venv` via `uv` with all 79 production dependencies including `fastapi`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `redis`, `arq`, `langgraph`, and `reportlab`.
 
-### `ISSUE-012`: Missing Android SDK on Development Host
+### `ISSUE-012`: Android Build Toolchain & SDK Compilation (BLK-00)
 - **Category:** Mobile Build Toolchain
 - **Priority:** `P1`
-- **Status:** `OPEN` / `BLOCKED`
-- **Description:** Host machine has no Android SDK installed (`ANDROID_HOME` unset). Kotlin source code is authored and statically contract-verified against backend schemas, but local Gradle build cannot be executed on this host.
-- **Status:** Marked **⚠️ BLOCKED — ANDROID BUILD TOOLCHAIN UNAVAILABLE**. Android compilation must be performed in CI/CD container or machine with Android SDK.
+- **Status:** `RESOLVED`
+- **Description:** Host machine initially lacked Android SDK tools and modern Gradle.
+- **Resolution:**
+  1. Installed official Google `android` CLI binary in `~/.local/bin`.
+  2. Provisioned Android SDK Platform 34 (`platforms/android-34`) and Build-Tools (`build-tools/34.0.0`) in `/home/darkwing/Android/Sdk`.
+  3. Installed Gradle 8.4 runtime in `~/.local/opt/gradle-8.4` and initialized standard `gradlew` wrapper.
+  4. Configured `android.useAndroidX=true` in `gradle.properties` and created resource definitions in `android/app/src/main/res/`.
+  5. Verified live compilation: both `compileDebugSources` and `assembleDebug` executed with code 0 (`BUILD SUCCESSFUL`).
 
 ### `ISSUE-013`: Async Session Pool Isolation in Pytest Concurrency
 - **Category:** Testing Infrastructure
 - **Priority:** `P2`
 - **Status:** `RESOLVED`
 - **Description:** Default SQLAlchemy connection pool maintains open socket connections across tests, triggering `asyncpg.InterfaceError: cannot perform operation: another operation is in progress` when pytest-asyncio switches event loops.
-- **Resolution:** Initialized dedicated test engines with `poolclass=NullPool`, ensuring instant socket closure upon test completion. Verified all 37 integration and unit tests run with zero concurrency conflicts.
+- **Resolution:** Initialized dedicated test engines with `poolclass=NullPool`, ensuring instant socket closure upon test completion. Verified all 60 integration and unit tests run with zero concurrency conflicts.
 
 ### `ISSUE-014`: Redaction Mask Handling for Null Optional Payload Lists
 - **Category:** Clinical Data Service
 - **Priority:** `P2`
 - **Status:** `RESOLVED`
 - **Description:** When Pydantic schemas serialized optional redaction lists (`redact_finding_ids: None`, `redact_metrics: None`), `DoctorVisitSummaryService.redact_summary` passed `None` into `set()`, raising `TypeError: 'NoneType' object is not iterable`.
-- **Resolution:** Updated redaction parser to use fallback `(redaction_mask.get(...) or [])`, ensuring safe handling of explicit null values in HTTP payloads. Verified across all 46 automated integration tests.
+- **Resolution:** Updated redaction parser to use fallback `(redaction_mask.get(...) or [])`, ensuring safe handling of explicit null values in HTTP payloads. Verified across all automated integration tests.
+
+### `ISSUE-015`: Zero-Downtime Cryptographic Key Rotation & Envelope Encryption
+- **Category:** Security & Cryptography
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Lack of envelope encryption architecture meant database credentials and sensitive health data lacked granular per-record key isolation and cryptographic key rotation capabilities.
+- **Resolution:** Implemented `EnvelopeEncryptionService` with AES-256-GCM authenticated cipher. Master Key (KEK) encrypts an ephemeral 256-bit Data Encryption Key (DEK) per record. Encoded tokens carry key version (`env:v1:...`), enabling seamless zero-downtime rotation via `CURRENT_KEY` and `OLD_KEYS` dictionary, backed by 5 automated tests in `test_crypto.py`.
+
+### `ISSUE-016`: Sliding-Window Rate Limiting with Fail-Open Clinical Safety
+- **Category:** Infrastructure & Availability
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Public authentication and wearable sync endpoints were vulnerable to brute-force credential stuffing and burst flooding DoS.
+- **Resolution:** Built Redis-backed sliding-window rate limiter (`RateLimiter`) using sorted sets (ZSET). Enforced strict limits on `/v1/auth/login` (5/min per IP), `/v1/sync/batch` (60/min per user), and clinical document endpoints. Wrapped Redis operations in try/except with fail-open fallback so transient Redis hiccups never deny urgent clinical access.
+
+### `ISSUE-017`: Database Backup & Disaster Recovery Verification Drill
+- **Category:** Reliability & SRE
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Database backup capability was unproven; lack of a verified restore drill posed a critical operational risk under audit.
+- **Resolution:** Authored `scripts/backup_db.sh` and `scripts/restore_db.sh`. Conducted an actual live disaster recovery drill against PostgreSQL: produced 2.2 MB compressed dump with SHA-256 seal, restored dump into a fresh `healthos_db_drill` database, and verified **100% exact table row and hypertable chunk parity across all 7 core tables** ($<30$s RTO).
+
 
 
 

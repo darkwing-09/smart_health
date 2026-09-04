@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A privacy-first longitudinal personal health operating system"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [
     { name = "Personal Health OS Architecture Team" }
 ]
@@ -54,6 +54,10 @@ dev = [
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["backend"]
+include = ["app*"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -85,3 +89,5 @@ warn_unused_ignores = true
 asyncio_mode = "auto"
 testpaths = ["backend/tests"]
 python_files = ["test_*.py"]
+pythonpath = ["backend"]
+

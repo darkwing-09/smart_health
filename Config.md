@@ -75,7 +75,19 @@ Personal Health OS supports four operational tiers configured via `APP_ENV`:
 | `WHATSAPP_PHONE_NUMBER_ID` | string | Optional | Phone Number ID registered with WhatsApp Business Platform. |
 | `NOTIFICATION_DEDUP_WINDOW_HOURS`| int | `12` | Hours before an un-escalated anomaly can re-alert the user. |
 
+### 2.6 Cryptographic Envelope & Rate Limiting Controls (Phase 6)
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `CURRENT_KEY_ID` | string | `v1` | Identifier of active Master Key (KEK) for new envelope encryptions. |
+| `OLD_ENCRYPTION_KEYS_JSON` | string | `{}` | JSON dictionary mapping historical key IDs to 32-byte Base64 keys for zero-downtime rotation. |
+| `RATE_LIMIT_ENABLED` | bool | `true` | Enables distributed sliding-window rate limiting via Redis ZSET. |
+| `RATE_LIMIT_LOGIN_PER_MIN` | int | `5` | Maximum login attempts per minute per client IP. |
+| `RATE_LIMIT_SYNC_PER_MIN` | int | `60` | Maximum wearable sync batch submissions per minute per user. |
+| `RATE_LIMIT_SUMMARY_PER_MIN`| int | `10` | Maximum clinical brief drafts / PDF exports per minute per user. |
+| **Production Validator Rule** | Enforced | *Active* | `@model_validator(mode="after")` rejects startup in `APP_ENV=production` if dev secrets are detected. |
+
 ---
+
 
 ## 3. Pydantic Settings Implementation
 

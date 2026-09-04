@@ -1,0 +1,121 @@
+# Personal Health OS - Production Hardened Orchestration Specification
+# Enforces: non-root execution, read-only root filesystems, capability dropping, resource limits, and secrets injection.
+
+services:
+
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: healthos_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: healthos_db
+    ports:
+      - "127.0.0.1:5432:5432" # Bind strictly to loopback interface
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+      - ./docker/init-timescale.sql:/docker-entrypoint-initdb.d/init-timescale.sql:ro
+    secrets:
+      - db_user
+      - db_password
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthos_user -d healthos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: healthos_redis_prod
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-strong_redis_prod_password}
+      --rename-command FLUSHALL ""
+      --rename-command FLUSHDB ""
+      --rename-command CONFIG ""
+      --save 60 1000
+    ports:
+      - "127.0.0.1:6379:6379" # Bind strictly to loopback interface
+    volumes:
+      - redisdata_prod:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthos_api_prod
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "10001:10001"
+    environment:
+      APP_ENV: production
+      LOG_LEVEL: info
+      PORT: 8000
+    env_file:
+      - .env.production
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pgdata_prod:
+  redisdata_prod:
+
+secrets:
+  db_user:
+    file: ./docker/secrets/db_user.txt
+  db_password:
+    file: ./docker/secrets/db_password.txt

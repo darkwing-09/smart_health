@@ -14,13 +14,26 @@ from app.models.user import User
 security_bearer = HTTPBearer(auto_error=True)
 
 
+_redis_client: aioredis.Redis | None = None
+
+
+def get_redis_pool() -> aioredis.Redis:
+    """Returns a singleton Redis client using an async connection pool."""
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            max_connections=50
+        )
+    return _redis_client
+
+
 async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:
-    """Yields an async Redis connection client."""
-    client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
-    try:
-        yield client
-    finally:
-        await client.close()
+    """Yields an async Redis connection client from the connection pool."""
+    client = get_redis_pool()
+    yield client
+
 
 
 async def get_current_user(

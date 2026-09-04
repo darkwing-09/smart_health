@@ -35,17 +35,25 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Final lightweight runner stage
 FROM python:3.11-slim AS runner
 
+# Create non-root system group and user
+RUN groupadd -g 10001 appgroup && \
+    useradd -u 10001 -g appgroup -s /sbin/nologin -m appuser
+
 WORKDIR /app/backend
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 curl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder --chown=appuser:appgroup /root/.local /home/appuser/.local
+ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/backend
+ENV TMPDIR=/tmp
 
-COPY backend/ /app/backend/
-COPY alembic.ini /app/backend/alembic.ini
+COPY --chown=appuser:appgroup backend/ /app/backend/
+COPY --chown=appuser:appgroup alembic.ini /app/backend/alembic.ini
+
+# Switch to non-root execution
+USER 10001:10001
 
 EXPOSE 8000
 
@@ -53,3 +61,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+

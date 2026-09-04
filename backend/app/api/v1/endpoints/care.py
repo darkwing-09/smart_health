@@ -9,8 +9,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
 from app.models.user import User
 from app.models.care import UserApproval, ClinicalConsent, ClinicalSummary
+
 from app.models.finding import Finding
 from app.schemas.report import (
     CareResearchRequest,
@@ -189,7 +192,16 @@ async def draft_doctor_visit_summary(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> DoctorVisitSummaryResponse:
+    # Enforce rate limiting per user on expensive clinical synthesis
+    await check_rate_limit(
+        request=request,
+        scope="care:summary_draft",
+        limit=settings.RATE_LIMIT_SUMMARY_PER_MIN,
+        identifier=str(current_user.id)
+    )
+
     service = DoctorVisitSummaryService(db)
+
     client_ip = request.client.host if request.client else None
 
     summary = await service.generate_draft(
@@ -199,6 +211,7 @@ async def draft_doctor_visit_summary(
         custom_date_end=payload.custom_date_end,
         ip_address=client_ip
     )
+
 
     return DoctorVisitSummaryResponse(
         summary_id=summary.id,
@@ -340,14 +353,23 @@ async def approve_doctor_visit_summary(
 )
 async def export_doctor_visit_summary_pdf(
     summary_id: uuid.UUID,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    await check_rate_limit(
+        request=request,
+        scope="care:summary_export",
+        limit=settings.RATE_LIMIT_EXPORT_PER_MIN,
+        identifier=str(current_user.id)
+    )
+
     service = DoctorVisitSummaryService(db)
     pdf_path = await service.export_pdf(
         user_id=current_user.id,
         summary_id=summary_id
     )
+
 
     if not os.path.exists(pdf_path):
         raise HTTPException(

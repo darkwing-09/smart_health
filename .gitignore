@@ -1,8 +1,9 @@
 # Python
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
+**/*.pyc
 .Python
 env/
 build/
@@ -34,6 +35,7 @@ ENV/
 
 # Android & Gradle
 .gradle/
+**/.gradle/
 build/
 */build/
 *.iml
@@ -44,5 +46,7 @@ captures/
 .externalNativeBuild/
 .cxx/
 
-# Data artifacts
+# Data & Database Backups
+backups/
+*.dump
 data/reports/*.pdf

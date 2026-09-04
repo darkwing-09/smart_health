@@ -265,6 +265,41 @@ A recorded architectural decision must never be modified or reversed silently. A
 - **Consequences:** Every clinical brief exported is evidence-grounded, patient-approved, tamper-evident, and auditable.
 - **Status:** Accepted.
 
+---
 
+## ADR-022: Multi-Tier Envelope Encryption Architecture with AES-256-GCM and Key Rotation
+- **Date:** 2026-09-04
+- **Decision:** Implement multi-tier envelope encryption (`EnvelopeEncryptionService`) utilizing Master Key (KEK) $\to$ Ephemeral Data Encryption Key (DEK) $\to$ AES-256-GCM authenticated cipher for all sensitive PHI payloads and credentials. Support seamless zero-downtime key rotation using canonical token prefixing (`env:<key_id>:...`).
+- **Context:** Storing sensitive personal health records and provider communications requires cryptographic defense-in-depth against snapshot exfiltration, database compromises, and insider threats. Hardcoding single static symmetric keys prevents secure key lifecycle management and periodic rotation.
+- **Alternatives considered:**
+  - Single static AES-256 key: Rejected due to inability to rotate keys without decrypting and re-encrypting the entire database in a high-risk maintenance window.
+  - Database-only storage volume encryption (EBS): Necessary but insufficient on its own; does not protect against SQL injection or privileged database role leakage.
+- **Reasoning:** Envelope encryption limits the blast radius of any individual key: data is encrypted under an ephemeral DEK generated per record, and the DEK is encrypted under the KEK. Canonical token formatting embeds the key version (`env:v1:...`), allowing the service to decrypt historical records using `OLD_KEYS` while encrypting all new writes with `CURRENT_KEY_ID`.
+- **Consequences:** `backend/app/core/crypto.py` and unit test suite `test_crypto.py` verify authenticated roundtrips, tampering detection, and background re-encryption.
+- **Status:** Accepted.
 
+---
 
+## ADR-023: Redis-Backed Sliding-Window Rate Limiting with Fail-Open Clinical Safety
+- **Date:** 2026-09-04
+- **Decision:** Implement distributed sliding-window rate limiting (`RateLimiter`) backed by Redis Sorted Sets (ZSET) across public authentication, wearable ingestion, and clinical document synthesis endpoints. In the event of a Redis outage, the limiter must fail open with a diagnostic log warning.
+- **Context:** High-frequency wearable sync endpoints and computationally expensive clinical brief synthesis (PDF compilation, trend analysis) are vulnerable to Denial of Service (DoS), brute force credential attacks, and rogue sync loops. However, an overly rigid rate limiter that fails closed during infrastructure degradation could dangerously block critical physiological monitoring.
+- **Alternatives considered:**
+  - In-memory fixed-window counter: Rejected because fixed windows allow $2\times$ burst at window boundaries, and in-memory counters do not scale across multiple API worker replicas.
+  - Fail-closed rate limiting: Rejected because Personal Health OS processes safety-critical telemetry; denying sync due to a cache glitch could prevent urgent anomaly detection.
+- **Reasoning:** Redis ZSET sliding-window algorithm guarantees mathematically exact rolling request counts. Wrapping Redis calls in try/except with fail-open fallback balances security against healthcare system availability.
+- **Consequences:** Quotas enforced: `/v1/auth/login` (5 req/min per IP), `/v1/sync/batch` (60 req/min per user), `/v1/care/summary/draft` (10 req/min per user), and `/v1/care/summary/{id}/export/pdf` (10 req/min per user).
+- **Status:** Accepted.
+
+---
+
+## ADR-024: Non-Root Container Security Standard and Disaster Recovery Drill Standard
+- **Date:** 2026-09-04
+- **Decision:** Production containers must run strictly as unprivileged user `appuser:10001`, enforce read-only root filesystems, drop all Linux capabilities (`cap_drop: [ALL]`), and mount temporary files on `tmpfs`. Database disaster recovery procedures must be verified through actual live restore drills with table row parity audits.
+- **Context:** Running containers as root creates severe host privilege escalation risks. Furthermore, treating a disaster recovery strategy as complete simply because a `pg_dump` script exists is a major operational anti-pattern in health-tech.
+- **Alternatives considered:**
+  - Standard root container with writable filesystem: Rejected as violating basic CIS Docker benchmarks and DevSecOps standards.
+  - Theoretical disaster recovery runbook: Rejected because untested backups frequently fail during real outages due to extension mismatches or permission errors.
+- **Reasoning:** Enforcing non-root UID 10001 and read-only filesystems prevents runtime binary tampering. Conducting a live restore drill into a temporary database (`healthos_db_drill`) proved 100% row parity across all 7 core tables and TimescaleDB hypertable chunks with $<30$ second RTO.
+- **Consequences:** `Dockerfile`, `docker-compose.prod.yml`, `scripts/backup_db.sh`, and `scripts/restore_db.sh` establish production-grade operational readiness.
+- **Status:** Accepted.

@@ -1,7 +1,7 @@
 """Application configuration loaded via Pydantic BaseSettings."""
 
 from typing import List
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,9 +29,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     ENCRYPTION_KEY_AES256: str = Field(
-        default="dGVzdF9hZXNfZW5jcnlwdGlvbl9rZXlfZm9yX2Rldl8wMDAwMDA=",
+        default="MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
         description="Base64-encoded 32-byte key for AES-GCM field encryption"
     )
+
 
     # Database & Storage
     DATABASE_URL: str = Field(
@@ -90,5 +91,38 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""
     OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4317"
 
+    # Key Rotation & Envelope Encryption
+    ENCRYPTION_KEY_ID: str = "v1"
+    ENCRYPTION_OLD_KEYS_JSON: str = "{}"  # JSON mapping of version_id -> base64_key
+
+    # Rate Limiting (Redis-backed)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN_PER_MIN: int = 5
+    RATE_LIMIT_SYNC_PER_MIN: int = 60
+    RATE_LIMIT_SUMMARY_PER_MIN: int = 10
+    RATE_LIMIT_EXPORT_PER_MIN: int = 10
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Enforces zero-default-secrets and strict cryptography when in production."""
+        is_prod = self.APP_ENV.lower() in ("production", "prod")
+        default_secret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        default_enc_key = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+
+
+        if is_prod:
+            if self.SECRET_KEY == default_secret or len(self.SECRET_KEY) < 32:
+                raise ValueError("CRITICAL: Production deployment requires a secure, non-default SECRET_KEY >= 32 chars.")
+            if self.ENCRYPTION_KEY_AES256 == default_enc_key or not self.ENCRYPTION_KEY_AES256:
+                raise ValueError("CRITICAL: Production deployment requires a secure, non-default ENCRYPTION_KEY_AES256.")
+            if "healthos_dev_password" in self.DATABASE_URL:
+                raise ValueError("CRITICAL: Production DATABASE_URL cannot contain the default development password.")
+            if self.DEBUG:
+                raise ValueError("CRITICAL: DEBUG mode cannot be enabled in production.")
+            if "*" in self.CORS_ORIGINS:
+                raise ValueError("CRITICAL: Wildcard CORS_ORIGINS ('*') cannot be enabled in production.")
+        return self
+
 
 settings = Settings()
+

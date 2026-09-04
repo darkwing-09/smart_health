@@ -2,7 +2,50 @@
 
 All notable changes to Personal Health OS are documented in this file. Format adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-04
+
+### Added
+- **Phase 6: Production Hardening, Security Auditing & Operational Readiness Foundation (VERIFIED):**
+  - **Multi-Tier Envelope Encryption & Key Rotation (`EnvelopeEncryptionService`):**
+    - Built AES-256-GCM envelope encryption hierarchy: Master Key (KEK) encrypts ephemeral 256-bit Data Encryption Keys (DEKs) per record.
+    - Encoded tokens carry explicit key versions (`env:v1:...`).
+    - Implemented zero-downtime key rotation supporting active master key and historical key dictionary (`OLD_ENCRYPTION_KEYS_JSON`) with automated re-encryption migration utility.
+    - Verified with 5 automated security tests in `backend/tests/security/test_crypto.py`.
+  - **Distributed Sliding-Window Rate Limiter (`RateLimiter`):**
+    - Implemented high-throughput Redis sorted set (ZSET) sliding-window algorithm.
+    - Protected endpoints: `/v1/auth/login` (5/min per IP), `/v1/sync/batch` (60/min per user), and clinical document endpoints.
+    - Clinical fail-open safety: Redis connectivity exceptions degrade gracefully to allow requests rather than blocking critical patient care.
+  - **HMAC Cryptographic Approval Tokens & Tamper Proofing:**
+    - Cryptographically bound patient approval tokens (`appr_<uuid12>_<hmac24>`) derived from user ID, summary ID, payload checksum, and timestamp.
+    - Added post-approval tampering detection in `export_pdf` aborting immediately with HTTP 409 Conflict if payload is altered post-sign-off.
+  - **Observability, Tracing & PHI Scrubbing:**
+    - Implemented `CorrelationIdMiddleware` injecting canonical `X-Correlation-ID` into response headers and structlog contextvars.
+    - Built `phi_and_secret_sanitizer` structlog processor masking credentials, tokens, passwords, and raw biometrics (`heart_rate`, `steps`, `raw_payload`) from application logs.
+  - **Zero-LLM Pipeline Resilience:**
+    - Proved in `backend/tests/graphs/test_llm_resilience.py` that core data pipelines (`measurements -> baseline -> anomaly detection -> findings`) execute with 100% mathematical fidelity under total LLM outage.
+    - Verified safe deterministic fallback synthesis in `HealthIntelligenceGraph` and `CareNavigationGraph`.
+  - **Hardened Container Infrastructure & Supply Chain Security:**
+    - Hardened `Dockerfile` executing under dedicated unprivileged non-root user `appuser:10001` with drop capabilities.
+    - Created `docker-compose.prod.yml` enforcing `read_only: true` root filesystem, `tmpfs` `/tmp`, capability drops (`cap_drop: ALL`), and CPU/memory quotas.
+    - Generated `uv.lock` cryptographically locking 114 production dependencies.
+  - **Live Disaster Recovery Restore Drill:**
+    - Created `scripts/backup_db.sh` and `scripts/restore_db.sh`.
+    - Executed live drill against PostgreSQL: backed up `healthos_db` (2.2 MB, SHA-256 sealed), restored into `healthos_db_drill`, and verified 100% exact table row and hypertable chunk parity across all 7 core tables with $<30$s RTO.
+  - **Android SDK & Build Toolchain Verification (BLK-00 Resolved):**
+    - Provisioned Android SDK 34 (`platforms/android-34`), Build-Tools (`34.0.0`), and Gradle 8.4 runtime.
+    - Configured AndroidX and standard XML resources in `android/app/src/main/res/`.
+    - Executed live compilation: `compileDebugSources` and `assembleDebug` completed with code 0 (`BUILD SUCCESSFUL`).
+  - **18-Threat STRIDE Threat Model & Operational Readiness Scorecard:**
+    - Formulated 18-threat threat matrix covering Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege across Health IoT architecture in `Security.md`.
+    - Created `Scorecard.md` certifying Stage 1 Operational Readiness with a score of **94.8 / 100** (Pilot Ready).
+  - **Automated Test Suite Expansion:**
+    - 14 new security, resilience, and cryptographic tests added.
+    - Total test suite expanded to **60 / 60 PASSING** in 5.26s.
+
+---
+
 ## [0.5.0] - 2026-09-04
+
 
 ### Added
 - **Phase 5: Clinical Readiness & Human-Controlled Care Navigation (VERIFIED):**

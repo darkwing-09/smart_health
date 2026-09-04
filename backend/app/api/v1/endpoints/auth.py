@@ -1,13 +1,14 @@
-"""Authentication and Token Management Endpoints."""
-
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from jose import jwt
 from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.core.config import settings
+from app.core.rate_limit import check_rate_limit
+from app.models.audit import AuditLog
 from app.models.user import User
 from app.schemas.timeline import LoginRequest, TokenResponse
 
@@ -16,17 +17,44 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
-async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def login(
+    payload: LoginRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+) -> TokenResponse:
+    # 1. Enforce sliding-window rate limit per IP
+    await check_rate_limit(
+        request=request,
+        scope="auth:login",
+        limit=settings.RATE_LIMIT_LOGIN_PER_MIN
+    )
+
+    client_ip = request.client.host if request.client else None
     stmt = select(User).where(User.email == payload.email)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
     if not user or not pwd_context.verify(payload.password, user.hashed_password):
+        if user:
+            # Audit failed login attempt for existing user
+            audit_entry = AuditLog(
+                id=uuid.uuid4(),
+                user_id=user.id,
+                actor="client:ip",
+                action="login_failed",
+                target_ref=f"user:{user.id}",
+                detail={"reason": "invalid_credentials", "email": payload.email},
+                ip_address=client_ip
+            )
+            db.add(audit_entry)
+            await db.commit()
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"}
         )
+
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expire = datetime.now(timezone.utc) + access_token_expires
@@ -40,7 +68,21 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> To
         algorithm="HS256"
     )
 
+    # Audit successful login
+    audit_success = AuditLog(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        actor="user:auth",
+        action="login_success",
+        target_ref=f"user:{user.id}",
+        detail={"method": "password_argon2"},
+        ip_address=client_ip
+    )
+    db.add(audit_success)
+    await db.commit()
+
     return TokenResponse(
+
         access_token=encoded_jwt,
         refresh_token=refresh_token,
         token_type="bearer",

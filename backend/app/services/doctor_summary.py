@@ -8,6 +8,7 @@ import os
 import uuid
 import json
 import hashlib
+import hmac
 from copy import deepcopy
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
@@ -15,6 +16,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
+from app.core.config import settings
+from app.core.crypto import crypto_service
 from app.models.care import ClinicalConsent, ClinicalSummary
 from app.models.finding import Finding
 from app.models.baseline import Baseline
@@ -29,6 +32,7 @@ from app.graphs.care_nav import build_care_nav_graph, CLINICAL_DISCLAIMER
 from app.services.doctor_summary_pdf import DoctorVisitSummaryPdfService
 
 
+
 class DoctorVisitSummaryService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -36,9 +40,11 @@ class DoctorVisitSummaryService:
 
     @staticmethod
     def _compute_checksum(payload: Dict[str, Any]) -> str:
-        """Calculates canonical SHA-256 checksum of summary document."""
-        serialized = json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+        """Calculates canonical SHA-256 checksum of summary document, excluding checksum key itself."""
+        clean_payload = {k: v for k, v in payload.items() if k != "checksum_sha256"}
+        serialized = json.dumps(clean_payload, sort_keys=True, default=str).encode("utf-8")
         return hashlib.sha256(serialized).hexdigest()
+
 
     async def generate_draft(
         self,
@@ -382,7 +388,11 @@ class DoctorVisitSummaryService:
         # Validate that associated consent remains active
         await self.consent_service.validate_consent_active(user_id=user_id, consent_id=summary.consent_id)
 
-        approval_token = f"appr_{uuid.uuid4().hex}"
+        # Cryptographically bind approval token to user, summary, and current checksum
+        token_binding = f"{user_id}:{summary_id}:{summary.checksum_sha256}:{now.isoformat()}"
+        token_sig = hmac.new(settings.SECRET_KEY.encode("utf-8"), token_binding.encode("utf-8"), hashlib.sha256).hexdigest()[:24]
+        approval_token = f"appr_{uuid.uuid4().hex[:12]}_{token_sig}"
+
         payload = deepcopy(summary.summary_payload)
         payload["status"] = "approved"
         payload["approval_token"] = approval_token
@@ -424,7 +434,7 @@ class DoctorVisitSummaryService:
     ) -> str:
         """
         Renders the approved summary as a vector PDF.
-        Strictly enforces approval state and active consent.
+        Strictly enforces approval state, valid token, active consent, and cryptographic integrity.
         """
         now = datetime.now(timezone.utc)
         stmt = select(ClinicalSummary).where(
@@ -438,14 +448,23 @@ class DoctorVisitSummaryService:
                 detail="Clinical summary not found"
             )
 
-        if summary.status != "approved":
+        if summary.status != "approved" or not summary.approval_token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Clinical summary must be approved by patient before PDF export"
+                detail="Clinical summary must be approved by patient with a valid approval token before PDF export"
             )
 
         # Enforce that consent is currently active and not revoked
         await self.consent_service.validate_consent_active(user_id=user_id, consent_id=summary.consent_id)
+
+        # Enforce cryptographic integrity verification against payload tampering
+        computed_checksum = self._compute_checksum(summary.summary_payload)
+        if computed_checksum != summary.checksum_sha256:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Clinical summary integrity violation: summary payload was modified post-approval"
+            )
+
 
         filename = f"doctor_visit_summary_{summary.id}_{int(now.timestamp())}.pdf"
         output_path = os.path.join(output_dir, filename)
