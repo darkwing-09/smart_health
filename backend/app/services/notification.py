@@ -16,6 +16,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from sqlalchemy import and_, desc, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit import AuditLog
@@ -245,10 +246,11 @@ class NotificationService:
         should_hold = is_quiet and not policy.overrides_quiet_hours
 
         # 5. Create Notification Record with State Machine
+        window_bucket = int(now.timestamp() // (policy.dedup_window_hours * 3600))
         idempotency_key = (
-            f"notif_{user_id}_{finding.id}_{severity}_{now.strftime('%Y%m%d%H%M')}"
+            f"notif_{user_id}_{finding.id}_{severity}_{int(now.timestamp())}"
             if is_escalation else
-            f"notif_{user_id}_{finding.id}_{primary_channel.value}"
+            f"notif_{user_id}_{finding.id}_{primary_channel.value}_{window_bucket}"
         )
 
         notif = Notification(
@@ -277,8 +279,17 @@ class NotificationService:
                 "release_time_utc": release_time_utc.isoformat() if should_hold else None,
             }
         )
-        self.db.add(notif)
-        await self.db.flush()
+        try:
+            self.db.add(notif)
+            await self.db.flush()
+        except IntegrityError:
+            await self.db.rollback()
+            stmt_exist = select(Notification).where(Notification.idempotency_key == idempotency_key)
+            existing_notif = (await self.db.scalars(stmt_exist)).first()
+            if existing_notif:
+                logger.info(f"Concurrent race condition handled: returning existing notification {existing_notif.id}")
+                return existing_notif
+            raise
 
         # State transition: CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING
         NotificationStateMachine.validate_transition(notif.state, NotificationState.POLICY_EVALUATED)
@@ -491,6 +502,24 @@ class NotificationService:
             event_type="notification.updated",
             data={"notification_id": str(notif.id), "state": notif.state, "dismissed_at": now.isoformat()}
         )
+
+        await self.db.commit()
+        await self.db.refresh(notif)
+        return notif
+
+    async def expire_notification(
+        self,
+        user_id: uuid.UUID,
+        notification_id: uuid.UUID
+    ) -> Optional[Notification]:
+        """Transitions an unacknowledged/stale notification to EXPIRED."""
+        notif = await self.get_notification_by_id(user_id, notification_id)
+        if not notif:
+            return None
+
+        NotificationStateMachine.validate_transition(notif.state, NotificationState.EXPIRED)
+        notif.state = NotificationState.EXPIRED.value
+        notif.expires_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         await self.db.refresh(notif)

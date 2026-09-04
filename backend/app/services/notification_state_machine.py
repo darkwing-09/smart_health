@@ -88,6 +88,7 @@ class NotificationStateMachine:
         NotificationState.DELIVERED: {
             NotificationState.ACKNOWLEDGED,
             NotificationState.DISMISSED,
+            NotificationState.EXPIRED,
         },
         NotificationState.ACKNOWLEDGED: {
             NotificationState.DISMISSED,

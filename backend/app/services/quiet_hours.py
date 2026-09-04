@@ -32,7 +32,7 @@ def get_safe_zoneinfo(tz_name: Optional[str]) -> ZoneInfo:
         return ZoneInfo(DEFAULT_TIMEZONE)
     try:
         return ZoneInfo(tz_name.strip())
-    except ZoneInfoNotFoundError:
+    except (ZoneInfoNotFoundError, ValueError, Exception):
         logger.warning(f"Unrecognized timezone '{tz_name}', falling back to {DEFAULT_TIMEZONE}")
         return ZoneInfo(DEFAULT_TIMEZONE)
 
