@@ -26,7 +26,7 @@ object HealthOSNotificationManager {
                 description = "Critical physiological alerts overriding quiet hours and bedtime"
                 enableVibration(true)
                 setShowBadge(true)
-                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE
             }
 
             val importantChannel = NotificationChannel(
@@ -76,6 +76,7 @@ object HealthOSNotificationManager {
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(priority)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()

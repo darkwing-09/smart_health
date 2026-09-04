@@ -91,8 +91,16 @@ Personal Health OS supports four operational tiers configured via `APP_ENV`:
 | `RATE_LIMIT_SUMMARY_PER_MIN`| int | `10` | Maximum clinical brief drafts / PDF exports per minute per user. |
 | **Production Validator Rule** | Enforced | *Active* | `@model_validator(mode="after")` rejects startup in `APP_ENV=production` if dev secrets are detected. |
 
----
+### 2.7 Pilot Concurrency, ActionGate & Hardware Detection (Phase 8)
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `LOAD_TEST_WORKERS` | int | `500` | Target request volume for high-concurrency ingestion stress testing. |
+| `LOAD_TEST_CONCURRENCY` | int | `50` | Concurrent asynchronous client worker connections. |
+| `ACTION_GATE_TOKEN_EXPIRY_SEC` | int | `3600` | Expiration window for HMAC-SHA256 clinical summary approval tokens. |
+| `HEALTH_CONNECT_MIN_SDK` | int | `34` | Target Android SDK version for Health Connect permissions. |
+| `ADB_PATH` | string | `/home/darkwing/Android/Sdk/platform-tools/adb` | Path to Android Debug Bridge binary. |
 
+---
 
 ## 3. Pydantic Settings Implementation
 
@@ -162,5 +170,20 @@ class Settings(BaseSettings):
     WHATSAPP_ACCESS_TOKEN: str = ""
     WHATSAPP_PHONE_NUMBER_ID: str = ""
 
+    # Envelope Encryption & Key Rotation
+    ENCRYPTION_KEY_ID: str = "v1"
+    ENCRYPTION_OLD_KEYS_JSON: str = "{}"
+
+    # Rate Limiting (Redis-backed sliding window)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN_PER_MIN: int = 5
+    RATE_LIMIT_SYNC_PER_MIN: int = 60
+    RATE_LIMIT_SUMMARY_PER_MIN: int = 10
+    RATE_LIMIT_EXPORT_PER_MIN: int = 10
+
+    # Production Security Validator
+    # Enforces zero-default-secrets in production via Pydantic model validator
+
 settings = Settings()
 ```
+

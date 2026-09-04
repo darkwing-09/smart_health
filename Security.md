@@ -250,3 +250,63 @@ Phase 7 implements safety-critical notification delivery with defense-in-depth i
 
 ### 14.4 Life-Safety Invariance
 - **Deterministic Level 4 Override:** Quiet hours and minimum severity thresholds are evaluated in deterministic code. User preference filters cannot suppress Level 4 Urgent physiological alerts.
+
+---
+
+## 15. Phase 8 Pilot Security, Lockscreen Privacy & Cryptographic ActionGate Binding
+
+Phase 8 hardens and verifies the security architecture against hostile adversarial inputs, multi-tenant tampering, lockscreen eavesdropping, and consent forgery:
+
+### 15.1 Android Lockscreen PHI Masking (`NotificationCompat.VISIBILITY_PRIVATE`)
+To prevent visual snooping of sensitive biometric information on unlocked ambient displays or lockscreens:
+- Both Urgent (`CHANNEL_URGENT_ID`) and Important (`CHANNEL_IMPORTANT_ID`) Android notification builders configure `setVisibility(NotificationCompat.VISIBILITY_PRIVATE)`.
+- A dedicated, sanitized public version of the notification is attached via `setPublicVersion()`:
+  - Public Title: `"Personal Health OS - Health Update"`
+  - Public Content: `"Unlock device to view health insights."`
+- The actual physiological findings and advisories are only rendered when the device is fully authenticated and unlocked by the owner.
+- Formally verified via Android unit test suite `android/app/src/test/java/com/healthos/service/NotificationPrivacyTest.kt`.
+
+### 15.2 Cryptographic ActionGate Approval Token Binding
+To prevent replay, forgery, and unauthorized generation of clinical export documents:
+- Doctor Visit Summary approvals require an HMAC-SHA256 cryptographically bound token:
+  $$\text{Token} = \text{HMAC-SHA256}_{\text{SECRET\_KEY}}(\text{user\_id} \mathbin{\Vert} \text{summary\_id} \mathbin{\Vert} \text{timestamp})$$
+- Token format: `<timestamp>:<hex_digest>` with a mandatory 1-hour expiration window.
+- The `ActionGate` validates:
+  1. Signature integrity using constant-time comparison (`hmac.compare_digest`).
+  2. Timestamp freshness ($|\text{current\_time} - \text{timestamp}| \le 3600$).
+  3. Strict cryptographic binding to the authenticated `user_id` and target `summary_id`.
+- Attempts to export PDFs with forged, replayed, mismatched, or expired tokens result in immediate rejection (`HTTP 403 Forbidden`).
+
+### 15.3 Adversarial Pilot Security & Multi-Tenant Verification
+The security boundaries were subjected to 11 adversarial integration test scenarios (`test_pilot_adversarial_security.py`):
+1. **Cross-Tenant Data Tampering:** Ingestion of batch with forged `user_id` is blocked or rejected.
+2. **Finding State Hijacking:** Cross-user finding acknowledgement returns `404 Not Found`.
+3. **Clinical Consent Bypass:** Exporting clinical summaries without active consent returns `403 Forbidden`.
+4. **Forged PDF Digest Verification:** Tampered PDF content triggers checksum mismatch error.
+5. **SQL Injection Resistance:** SQL syntax characters in string fields safely parameterized via SQLAlchemy.
+6. **XSS & Script Injection:** `<script>` tags in finding notes/titles neutralized via escaping.
+7. **Rate Limit Enforcement:** Rapid bursts exceeding quota receive `HTTP 429 Too Many Requests`.
+8. **Concurrent Ingestion Race Conditions:** Simultaneous batch posts with identical idempotency keys deduplicated safely.
+9. **ActionGate Approval Token Binding:** Forged/mismatched tokens denied export access (`HTTP 403`).
+10. **ActionGate Expired Token Rejection:** Tokens older than 3600s strictly rejected.
+11. **Tenant Isolation Across All Endpoints:** Zero data cross-contamination between simulated tenants.
+
+---
+
+## 16. Phase 9 Production Operations Security, DPDP Consent Hard-Stop & SRE Governance
+
+### 16.1 DPDP Act 2023 Consent Revocation Hard-Stop
+Under India's Digital Personal Data Protection (DPDP) Act 2023, data principals possess the unconditional right to withdraw consent at any time. When a participant revokes consent via `POST /v1/care/consent/{id}/revoke`:
+- Status transitions immediately to `revoked` in `clinical_consents`.
+- All clinical summary drafting, viewing, patient approval, and ReportLab PDF export endpoints return immediate `HTTP 403 Forbidden` or `HTTP 404 Not Found`.
+- Verified under `test_p9_09_dpdp_consent_revocation_hard_stop`.
+
+### 16.2 Zero-Information-Disclosure (404 Concealment Boundary)
+To defeat cross-tenant enumeration attacks, unauthorized access to resources owned by another user always returns **HTTP 404 Not Found** rather than HTTP 403 Forbidden. This ensures an attacker cannot differentiate between an ID that does not exist and an ID that belongs to another participant. Verified under `test_p9_07_multi_tenant_isolation_boundary`.
+
+### 16.3 Cryptographic Key Isolation & Rotation
+- `SECRET_KEY` (used for JWT authentication) and `ACTION_GATE_SECRET` (used for clinical approval HMAC signatures) are managed as separate, high-entropy secrets.
+- Production startup strictly rejects default fallback keys via Pydantic model validation.
+- All operational incident escalation steps adhere to `INCIDENT_RESPONSE_RUNBOOK.md` and participant safety governance is enforced via `PILOT_SAFETY_PROTOCOL.md`.
+
+

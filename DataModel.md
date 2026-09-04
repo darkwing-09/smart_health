@@ -336,3 +336,68 @@ CREATE TABLE clinical_summaries (
 CREATE INDEX idx_clinical_summaries_user_status ON clinical_summaries(user_id, status);
 ```
 
+### 2.9 Notifications, User Preferences & Pilot Ingestion Schema (Phase 7 & 8)
+
+```sql
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    finding_id UUID REFERENCES findings(id) ON DELETE SET NULL,
+    channel VARCHAR(32) NOT NULL DEFAULT 'in_app', -- 'in_app', 'fcm', 'websocket', 'email'
+    severity VARCHAR(32) NOT NULL DEFAULT 'info', -- 'info', 'insight', 'attention', 'important', 'urgent'
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    state VARCHAR(32) NOT NULL DEFAULT 'created', -- 'created', 'policy_evaluated', 'dedup_checked', 'queued', 'dispatching', 'delivered', 'acknowledged', 'dismissed', 'failed', 'dead_letter'
+    delivery_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    sent_at TIMESTAMPTZ,
+    acknowledged_at TIMESTAMPTZ,
+    dismissed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_notifications_user_state ON notifications(user_id, state);
+CREATE INDEX idx_notifications_finding ON notifications(finding_id);
+
+CREATE TABLE user_preferences (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
+    quiet_hours_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    quiet_hours_start VARCHAR(8) NOT NULL DEFAULT '22:00',
+    quiet_hours_end VARCHAR(8) NOT NULL DEFAULT '07:00',
+    fcm_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    websocket_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    email_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    whatsapp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    min_notification_severity VARCHAR(32) NOT NULL DEFAULT 'info',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE device_fcm_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device_token TEXT NOT NULL UNIQUE,
+    device_type VARCHAR(32) NOT NULL DEFAULT 'android',
+    app_version VARCHAR(32),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_device_tokens_user ON device_fcm_tokens(user_id, is_active);
+
+CREATE TABLE sync_batches (
+    id UUID PRIMARY KEY, -- Idempotency-Key UUID from client
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    accepted_count INTEGER NOT NULL DEFAULT 0,
+    duplicate_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_sync_batches_user_created ON sync_batches(user_id, created_at DESC);
+```
+
+### 2.10 TimescaleDB Hypertable & Provenance Invariants
+- **Hypertable Partitioning:** `measurements` is partitioned on `recorded_at` into 7-day chunks.
+- **Composite Primary Key:** `(recorded_at, id, user_id)` strictly fulfills TimescaleDB constraint requirements for hypertables.
+- **Immutable Provenance:** Every record retains immutable `ingested_at TIMESTAMPTZ` alongside original device `recorded_at`, ensuring complete forensic lineage.
+- **Phase 9 Data Quality Taxonomy:** Records are tagged with deterministic flags: `nominal` (valid sensor reading), `estimated` (interpolated step counter), `gap_filled` (coarse epoch aggregation), `missing` (sensor detachment / zero HR+steps window without imputation), or `invalid` (quarantined impossible biological value or clock skew > 5 min future timestamp). Quarantined records are isolated from statistical baselines and alert evaluation.
+
+
+

@@ -2,6 +2,90 @@
 
 All notable changes to Personal Health OS are documented in this file. Format adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-09-04
+
+### Added
+- **Production Pilot Hardening & Operational Cadence Verification:**
+  - **Instant Session & JWT Token Revocation (`/v1/auth/logout` & Redis Blacklist):**
+    - Included unique JWT ID (`jti`) in access token payloads upon authentication.
+    - Added `POST /v1/auth/logout` endpoint storing `revoked_token:{jti}` in Redis with time-to-live matching remaining token lifespan.
+    - Enhanced `get_current_user` dependency in `app/api/deps.py` to check Redis blacklist before authorizing requests, rejecting revoked tokens with HTTP 401 Unauthorized.
+    - Added security test suite `backend/tests/security/test_token_revocation.py` verifying immediate token invalidation, multi-user token isolation, and audit logging.
+  - **Atomic High-Concurrency Batch Ingestion Safety:**
+    - Hardened `IngestionService.process_batch` with `insert(SyncBatch).values(...).on_conflict_do_nothing(index_elements=["id"])`.
+    - Eliminates race conditions during simultaneous client retry bursts with identical idempotency keys, cleanly returning `ALREADY_PROCESSED` with zero database exceptions.
+    - Added integration test `backend/tests/integration/test_ingest_concurrency.py` verifying 10 simultaneous concurrent requests without failure.
+  - **Background Worker Daily Cadence Implementation & Verification:**
+    - Replaced stub tasks in `backend/app/workers/worker.py` with full production implementations:
+      - `cron_daily_baseline_recompute`: Recomputes rolling 30-day baseline distributions for active users across 5 standard metrics (`heart_rate`, `steps`, `spo2`, `hrv`, `respiratory_rate`), with per-user error isolation and baseline establishment rules.
+      - `cron_daily_report_pipeline`: Aggregates 24-hour vitals, evaluates data quality, compiles vector PDFs via ReportLab with statutory disclaimers, and persists `Report` records with idempotent updates. Gracefully degrades to `degraded_trends_only` on sparse data.
+    - Added comprehensive integration test suite `backend/tests/integration/test_worker_cadence_e2e.py` verifying baseline computation, ReportLab PDF generation, zero-data degradation, and REST API download endpoints.
+  - **Automated Test Suite Expansion:**
+    - Expanded backend automated test suite from 147 to **153 / 153 PASSING (100%)** in 14.85s.
+    - Total test suite now **161 / 161 PASSING** (153 backend + 8 Android unit tests).
+
+## [0.9.0] - 2026-09-04
+
+### Added
+
+- **Phase 9: Real-World Pilot Launch, Hardware Validation & Production Operations (VERIFIED & AUDITED):**
+  - **Phase 9 Integration Test Suite (`test_phase9_pilot_operations.py`):**
+    - 10 automated end-to-end integration tests validating real-world operational invariants: multi-metric ingestion across 9 biometrics, TimescaleDB hypertable chunk persistence, end-to-end traversal to ReportLab vector PDF, 24-hour offline sync recovery with idempotent replay, clock skew resilience and future timestamp quarantining, sensor detachment quality tagging without synthetic imputation, quiet hours vs Level 4 emergency override invariance, multi-tenant resource isolation (404 concealment), ActionGate HMAC approval token security & freshness, DPDP Act 2023 consent revocation hard stop, and Kubernetes/ECS container liveness (`/health`) and readiness (`/ready`) probes.
+  - **Production Pilot Operational Runbooks:**
+    - `PILOT_DEPLOYMENT_CHECKLIST.md`: Formal 7-stage deployment protocol spanning pre-flight hardware gating, TimescaleDB hypertable validation, security boundaries, container health probes, worker concurrency, notification verification, and go/no-go decision gates.
+    - `INCIDENT_RESPONSE_RUNBOOK.md`: Standard operating procedures for Sev 1–4 incident triage, MTTA/MTTR response bounds, on-call roles, database connection exhaustion, worker queue backlogs, LLM outages, FCM push failures, PITR backup/restore verification, and zero-downtime rollback SOP.
+    - `PILOT_SAFETY_PROTOCOL.md`: Comprehensive participant safety protocol covering inclusion/exclusion criteria, DPDP Act 2023 informed consent, wearable sensor fit SOP, optical PPG limitations, non-diagnostic communication standards (Rule H1), emergency escalation dialers (`tel:112`/`tel:911`), and weekly clinical oversight.
+  - **Architecture Decision Records:**
+    - `ADR-034`: Production Pilot Architecture, SRE Observability & Operational Runbooks.
+    - `ADR-035`: Controlled Pilot Participant Safety Protocol & Non-Diagnostic Clinical Boundaries.
+  - **Automated Regression Test Suite Expansion:**
+    - Total backend automated test suite expanded from 137 to **147 / 147 PASSING (100%)** in 13.50s.
+    - Android client regression: 8/8 unit tests passing, 0 lint errors, debug build clean.
+  - **Readiness Scorecard Update:**
+    - Upgraded production readiness scorecard from 96.8 to **97.9 / 100** with verdict: **CONDITIONALLY READY FOR CONTROLLED PILOT**.
+    - Strict adherence to Zero Fabrication Rule: physical device gates (BLK-01 through BLK-04) explicitly retained as `BLOCKED` with verified operational protocols ready for hardware handover.
+
+---
+
+## [0.8.0] - 2026-09-04
+
+### Added
+- **Phase 8: Real Device, Wearable & Production Pilot Validation (VERIFIED & AUDITED):**
+  - **Hardware Readiness Inspection (`scripts/hardware_readiness_check.py`):**
+    - Evaluates 9 hardware gates: Workstation SDK 34 (VERIFIED), ADB 1.0.41 (VERIFIED), TimescaleDB (VERIFIED), Redis (VERIFIED), FCM Dry Run (PARTIAL), Physical Phone (BLOCKED), Android AVD (BLOCKED), Health Connect runtime (BLOCKED), Physical Wearable (BLOCKED).
+    - Preserves zero-fabrication rule: physical hardware steps strictly retained as BLOCKED without fabrication.
+  - **Android Real-Device Readiness & Lock Screen Privacy:**
+    - Updated `HealthOSNotificationManager.kt` with explicit `.setVisibility(NotificationCompat.VISIBILITY_PRIVATE)` to prevent sensitive PHI exposure on lock screens.
+    - Added unit test suite `android/app/src/test/java/com/healthos/NotificationPrivacyTest.kt` verifying privacy flags across attention and urgent channels.
+    - Added unit test suite `android/app/src/test/java/com/healthos/HealthSyncWorkerTest.kt` verifying batching, constraints, and exponential retry policies.
+    - Verified Android compile and lint: `./gradlew testDebugUnitTest` (8 tests passing), `./gradlew lintDebug` (0 errors), `./gradlew compileDebugKotlin` (clean).
+  - **Health Connect 14-Hop Deterministic Simulation (`scripts/simulate_health_connect_pipeline.py`):**
+    - Traced all 14 architectural hops from Wearable BLE $\to$ Health Connect Provider $\to$ Room DB $\to$ WorkManager $\to$ HTTPS API $\to$ TimescaleDB $\to$ DataQualityEngine $\to$ ContextEngine $\to$ BaselineService $\to$ AnomalyDetector $\to$ Finding $\to$ NotificationService $\to$ FCM/WebSocket $\to$ ReportLab Vector PDF.
+  - **Metric Coverage Matrix (`METRICS_MATRIX.md`):**
+    - Exhaustive audit of all 12 biometric metrics: `heart_rate`, `resting_heart_rate`, `steps`, `distance`, `calories`, `active_calories`, `sleep_stage`, `exercise_session`, `spo2`, `respiratory_rate`, `hrv`, `body_temperature`.
+    - Documented unit conversions, sampling frequencies, biological safety boundaries, baseline eligibility, and hardware limitations.
+  - **Data Quality Under Real Conditions Test Suite (`test_data_quality_real_conditions.py`):**
+    - 5 integration tests verifying off-wrist sensor detachment gaps, impossible biological values quarantine, 36-hour delayed sync, clock drift $\ge 5$ min adaptation, and multi-sync deduplication.
+  - **Real-Time Degradation & Fallback Test Suite (`test_realtime_pipeline_degradation.py`):**
+    - 6 integration tests verifying 5 alert tiers, Level 4 emergency quiet hours bypass, 12-hour anti-fatigue deduplication, deterministic mathematical fallback under total LLM outage, FCM outage resilience, and push preview masking.
+  - **Daily Report Validation & PDF Test Suite (`test_daily_report_e2e.py`):**
+    - 4 integration tests verifying zero-data day graceful degradation, partial-wear days (4 hours data), active findings inclusion without diagnostic assertion, and vector PDF compilation with statutory non-diagnostic disclaimers.
+  - **Pilot Adversarial Security & Token Tampering Tests (`test_pilot_adversarial_security.py`):**
+    - Added cross-user device hijacking prevention, immediate consent revocation hard stop, cryptographically signed HMAC approval token tampering detection, and cross-action replay prevention.
+  - **12 End-to-End Pilot Chaos Failure Drills (`test_pilot_12_failure_drills.py`):**
+    - 12 comprehensive chaos tests covering offline 24h sync, Redis down during ingest, PostgreSQL rollback on failure, worker crash recovery, duplicate batch idempotency, FCM timeout resilience, LLM outage fallback, WebSocket abrupt disconnect, app killed during sync, reboot rescheduling, wearable detachment gap, and consent revocation hard stop.
+  - **Production Observability & Readiness Probes (`/health`, `/ready`):**
+    - Enhanced `/ready` endpoint with async dependency injection checking live TimescaleDB and Redis connectivity, returning HTTP 200 (ready) or HTTP 503 (degraded).
+  - **500-Worker Concurrency Load Test (`scripts/load_test_500_workers.py`):**
+    - Evaluated 500 concurrent Android Health Connect sync clients posting batches under 50-connection concurrency limit.
+    - Empirical results: 500 requests in 37.71s (13.26 req/s), 99.8% success rate (499/500), p50: 1753ms, p95: 12447ms, zero connection pool leaks.
+  - **Hardware Test Protocol Runbook (`HARDWARE_TEST_PROTOCOL.md`):**
+    - Formal 19-step verification runbook for physical device/wearable testing, with status classification for every step (`VERIFIED`, `PARTIAL`, `UNVERIFIED`, `BLOCKED`) and step-by-step unblocking procedures.
+  - **Automated Test Suite Expansion:**
+    - Total backend automated test suite expanded from 106 to **137 / 137 PASSING (100%)** in 16.00s.
+
+---
+
 ## [0.7.0] - 2026-09-04
 
 ### Added

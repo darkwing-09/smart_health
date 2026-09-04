@@ -330,16 +330,19 @@ class NotificationService:
             )
             fcm_token = (await self.db.scalars(stmt_token)).first()
             if fcm_token:
-                await self.fcm_service.dispatch(
-                    fcm_token=fcm_token,
-                    title=title,
-                    body=body,
-                    notification_id=notif.id,
-                    user_id=user_id,
-                    finding_id=finding.id,
-                    severity=severity,
-                    alert_tier=int(policy.tier)
-                )
+                try:
+                    await self.fcm_service.dispatch(
+                        fcm_token=fcm_token,
+                        title=title,
+                        body=body,
+                        notification_id=notif.id,
+                        user_id=user_id,
+                        finding_id=finding.id,
+                        severity=severity,
+                        alert_tier=int(policy.tier)
+                    )
+                except Exception as e:
+                    logger.error(f"FCM push dispatch failed (non-fatal for in-app delivery): {e}")
 
         # 7. Finalize State -> DELIVERED
         NotificationStateMachine.validate_transition(notif.state, NotificationState.DELIVERED)

@@ -252,3 +252,67 @@ When the LLM provider is unreachable or fails schema validation, notifications f
 "URGENT ALERT: Severe physiological threshold breach detected in {metric_type} ({observed_value} {unit}). EMERGENCY ADVISORY: This reading represents a severe physiological deviation. If you are experiencing chest pain, shortness of breath, dizziness, or lightheadedness, seek immediate emergency medical care."
 ```
 
+---
+
+## 6. Android Notification Masking & Lockscreen Privacy Templates (Phase 8)
+
+- **Version:** `1.0.0`
+- **Target Component:** `HealthOSNotificationManager.kt` (Android Client)
+- **Purpose:** Protect sensitive biometric telemetry from ambient or shoulder-surfing observation when the device is locked.
+
+### 6.1 Sanitized Public Lockscreen Notification Template
+Attached via `setPublicVersion()` to all Urgent and Important notification channels (`NotificationCompat.VISIBILITY_PRIVATE`):
+
+```kotlin
+// Publicly visible version on locked screen (zero PHI)
+val publicNotification = NotificationCompat.Builder(context, channelId)
+    .setContentTitle("Personal Health OS - Health Update")
+    .setContentText("Unlock device to view health insights.")
+    .setSmallIcon(R.drawable.ic_notification)
+    .build()
+```
+
+### 6.2 Privacy Invariants
+1. **Zero Metric Names:** The words "Heart Rate", "SpO2", "Arrhythmia", "Blood Pressure", or any biometric identifier must never appear in the public notification title or text.
+2. **Zero Numerical Vitals:** No numbers, percentages, or deviation units may be present on the lockscreen.
+3. **Biometric Decryption:** The complete clinical narrative is decrypted and rendered only after the user satisfies local biometric authentication (Fingerprint / Face / PIN) and unlocks the device.
+
+---
+
+## 7. Controlled Pilot Participant Communication & Escalation Templates (Phase 9)
+
+- **Version:** `1.0.0`
+- **Target Audience:** Pilot Coordinators, Mobile UI, Clinical Safety Lead
+- **Purpose:** Standardize onboarding briefings, non-diagnostic boundaries, and acute escalation messaging.
+
+### 7.1 Participant Onboarding & Non-Diagnostic Framing Script
+Read to participants prior to digital DPDP consent signature:
+```markdown
+"Welcome to the Personal Health OS pilot. This system is an investigational health intelligence tool designed to help you track personal physiological patterns and share summaries with your physician. 
+
+It is NOT a medical device, diagnostic system, or continuous intensive care monitor. It will not detect all heart conditions or medical emergencies. 
+
+You remain in complete control of your data: you choose which metrics to track, you must explicitly approve any doctor summaries before export, and you may revoke your consent at any moment via the in-app settings."
+```
+
+### 7.2 Sensor Detachment & Quality Guidance
+Displayed when optical PPG confidence is limited or off-wrist is detected:
+```markdown
+"Telemetry Paused: Your wearable appears to be loose or removed from your wrist. To resume personal baseline tracking, please adjust your watch so it fits snugly one finger above your wrist bone."
+```
+
+### 7.3 Level 4 Urgent Emergency In-App Modal Template
+Rendered when hard physiological bounds are breached:
+```markdown
+[ HIGH CONTRAST SAFETY ALERT ]
+"A significant physiological vital deviation was recorded while you were resting. 
+
+Observed: {observed_value} {unit} (Baseline: {baseline_value} {unit})
+
+SAFETY ADVISORY: Personal Health OS does not provide medical diagnoses. If you are experiencing chest discomfort, shortness of breath, dizziness, or distress:
+-> [ DIAL EMERGENCY SERVICES (112) ]
+-> [ I AM SAFE / FALSE READING ]"
+```
+
+
+

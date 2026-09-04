@@ -15,6 +15,9 @@ These rules are strictly enforced across the Personal Health OS codebase, config
 7. **Rule H7 (Deterministic Notification Severity Ownership):** Notification severity, alert tiers (Levels 0–4), and emergency safety classifications are strictly computed by deterministic Python code from the Finding layer. LangGraph agents and LLMs may NEVER alter, infer, or override these values.
 8. **Rule H8 (Level 4 Emergency Quiet Hours Override):** Emergency Level 4 alerts must unconditionally override user quiet hours and preference minimums. Quiet hours must never delay or suppress life-critical physiological alerts.
 9. **Rule H9 (12-Hour Anti-Fatigue Deduplication & Escalation Bypass):** Repeated findings for the same user, metric, and channel within a 12-hour window are suppressed, unless a higher severity tier is detected (e.g. Level 2 escalating to Level 4), which must immediately bypass suppression.
+10. **Rule H10 (Zero Hardware Fabrication):** Physical wearable, mobile device, Android emulator, Health Connect IPC, or FCM production verification results must never be fabricated. In automated CI/CD and software simulation environments, hardware must be explicitly classified as BLOCKED when physical devices or runtime providers are absent.
+11. **Rule H11 (Lockscreen PHI Privacy):** All Android notifications containing biometric telemetry or alert context must enforce `NotificationCompat.VISIBILITY_PRIVATE` with a generic public masking version to prevent lockscreen snooping.
+12. **Rule H12 (Cryptographic ActionGate Token Binding):** External sharing or PDF exports of clinical summaries require an HMAC-SHA256 user-scoped and summary-scoped approval token with expiration $\le 3600\text{s}$.
 
 ---
 
@@ -110,3 +113,12 @@ These rules are strictly enforced across the Personal Health OS codebase, config
 1. **Rule G1 (Branching Strategy):** `main` is protected and deployable. Features must branch from `main` (`feature/<short-desc>`), undergo peer review via Pull Request, pass CI, and squash-merge.
 2. **Rule G2 (Documentation Synchronization):** Any commit modifying an API, data model, or architectural behavior must include simultaneous updates to the corresponding documentation files (e.g., `API.md`, `DataModel.md`, `Changelog.md`, `Progress.md`).
 3. **Rule G3 (No Scope Creep):** Proposed features outside the explicit MVP scope (e.g., autonomous doctor booking, multi-device syncing, continuous ECG analysis) must be recorded in `Issues.md` or `PRD.md` under V2/V3 and rejected from MVP pull requests.
+
+---
+
+## 10. Operational Governance & Real-World Pilot Launch Rules
+
+1. **Rule O1 (Zero Hardware Fabrication Protocol):** Physical hardware validation (smartphones, Wear OS watches, Bluetooth LE streams) and external production push services (FCM) must **never** be reported as verified unless physically executed against real physical hardware and live credentials. Missing physical devices must be explicitly preserved as `BLOCKED` with documented unblocking runbooks.
+2. **Rule O2 (Runbook-Gated Pilot Launch):** No participant data may be admitted into the production cluster without completing and signing off on all verification gates in `PILOT_DEPLOYMENT_CHECKLIST.md` and enforcing the onboarding protocols in `PILOT_SAFETY_PROTOCOL.md`.
+3. **Rule O3 (SRE Response & Clinical Invariance):** Production incident triage must adhere strictly to `INCIDENT_RESPONSE_RUNBOOK.md`. Sev 1 incidents (critical alert delays or multi-tenant boundary compromise) require MTTA < 5 minutes and MTTR < 30 minutes with immediate notification to the Clinical Safety Auditor.
+

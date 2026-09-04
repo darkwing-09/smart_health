@@ -396,3 +396,89 @@ A recorded architectural decision must never be modified or reversed silently. A
 - **Consequences:** Phase 8 delivers end-to-end daily digest compilation, ARQ morning cadence scheduling, daily digest REST APIs, vector PDF generation with ReportLab, and Android Compose daily card UI.
 - **Status:** Accepted.
 
+---
+
+## ADR-032: Hardware Readiness Detection & Deterministic 14-Hop Simulation
+- **Date:** 2026-09-04
+- **Decision:** Formalize zero-fabrication protocol for hardware validation. Where physical Android devices, emulators, or Bluetooth wearables are physically absent from the development workstation, their operational gates are explicitly marked and retained as `BLOCKED`. The end-to-end data pipeline is verified using the authoritative 14-hop deterministic simulation (`scripts/simulate_health_connect_pipeline.py`) and a reproducible 19-step physical device test runbook is documented in `HARDWARE_TEST_PROTOCOL.md`.
+- **Context:** Clinical and safety standards prohibit certifying hardware operations that have not been physically executed on hardware devices.
+- **Alternatives considered:**
+  - Mocking ADB output and claiming physical device verification: Strictly rejected as a safety and ethical violation.
+  - Delaying software, security, resilience, and load testing until hardware arrives: Rejected because distributed systems, database hypertables, and safety boundaries must be fully audited and tested in software.
+- **Reasoning:** Cleanly separates software readiness from physical deployment gating.
+- **Status:** Accepted.
+
+---
+
+## ADR-033: Lock Screen Biometric Data Masking (VISIBILITY_PRIVATE)
+- **Date:** 2026-09-04
+- **Decision:** Explicitly configure all Android notification channels and notifications with `NotificationCompat.VISIBILITY_PRIVATE`.
+- **Context:** Sensitive longitudinal health telemetry (elevated heart rate, nocturnal anomalies) displayed in lock screen notifications can be seen by bystanders, violating HIPAA and DPDP 2023 privacy mandates.
+- **Alternatives considered:**
+  - Default visibility: Leaves notification text visible on lock screens.
+  - `VISIBILITY_SECRET`: Suppresses notifications on lock screens entirely, risking patient safety on Level 4 Urgent alerts.
+- **Reasoning:** `VISIBILITY_PRIVATE` displays the application name and arrival of an alert on the lock screen while redacting sensitive physiological details until device authentication.
+- **Status:** Accepted.
+
+---
+
+## ADR-034: Production Pilot Architecture, SRE Observability & Operational Runbooks
+- **Date:** 2026-09-04
+- **Decision:** Formally establish standard operating procedures for pilot operations: container liveness/readiness probes, automated dead-letter queue routing, multi-tenant resource isolation returning HTTP 404, point-in-time database recovery (PITR), and zero-downtime rollback runbooks documented in `PILOT_DEPLOYMENT_CHECKLIST.md` and `INCIDENT_RESPONSE_RUNBOOK.md`.
+- **Context:** Moving from pilot software certification to controlled real-world pilot launch requires documented SRE operational boundaries, clear severity levels (Sev 1–4), and verifiable recovery workflows.
+- **Alternatives considered:**
+  - Ad-hoc incident troubleshooting: Rejected because clinical health data platforms require strict MTTA/MTTR response bounds and data integrity guarantees.
+- **Reasoning:** Documented and tested operational runbooks ensure deterministic, auditable responses to production degradations without risking patient safety or data loss.
+- **Consequences:** All deployment and incident response procedures are formalized and verified against integration tests (`test_phase9_pilot_operations.py`).
+- **Status:** Accepted.
+
+---
+
+## ADR-035: Controlled Pilot Participant Safety Protocol & Non-Diagnostic Clinical Boundaries
+- **Date:** 2026-09-04
+- **Decision:** Adopt `PILOT_SAFETY_PROTOCOL.md` defining strict participant enrollment, DPDP Act 2023 digital consent capture, wearable sensor limitation guidance, non-diagnostic communication rules (Rule H1), emergency escalation dialers, and adverse event logging.
+- **Context:** Investigational health software deployed to real human participants must adhere to clinical safety ethics, explicit non-diagnostic boundaries, and rapid escalation pathways for acute medical distress.
+- **Alternatives considered:**
+  - Deploying without formal safety protocols: Rejected as unethical and a regulatory violation.
+- **Reasoning:** Protects participant welfare, prevents panic induction, guarantees informed consent with immediate revocation rights, and establishes clinical auditor oversight.
+- **Consequences:** Participant onboarding is gated behind signed DPDP consent agreements and explicit briefing on optical wearable sensor limitations.
+- **Status:** Accepted.
+
+---
+
+## ADR-036: Redis-Backed JWT Token Revocation Blacklist (`POST /v1/auth/logout`)
+- **Date:** 2026-09-04
+- **Decision:** Implement stateless JWT revocation via unique `jti` (JWT ID) claims and a distributed Redis revocation blacklist. Upon calling `POST /v1/auth/logout`, the token's `jti` is stored in Redis under key `revoked_token:{jti}` with a Time-To-Live (TTL) set to the token's remaining validity duration, and an immutable `AuditLog` entry is persisted. The `get_current_user` FastAPI dependency rejects any revoked token with HTTP 401 Unauthorized.
+- **Context:** While JWTs are cryptographically signed and stateless, without a revocation mechanism, compromised tokens or explicit user logouts cannot immediately terminate access before the token's standard expiration (e.g. 8 days). In a health-tech platform handling sensitive biometric data, immediate session invalidation upon logout or credential reset is critical.
+- **Alternatives considered:**
+  - Fully stateful database sessions: Rejected due to unnecessary database write load and query overhead on every authenticated API request.
+  - Short-lived tokens (5 minutes) without revocation: Rejected because mobile wearable background sync frequently requires longer sessions without disrupting user experience.
+- **Reasoning:** Storing only revoked JTIs in Redis with auto-expiring TTL keeps memory usage near-zero while enabling instant, reliable token revocation across all distributed API nodes.
+- **Consequences:** Verified by unit and security tests in `test_token_revocation.py`. Revoked tokens are immediately rejected with HTTP 401.
+- **Status:** Accepted.
+
+---
+
+## ADR-037: Atomic Batch Ingestion Concurrency and Idempotent Mobile Sync Dedup
+- **Date:** 2026-09-04
+- **Decision:** Ingestion of wearable synchronization batches (`SyncBatch`) must use PostgreSQL `INSERT ... ON CONFLICT (id) DO NOTHING` semantics at the database engine level. If a concurrent retry commits the batch ID first, subsequent workers obtain zero inserted rows, fetch the committed batch, and return `status="ALREADY_PROCESSED"` with zero unhandled exceptions.
+- **Context:** Flaky mobile network conditions frequently trigger simultaneous retry requests from Android WorkManager or companion apps for the same sync batch. Under high concurrency, simultaneous transactions attempting standard `db.add(batch)` collided with `IntegrityError: duplicate key value violates unique constraint`, resulting in HTTP 500 errors and worker crashes.
+- **Alternatives considered:**
+  - Distributed Redis locks per batch ID: Rejected because lock acquisition adds latency and failure failure-modes if Redis degrades.
+  - Catching `IntegrityError` in application code: Fragile because it aborts the current PostgreSQL transaction and requires rollbacks.
+- **Reasoning:** PostgreSQL native `ON CONFLICT DO NOTHING` provides atomic, race-condition-safe handling directly inside the database engine without needing external locks or transaction aborts.
+- **Consequences:** Verified by 10-worker concurrent load test in `test_ingest_concurrency.py`. Exactly 1 batch is persisted, and all concurrent workers return clean HTTP 200 responses.
+- **Status:** Accepted.
+
+---
+
+## ADR-038: Automated Background Worker Cadence (Baseline Recompute & Vector Digests)
+- **Date:** 2026-09-04
+- **Decision:** Implement operational background worker jobs for `cron_daily_baseline_recompute` and `cron_daily_report_pipeline` with graceful zero-data degradation. Baseline recomputation updates rolling 30-day mean, standard deviation, and circadian profiles across 5 biometrics (`heart_rate`, `steps`, `spo2`, `hrv`, `respiratory_rate`). Daily report compilation computes 24-hour vitals rollups, synthesizes structured health narratives, generates publication-grade ReportLab vector PDFs with SHA-256 seals, and records durable `Report` database entities.
+- **Context:** Previously, worker cadence methods were lightweight stubs returning success dictionaries. A production-ready pilot requires fully implemented, dependable daily operations running on ARQ/Redis.
+- **Alternatives considered:**
+  - Computing baselines dynamically on each incoming measurement: Rejected due to quadratic computational overhead.
+  - Skipping report generation on zero-telemetry days: Rejected because participants need clear status communication indicating that no data was recorded (degraded mode), rather than silent failure.
+- **Reasoning:** Decoupled background execution keeps HTTP ingestion fast while ensuring longitudinal baselines and patient reports are ready each morning.
+- **Consequences:** Verified across end-to-end integration tests in `test_worker_cadence_e2e.py`.
+- **Status:** Accepted.

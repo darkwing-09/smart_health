@@ -199,3 +199,38 @@ This document formally specifies all 12 autonomous, semi-autonomous, and determi
 - **Decision Boundaries:** Rejects any explanation containing blacklisted diagnostic assertions or lacking emergency disclaimers on `urgent` findings.
 - **Failure Behavior:** Blocks message transmission; falls back to static safe template: "A significant deviation in your heart rate was recorded. Please consult your physician or seek emergency medical care."
 - **What It Must NEVER Do:** Allow a bypass of safety rules under any prompt override or context trick.
+
+---
+
+## Agent System Pilot Verification & Chaos Resilience (Phase 8)
+
+During Phase 8, all 12 autonomous and deterministic agents were subjected to real-world degradation, burst concurrency, and 12 chaos failure injection drills (`test_pilot_12_failure_drills.py`, `test_pilot_adversarial_security.py`):
+
+| Agent | Engine Type | Phase 8 Chaos & Resilience Test Evidence | Authority Boundary Invariant |
+| :--- | :--- | :--- | :--- |
+| **1. Data Intelligence Agent** | Deterministic Worker | Ingested 500-batch bursts (2,500 records) at 13.26 req/s; rejected out-of-bounds metrics (HR=350 bpm) with RFC 7807 problem details. | Zero synthetic data generation; immutable historical provenance. |
+| **2. Data Quality Agent** | Deterministic Worker | Verified detection of wearable off-wrist detachment (>30m zero HR & steps); tagged sparse gaps as `gap` or `missing` without interpolation. | Never marks missing data as healthy baseline. |
+| **3. Baseline Intelligence Agent** | Deterministic Worker | Recomputed baselines across rolling windows; preserved previous snapshot on simulated failure. | Baseline parameters never altered by subjective LLM feedback. |
+| **4. Health Intelligence Agent** | LangGraph Reasoning | Fallback to deterministic mathematical template verified during total LLM API outage (Drill 2). | Zero diagnostic claims (Rule H1); strictly bounded to telemetry. |
+| **5. Anomaly Evaluation Agent** | Hybrid (NumPy + LangGraph) | Verified mathematical z-score gating; suppressed resting tachycardia when accelerometer steps indicated exercise exertion. | Never downgrades urgent findings without deterministic proof. |
+| **6. Notification Agent** | LangGraph Router Graph | Verified 12h dedup, escalation bypass (Level 2 $\to$ Level 4), quiet hours evaluation, FCM dead-letter routing, and WebSocket catch-up replay. | Cannot alter severity; Level 4 permanently overrides quiet hours. |
+| **7. Daily Report Agent** | LangGraph Synthesis | Fallback to deterministic metric tables and stoic quotes verified during LLM outages; multi-stream synthesis tested. | Never includes hallucinations or unmeasured speculations. |
+| **8. Research Agent** | LangGraph + Tools | Directory lookup simulated; blocked autonomous external API booking. | Zero fabricated facilities; requires explicit user initiation. |
+| **9. Care Navigation Agent** | LangGraph Coordinator | Gated Doctor Visit Summary compilation behind active consent and ActionGate HMAC approval tokens; verified SHA-256 seal. | External outreach strictly blocked until explicit patient sign-off. |
+| **10. Appointment Agent** | LangGraph HITL | Verified draft message generation for WhatsApp/email; confirmed zero autonomous booking (ADR-003). | Never contacts clinic APIs or scrapers autonomously. |
+| **11. User Preference Agent** | Deterministic Logic | Verified tenant-isolated preference persistence and quiet-hours timezone shifts. | Default safe settings preserved on missing configs. |
+| **12. Safety & Policy Agent** | Rule Gate + Guardrail | Adversarial penetration testing: intercepted blacklisted diagnostic phrases; enforced emergency disclaimers on Level 4 alerts. | Zero bypass under prompt override, roleplay, or context tricks. |
+
+---
+
+## Agent System Real-World Pilot Launch Operations (Phase 9)
+
+In Phase 9, all 12 system agents were bound to formal SRE operational runbooks (`PILOT_DEPLOYMENT_CHECKLIST.md`, `INCIDENT_RESPONSE_RUNBOOK.md`) and participant safety protocols (`PILOT_SAFETY_PROTOCOL.md`), validated across 10 operational integration tests (`test_phase9_pilot_operations.py`):
+
+1. **Ingestion & Data Quality Agents (Agents 1 & 2):** Verified under multi-metric batch ingestion (9 biometrics) and hypertable chunk persistence (`test_p9_01`), future timestamp quarantine (`test_p9_04`), and sensor detachment tracking without synthetic imputation (`test_p9_05`).
+2. **Baseline & Anomaly Agents (Agents 3 & 5):** Verified under clock skew jitter resilience (`test_p9_04`) and 22-hour delayed offline sync recovery (`test_p9_03`).
+3. **Notification & Safety Agents (Agents 6 & 12):** Verified under quiet-hours evaluation and unconditional Level 4 emergency bypass (`test_p9_06`), accompanied by mandatory calm emergency disclaimers.
+4. **Care Navigation & Appointment Agents (Agents 9 & 10):** Verified under full pipeline traversal to ReportLab vector PDF (`test_p9_02`), ActionGate HMAC approval token security and freshness validation (`test_p9_08`), and immediate DPDP consent revocation hard-stop (`test_p9_09`).
+5. **System Governance (Agents 4, 7, 8, 11):** Bound to container liveness (`/health`) and readiness (`/ready`) probes (`test_p9_10`) and zero-information-disclosure multi-tenant isolation returning HTTP 404 (`test_p9_07`).
+
+

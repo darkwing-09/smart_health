@@ -114,6 +114,27 @@ Every finding classified as Level 2 (Attention) or higher must contain all seven
 - Android Jetpack Compose notification feed with channel configurations and finding detail deep-linking.
 - Notification fatigue telemetry service tracking distribution, latencies, suppressions, and delivery rates.
 
+### Phase 8 Scope (Real Device, Wearable & Production Pilot Validation - VERIFIED)
+- Hardware readiness detection script (`scripts/hardware_readiness_check.py`) with zero-fabrication classification.
+- Android lockscreen notification privacy hardening (`NotificationCompat.VISIBILITY_PRIVATE`) with verified test suite.
+- 14-hop Health Connect to vector PDF pipeline simulation script (`scripts/simulate_health_connect_pipeline.py`).
+- 12-metric biometric coverage matrix (`METRICS_MATRIX.md`) across 4 wearable tiers.
+- Real-conditions data quality validation under clock drift, burst sync, sparse gaps, and sensor detachment.
+- Graceful degradation and resilience under Redis failover, LLM outages, DB reconnects, and RFC 7807 schema errors.
+- Daily report multi-stream aggregation and PDF generation.
+- Adversarial security suite (11/11 tests) verifying cross-tenant isolation, SQLi, XSS, rate limiting, and HMAC-SHA256 ActionGate approval token binding.
+- Production container liveness (`/health`) and readiness (`/ready`) probes evaluating database and Redis health.
+- 12 comprehensive end-to-end chaos failure injection drills.
+- 19-step hardware test protocol runbook (`HARDWARE_TEST_PROTOCOL.md`) with explicit blocker tracking (BLK-01 to BLK-06).
+- 500-worker concurrency load test verifying 99.8% success at 13.26 req/s without deadlocks or connection starvation.
+
+### Phase 9 Scope (Real-World Pilot Launch, Hardware Validation & Production Operations - VERIFIED)
+- Production pilot launch checklist (`PILOT_DEPLOYMENT_CHECKLIST.md`) covering 7-stage pre-flight, hypertable validation, security gates, container probes, and go/no-go criteria.
+- Incident response and rollback runbook (`INCIDENT_RESPONSE_RUNBOOK.md`) defining Sev 1–4 incident matrix, MTTA/MTTR response bounds, fail-open ingestion, PITR backup restoration, and zero-downtime rollbacks.
+- Participant safety protocol (`PILOT_SAFETY_PROTOCOL.md`) governing eligibility, DPDP Act 2023 consent capture, wearable fit SOP, non-diagnostic communication (Rule H1), emergency escalation dialers, and adverse event logging.
+- Phase 9 integration test suite (`test_phase9_pilot_operations.py`) verifying 10 real-world operational invariants.
+- Adoption of ADR-034 (Production Pilot Architecture & SRE Observability) and ADR-035 (Controlled Pilot Participant Safety Protocol).
+- Strict enforcement of Zero Fabrication Rule: physical hardware gates explicitly retained as BLOCKED pending physical lab delivery.
 
 ### V2/V3 Scope (Deferred)
 - Garmin Health API integration (pending B2B partnership approval).

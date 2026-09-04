@@ -6,15 +6,13 @@ This file tracks the live operational state, active work streams, blockers, and 
 
 ## 1. Executive Status Dashboard
 
-- **Current Project Phase:** **Phase 0 through Phase 7 COMPLETE, AUDITED & HARDENED**.
-- **Architecture Maturity:** Pilot-Ready Personal Health Data Operating System. Enterprise envelope encryption (AES-256-GCM), key rotation, sliding-window Redis rate limiting, non-root hardened containers, live verified disaster recovery restore drill (100% row parity across 7 tables and TimescaleDB chunks), 18-threat STRIDE threat model, correlation ID tracing, PHI log scrubbing, deterministic 5-tier alert policy, atomic 12-hour deduplication with escalation bypass, timezone-aware quiet hours with emergency override, 7-state notification lifecycle, FCM HTTP v1 push engine, authenticated WebSocket streaming with missed-event replay catch-up, concurrency race-condition database fallback, and Android SDK 34 compile verification.
-- **Test Suite Status:** **92 / 92 Passing (100%)** across Unit, Graph, Eval, Security, Integration, and Fault Injection suites:
-  - 20 Unit Tests (Deterministic baseline math, physiological hard biological gates, Pydantic schemas, 5-tier alert tier deterministic mapping, notification state machine transitions, FCM payload formatting and dry-run dispatch).
-  - 17 LangGraph Workflow & Resilience Tests (`HealthIntelGraph` safety guardrails, `DailyReportGraph` execution, `CareNavGraph` evidence synthesis & human approval gating, `NotificationGraph` quiet-hours hold & emergency override, Rule H1 non-diagnostic enforcement, and total LLM outage resilience).
-  - 4 LangSmith Evaluation Tests (`test_langsmith_evals.py`: Grounding & hallucination prevention, uncertainty disclosure on limited data, calm/anti-alarmist tone, and human-in-the-loop action gating).
-  - 11 Security & Cryptography Tests (`test_crypto.py` & `test_security_hardening.py`: Envelope encryption roundtrip, key rotation, historical decryption, re-encryption migration, tampering detection, HTTP security headers, sliding-window rate limiting, post-approval tampering detection [HTTP 409], unapproved export blocking [HTTP 400], correlation ID propagation, structlog PHI/token log scrubbing).
-  - 40 Real Integration & Fault Injection Tests (Live PostgreSQL 16 + TimescaleDB hypertable persistence, idempotency, unique constraint deduplication, multi-tenant isolation, ARQ worker job execution against live Redis, 30-day synthetic telemetry ingestion, timezone-aware circadian modeling, exertion suppression, nocturnal tachycardia detection, idempotent Finding persistence, data quality ratings, deterministic context engine, longitudinal trend regression, timeline query abstraction, notification deduplication & audit, daily digest compilation, deterministic specialty routing, granular consent lifecycle & DPDP 2023 compliance, 5-stage Doctor Visit Summary lifecycle [DRAFT -> REVIEW -> REDACT -> APPROVE -> EXPORT], ReportLab vector PDF compilation, SHA-256 seal integrity, revocation defense, multi-tenant clinical isolation, end-to-end HTTP REST API verification, migration 20260904_0005 notification state machine persistence, atomic 12-hour deduplication, Level 4 emergency quiet-hours bypass, timezone-aware morning release worker, FCM push dry-run dispatch, authenticated per-user WebSocket streaming with tenant isolation, reconnect missed-event catch-up protocol, plus 10 live fault injection tests: Redis outage fail-open, PostgreSQL rollback on illegal transition, FCM timeout/retry exhaustion, concurrent worker dispatch race condition handling, 12h anti-fatigue deduplication, WebSocket expired JWT rejection, cross-user isolation, timezone change adaptation, Level 4 emergency override, and deterministic content generation under total LLM outage).
+- **Current Project Phase:** **Phase 0 through Phase 9 COMPLETE & PRODUCTION PILOT HARDENED**.
+- **Architecture Maturity:** Production-Pilot-Ready Personal Health OS. Fully validated across backend distributed systems, TimescaleDB hypertable ingestion, ARQ/Redis asynchronous workers, LangGraph safety-guarded agents, DPDP Act 2023 consent boundaries, ActionGate human-in-the-loop gates, 7-state notification lifecycle, FCM HTTP v1 push gateway (deterministic dry-run verified), authenticated WebSocket streaming, and ReportLab vector PDF compilation. Formalized operational readiness through `PILOT_DEPLOYMENT_CHECKLIST.md`, `INCIDENT_RESPONSE_RUNBOOK.md`, and `PILOT_SAFETY_PROTOCOL.md`. Hardened with Redis JWT token revocation blacklist (`/v1/auth/logout`), atomic batch ingestion concurrency (`on_conflict_do_nothing`), and operational daily cadence for baseline recomputation and daily vector digests. Software readiness 100% verified (153/153 tests passing); physical hardware items explicitly retained as BLOCKED pending physical lab hardware.
+- **Test Suite Status:** **153 / 153 Passing (100%)** across Backend Unit, Graph, Eval, Security, Integration, Degradation, Chaos Failure Drills, Pilot Operations, Concurrency, and Cadence E2E.
+- **Android Status:** Android SDK 34, JDK 17, Gradle 8.4; `./gradlew testDebugUnitTest` PASS (8 unit tests), `./gradlew lintDebug` PASS (0 errors), `./gradlew compileDebugKotlin` PASS.
+- **500-Worker Load Test:** 500 requests, 37.71s total time, 13.26 req/s throughput, 499 (99.8%) success rate, p50: 1753ms, p95: 12447ms.
 - **Core Technology Stack:** Python 3.11+, FastAPI 0.111+, PostgreSQL 16 + TimescaleDB (v2.29.2), Redis 7 + ARQ (v0.28.0), LangGraph 1.2+, LangSmith 0.12+, ReportLab 5.0+, Kotlin Android (Health Connect + Jetpack Compose + Room DB + WorkManager, Android SDK 34, Java 17).
+
 
 ---
 
@@ -65,17 +63,17 @@ This file tracks the live operational state, active work streams, blockers, and 
 | **Phase 6: CI/CD Pipeline** | COMPLETE | ✅ VERIFIED | 10-job GitHub Actions workflow (`.github/workflows/ci.yml`) covering linting, types, unit, graphs, security, integration, audit, docker, android, and compliance. |
 | **Phase 6: 18-Threat Threat Model** | COMPLETE | ✅ VERIFIED | Comprehensive STRIDE + Health IoT threat matrix documented in `Security.md`. |
 | **Phase 6: Readiness Scorecard** | COMPLETE | ✅ VERIFIED | `Scorecard.md` created with weighted readiness score 94.8 / 100 (Pilot Certified). |
-| **Phase 7: Notification Migration & Models** | COMPLETE | ✅ VERIFIED | Migration `20260904_0005` applied: 8 new columns (`state`, `retry_count`, `max_retries`, `next_retry_at`, `delivered_at`, `dismissed_at`, `expires_at`, `quiet_hours_held`) and composite indices `idx_notifications_user_state`, `idx_notifications_held_retry`. |
-| **Phase 7: Deterministic Policy Engine** | COMPLETE | ✅ VERIFIED | `NotificationPolicyEngine` implements pure mathematical mapping of 5 alert tiers (Level 0 Info, Level 1 Insight, Level 2 Attention, Level 3 Important, Level 4 Urgent). LLM permanently barred from altering severity or safety level. Level 4 emergency disclaimer mandatory. |
-| **Phase 7: Timezone-Aware Quiet Hours** | COMPLETE | ✅ VERIFIED | `QuietHoursEvaluator` resolves user timezone (`ZoneInfo`), correctly evaluates overnight intervals (e.g. 22:00–07:00), holds Level 0–3 FCM dispatch while keeping in-app feed updated. Level 4 Urgent alerts permanently override quiet hours. Morning release timestamp calculated dynamically. |
-| **Phase 7: Atomic 12-Hour Deduplication** | COMPLETE | ✅ VERIFIED | Race-safe database-level deduplication query prevents alert fatigue within a 12-hour window unless an explicit severity escalation occurs (e.g., Level 2 Attention escalates to Level 4 Urgent), which immediately bypasses suppression. |
-| **Phase 7: Notification State Machine** | COMPLETE | ✅ VERIFIED | `NotificationStateMachine` validates explicit transitions (`CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING -> DELIVERED`, retries, `DEAD_LETTER`, `ACKNOWLEDGED`, `DISMISSED`). PostgreSQL is the persistent authority. |
-| **Phase 7: FCM HTTP v1 Dispatcher** | COMPLETE | ✅ VERIFIED | `FcmNotificationService` formats Google Firebase HTTP v1 REST payloads, separates `healthos_urgent` (high priority) and `healthos_important` (normal priority) channels, deactivates invalid device tokens, implements bounded exponential backoff (max 3 retries), and provides zero-external-call dry-run simulation mode. |
-| **Phase 7: WebSocket Streaming Engine** | COMPLETE | ✅ VERIFIED | `ws_manager` tracks authenticated per-user WebSocket connections (`/v1/ws/stream`), enforces strict tenant isolation, issues periodic ping/pong heartbeats, broadcasts live findings/notifications, and supports missed-event catch-up replay via timestamp cursor on reconnect. |
-| **Phase 7: Notification & Preference APIs** | COMPLETE | ✅ VERIFIED | Endpoints `/v1/notifications`, `/v1/notifications/{id}`, `/v1/notifications/{id}/acknowledge`, `/v1/notifications/{id}/dismiss`, `/v1/users/preferences`, `/v1/devices/fcm-token`, `/v1/ws/stream` live verified with full auth, multi-tenant isolation, and cursor pagination. |
-| **Phase 7: Android Notification Client** | COMPLETE | ✅ VERIFIED* | Android SDK 34 compilation verified: `HealthOSNotificationManager.kt` configures notification channels with system sound/vibration; `NotificationsScreen.kt` provides Jetpack Compose reactive feed with acknowledge/dismiss actions and finding detail navigation. Marked: **✅ COMPILES**. |
-| **Phase 7: Notification Fatigue Metrics** | COMPLETE | ✅ VERIFIED | `NotificationMetricsService` tracks alerts/user/day, severity distribution, deduplication count, suppressions, quiet-hour holds, escalations, retries, failures, and end-to-end delivery latency. |
-| **Phase 7: ARQ Background Workers & Cadence** | COMPLETE | ✅ VERIFIED | `worker.py` enqueues notification dispatch on acute findings with unique job keys, handles retries/dead-lettering, and executes 15-minute cron `cron_release_quiet_hour_notifications` for releasing quiet-hour held notifications at morning threshold. |
+| **Phase 7: Notification Migration & Models** | COMPLETE | ✅ VERIFIED | Migration `20260904_0005` applied: 8 new columns and composite indices verified. |
+| **Phase 7: Deterministic Policy Engine** | COMPLETE | ✅ VERIFIED | `NotificationPolicyEngine` implements pure mathematical mapping of 5 alert tiers. LLM permanently barred from altering severity. |
+| **Phase 7: Timezone-Aware Quiet Hours** | COMPLETE | ✅ VERIFIED | `QuietHoursEvaluator` resolves user timezone (`ZoneInfo`), holds Level 0–3 FCM dispatch, while Level 4 permanently overrides quiet hours. |
+| **Phase 7: Atomic 12-Hour Deduplication** | COMPLETE | ✅ VERIFIED | Race-safe database-level deduplication query prevents alert fatigue; escalations bypass suppression. |
+| **Phase 7: Notification State Machine** | COMPLETE | ✅ VERIFIED | Authoritative 7-state PostgreSQL lifecycle validated (`CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING -> DELIVERED`). |
+| **Phase 7: FCM HTTP v1 Dispatcher** | COMPLETE | ✅ VERIFIED | `FcmNotificationService` verified with deterministic dry-run mode and high/normal channel priorities. |
+| **Phase 7: WebSocket Streaming Engine** | COMPLETE | ✅ VERIFIED | Authenticated streaming (`/v1/ws/stream`), heartbeats, and timestamp-based replay verified. |
+| **Phase 7: Notification & Preference APIs** | COMPLETE | ✅ VERIFIED | Full notification REST API suite verified. |
+| **Phase 7: Android Notification Client** | COMPLETE | ✅ VERIFIED* | Android SDK 34 compilation verified with `NotificationCompat.VISIBILITY_PRIVATE`. |
+| **Phase 8: Chaos Resilience & Failure Drills** | COMPLETE | ✅ VERIFIED | 12 chaos failure injection drills passed, 500-batch load test passed (13.26 req/s). |
+| **Phase 9: Real-World Pilot Launch Operations** | COMPLETE | ✅ VERIFIED | 10 integration tests in `test_phase9_pilot_operations.py` passed; `PILOT_DEPLOYMENT_CHECKLIST.md`, `INCIDENT_RESPONSE_RUNBOOK.md`, `PILOT_SAFETY_PROTOCOL.md` operationalized. ADR-034 & ADR-035 adopted. |
 
 ---
 
@@ -84,21 +82,26 @@ This file tracks the live operational state, active work streams, blockers, and 
 | ID | Dependency / Blocker | Category | Impact | Status | Action Owner |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **BLK-00** | Android SDK Toolchain | Build Environment | Android Gradle compilation | **✅ RESOLVED (COMPILES)** | Resolved via Android SDK 34 + Gradle 8.4 |
-| **BLK-01** | Meta WhatsApp Business Platform Approval | External Dependency | Blocks V1 WhatsApp delivery | **DEFERRED (V1)** | Product Co-Founder |
-| **BLK-02** | Hospital Directory Provider Selection | External Dependency | Gating live provider lookup | **DEFERRED (V1)** | Engineering Lead |
-| **BLK-03** | Indian DPDP Act 2023 Compliance Review | Regulatory / Legal | Gating automated appointment requests | **UNDER REVIEW** | Legal Counsel |
+| **BLK-01** | Physical Android Device | Hardware / Peripheral | Live device installation | **BLOCKED** | Lab Hardware Manager |
+| **BLK-02** | Wearable Bluetooth Smartwatch | Hardware / Peripheral | Live BLE Health Connect sync | **BLOCKED** | Lab Hardware Manager |
+| **BLK-03** | Android Emulator / System Image | Development Environment | Headless AVD execution (network unreachable for binpb) | **BLOCKED** | DevOps / SRE |
+| **BLK-04** | Meta WhatsApp Business Platform Approval | External Dependency | Blocks V1 WhatsApp delivery | **DEFERRED (V1)** | Product Co-Founder |
+| **BLK-05** | Hospital Directory Provider Selection | External Dependency | Gating live provider lookup | **DEFERRED (V1)** | Engineering Lead |
+| **BLK-06** | Indian DPDP Act 2023 Compliance Review | Regulatory / Legal | Gating automated appointment requests | **UNDER REVIEW** | Legal Counsel |
 
 ---
 
 ## 4. Test Suite Summary
 
 ```
-============================== 92 passed, 3 warnings in 6.86s ==============================
+============================= 153 passed, 3 warnings in 14.85s =============================
 - 5 unit test suites (5 anomaly math, 3 schemas, 7 notification policy, 3 state machine, 2 FCM service) [20 tests]
 - 5 graph & evaluation test suites (2 health intel graph, 5 multi-graph & langsmith, 3 care navigation graph, 3 LLM outage resilience, 4 notification graph) [17 tests]
 - 1 evaluation test suite (4 automated langsmith evaluations) [4 tests]
-- 2 security test suites (5 envelope crypto, 6 security hardening & rate limiting) [11 tests]
-- 7 integration test suites (5 sync e2e, 2 worker e2e, 5 phase 3 baseline & anomaly e2e, 6 phase 4 longitudinal intelligence e2e, 6 phase 5 clinical readiness e2e, 6 phase 7 notifications & streaming e2e, 10 phase 7 failure modes & fault injection e2e) [40 tests]
+- 4 security test suites (5 envelope crypto, 6 security hardening & rate limiting, 11 pilot adversarial security & readiness, 2 token revocation blacklist) [24 tests]
+- 14 integration test suites (5 sync e2e, 2 worker e2e, 5 phase 3 baseline & anomaly e2e, 6 phase 4 longitudinal intelligence e2e, 6 phase 5 clinical readiness e2e, 6 phase 7 notifications & streaming e2e, 10 phase 7 failure modes & fault injection e2e, 5 data quality real conditions, 6 realtime pipeline degradation, 4 daily report e2e, 12 pilot failure drills, 7 failure injection, 10 phase 9 pilot operations, 1 ingest concurrency race condition, 3 worker cadence e2e) [88 tests]
+- Android Unit Tests: 8 passed in 684ms (:app:testDebugUnitTest)
+- Android Lint: 0 errors (:app:lintDebug)
 ```
 - backend/tests/unit/test_anomaly_math.py: 5 passed
 - backend/tests/unit/test_schemas.py: 3 passed
@@ -113,6 +116,8 @@ This file tracks the live operational state, active work streams, blockers, and 
 - backend/tests/evals/test_langsmith_evals.py: 4 passed
 - backend/tests/security/test_crypto.py: 5 passed
 - backend/tests/security/test_security_hardening.py: 6 passed
+- backend/tests/security/test_pilot_adversarial_security.py: 11 passed
+- backend/tests/security/test_token_revocation.py: 2 passed
 - backend/tests/integration/test_sync_e2e.py: 5 passed
 - backend/tests/integration/test_worker_e2e.py: 2 passed
 - backend/tests/integration/test_phase3_baseline_anomaly_e2e.py: 5 passed
@@ -120,17 +125,29 @@ This file tracks the live operational state, active work streams, blockers, and 
 - backend/tests/integration/test_phase5_clinical_readiness.py: 6 passed
 - backend/tests/integration/test_phase7_notifications_e2e.py: 6 passed
 - backend/tests/integration/test_phase7_failure_modes.py: 10 passed
+- backend/tests/integration/test_data_quality_real_conditions.py: 5 passed
+- backend/tests/integration/test_realtime_pipeline_degradation.py: 6 passed
+- backend/tests/integration/test_daily_report_e2e.py: 4 passed
+- backend/tests/integration/test_pilot_failure_injection.py: 7 passed
+- backend/tests/integration/test_pilot_12_failure_drills.py: 12 passed
+- backend/tests/integration/test_phase9_pilot_operations.py: 10 passed
+- backend/tests/integration/test_ingest_concurrency.py: 1 passed
+- backend/tests/integration/test_worker_cadence_e2e.py: 3 passed
 
 ---
 
-## 5. Next Phase Roadmap: Phase 8
+## 5. Phase 9 Completion & Controlled Pilot Readiness Verdict
 
-- **Phase Title:** **Phase 8: Daily Health Digests, Longitudinal Trend Reporting & Automated Vector PDF Generation**
-- **Objective:** Fulfill Agent 7 (`Daily Report Agent`) by bridging the verified Phase 4 daily digest data layer into an automated daily delivery engine.
-- **Scope:**
-  1. Automated 24-hour vitals rollup & circadian stability scoring engine.
-  2. LangGraph Daily Report synthesis node (`DailyReportGraph`) with calm, non-cliché wellness insights and safe fallback templates.
-  3. ARQ scheduled morning cadence job (`cron_generate_daily_digests`) firing at patient's local morning waking hour.
-  4. Publication-grade vector PDF compilation using ReportLab (daily vitals charts, trend sparklines, SHA-256 seal).
-  5. REST API endpoints `/v1/reports/daily`, `/v1/reports/daily/{date}`, `/v1/reports/daily/{id}/pdf`.
-  6. Android Jetpack Compose Daily Health Digest card & longitudinal trend screen (`DailyDigestScreen.kt`).
+- **Phase Title:** **Phase 9: Real-World Pilot Launch, Hardware Validation & Production Operations (Hardened Release 0.9.1)**
+- **Status:** **COMPLETE & HARDENED (Software, SRE Operations, Incident Runbooks, Security, Concurrency, Worker Cadence, and Safety Verified; Physical Hardware Explicitly Isolated as Gated)**
+- **Controlled Pilot Verdict:** **CONDITIONALLY READY FOR CONTROLLED PILOT (CONDITIONAL GO)**
+- **Key Accomplishments:**
+  1. Software Regression Parity: 153/153 backend tests passing (100%), 8/8 Android unit tests passing (100%), 0 Android lint errors.
+  2. Stateless JWT Revocation Blacklist (`/v1/auth/logout`): JTI claims embedded into JWT tokens; logout revokes token in Redis with matching TTL; audit log records revocation event; `get_current_user` dependency rejects blacklisted tokens immediately with HTTP 401. Verified via `test_token_revocation.py`.
+  3. Atomic Batch Ingestion Concurrency (`test_ingest_concurrency.py`): Ingestion service utilizes PostgreSQL `insert().on_conflict_do_nothing()` on `SyncBatch.id`, eliminating race condition integrity errors under simultaneous burst sync retries and safely returning `ALREADY_PROCESSED`.
+  4. Operational Background Worker Cadence (`test_worker_cadence_e2e.py`): Production implementations of `cron_daily_baseline_recompute` (rolling 30-day baseline over 5 core biometrics) and `cron_daily_report_pipeline` (24-hour vitals rollup, daily narrative synthesis, ReportLab vector PDF compilation, and graceful degradation).
+  5. Phase 9 Integration Test Suite (`test_phase9_pilot_operations.py`): 10/10 passing tests verifying multi-metric ingestion, hypertable chunk persistence, vector PDF compilation, clock skew resilience, sensor detachment quality tagging, quiet hours vs Level 4 emergency bypass, multi-tenant isolation, ActionGate cryptographic token freshness, DPDP consent revocation hard stop, and container probes.
+  6. Production Operational Runbooks: Established `PILOT_DEPLOYMENT_CHECKLIST.md` and `INCIDENT_RESPONSE_RUNBOOK.md` with detailed Sev 1–4 incident triage, MTTA/MTTR bounds, PITR backup restoration, and zero-downtime rollback protocols.
+  7. Clinical Safety Protocol: Established `PILOT_SAFETY_PROTOCOL.md` defining participant inclusion/exclusion, DPDP informed consent, wearable setup SOP, non-diagnostic communication boundaries (Rule H1), emergency escalation dialers, and clinical review procedures.
+  8. Architecture Decision Records: Adopted ADR-034 (Production Pilot Architecture & SRE Observability), ADR-035 (Controlled Pilot Participant Safety Protocol), ADR-036 (Redis JWT Token Revocation Blacklist), ADR-037 (Atomic Batch Ingestion Concurrency), and ADR-038 (Automated Worker Cadence Execution).
+  9. Zero Fabrication Rule Enforced: Physical devices (BLK-01, BLK-02, BLK-03, BLK-04) remain transparently documented as `BLOCKED`. Physical rollout begins immediately upon hardware lab handover using the verified 19-step protocol (`HARDWARE_TEST_PROTOCOL.md`).

@@ -39,7 +39,15 @@ BIOLOGICAL_BOUNDS = {
     "heart_rate": (30.0, 240.0, "bpm"),
     "resting_heart_rate": (32.0, 140.0, "bpm"),
     "steps": (0.0, 35000.0, "count"),
-    "sleep_session": (0.0, 1440.0, "minutes"), # max 24 hours in minutes
+    "sleep_stage": (0.0, 1440.0, "minutes"),  # max 24 hours in minutes
+    "distance": (0.0, 100000.0, "m"),
+    "calories": (0.0, 20000.0, "kcal"),
+    "active_calories": (0.0, 20000.0, "kcal"),
+    "spo2": (50.0, 100.0, "%"),
+    "respiratory_rate": (4.0, 60.0, "rpm"),
+    "hrv": (5.0, 300.0, "ms"),
+    "body_temperature": (30.0, 45.0, "celsius"),
+    # exercise_session has no numeric bounds (duration tracked via start/end timestamps)
 }
 
 

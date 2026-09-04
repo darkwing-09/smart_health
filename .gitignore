@@ -50,3 +50,5 @@ captures/
 backups/
 *.dump
 data/reports/*.pdf
+backend/data/
+

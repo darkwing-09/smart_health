@@ -36,11 +36,14 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:
 
 
 
+import hashlib
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Decodes JWT Bearer token and returns authenticated User."""
+    """Decodes JWT Bearer token, verifies against Redis revocation blacklist, and returns authenticated User."""
     token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,7 +59,26 @@ async def get_current_user(
     except (JWTError, ValueError):
         raise credentials_exception
 
+    # Enforce immediate token revocation check via Redis blacklist
+    try:
+        redis_client = get_redis_pool()
+        jti = payload.get("jti")
+        token_key = f"revoked_token:{jti}" if jti else f"revoked_token:{hashlib.sha256(token.encode()).hexdigest()}"
+        is_revoked = await redis_client.get(token_key)
+        if is_revoked:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        # Fail-safe: if Redis connection encounters an issue, proceed with DB validation
+        pass
+
     user = await db.get(User, user_uuid)
     if user is None or not user.is_active:
         raise credentials_exception
     return user
+

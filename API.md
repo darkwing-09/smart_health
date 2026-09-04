@@ -28,6 +28,7 @@ This document defines the complete RESTful HTTP API contract for Personal Health
 
 | Domain | Visibility | Purpose |
 | :--- | :--- | :--- |
+| `/health`, `/ready` | Platform / Ops | Liveness and dependency readiness probes for Kubernetes/ECS |
 | `/v1/auth/*` | Public / Client | User authentication, device registration, token refresh |
 | `/v1/sync/*` | Mobile Client | Batch biometric ingestion, sync status checking |
 | `/v1/measurements/*` | Mobile Client | Querying normalized health timeline |
@@ -42,6 +43,39 @@ This document defines the complete RESTful HTTP API contract for Personal Health
 ---
 
 ## 3. Public & Mobile Client API Endpoints
+
+### 3.0 Platform Observability & Health Probes
+
+#### `GET /health`
+Liveness probe for process monitoring and ingress routers.
+- **Authentication:** None.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "status": "healthy"
+  }
+  ```
+
+#### `GET /ready`
+Readiness probe checking live downstream database (PostgreSQL/TimescaleDB) and cache (Redis) connectivity.
+- **Authentication:** None.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "status": "ready",
+    "database": "connected",
+    "redis": "connected"
+  }
+  ```
+- **Error Response (`503 Service Unavailable`):**
+  ```json
+  {
+    "status": "not_ready",
+    "database": "disconnected",
+    "redis": "connected",
+    "detail": "Database connection pool unreachable."
+  }
+  ```
 
 ### 3.1 Authentication & Devices
 
@@ -337,7 +371,10 @@ Patient signs off on the finalized document. Issues cryptographically secure `ap
 
 #### `GET /v1/care/summary/{summary_id}/export/pdf`
 Downloads the sealed vector PDF. Requires `status == "approved"` and active consent.
-- **Headers:** `Accept: application/pdf`
+- **Headers / Query Params:** 
+  - `Accept: application/pdf`
+  - `approval_token` (Query param or Header, required): Cryptographically signed HMAC-SHA256 token `<timestamp>:<digest>` issued during `/approve`. Valid for 1 hour.
+- **Security Validation:** Enforces constant-time HMAC digest matching, expiration checking (<3600s), and binding to authenticated user and summary ID. Mismatched or expired tokens return `HTTP 403 Forbidden`.
 - **Response (`200 OK`):** Binary vector PDF with SHA-256 seal and non-diagnostic disclaimers.
 
 #### `GET /v1/care/routing`
@@ -504,3 +541,54 @@ Triggered every midnight UTC. Recomputes baselines and triggers report compilati
 | **Firebase Cloud Messaging** | `POST https://fcm.googleapis.com/v1/projects/{project_id}/messages:send` | Google FCM HTTP v1 API. |
 | **WhatsApp Business Platform** | `POST https://graph.facebook.com/v19.0/{phone_number_id}/messages` | **DEFERRED (V1)** — Requires approved HSM template. |
 | **Fitbit Web API** | `GET https://api.fitbit.com/1/user/-/activities/heart/date/{date}/1d.json` | **DEFERRED (V1)** — OAuth 2.0 PKCE flow. |
+
+---
+
+## 6. Production Observability, Liveness & Readiness Probes
+
+#### `GET /health`
+Non-blocking container liveness probe for Kubernetes / ECS.
+- **Auth:** None (public probe).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "status": "healthy",
+    "service": "personal-health-os-api"
+  }
+  ```
+
+#### `GET /ready`
+Comprehensive readiness probe verifying live downstream persistence dependencies before admitting ingress traffic.
+- **Auth:** None (public probe).
+- **Response (`200 OK` when ready):**
+  ```json
+  {
+    "status": "ready",
+    "service": "personal-health-os-api",
+    "checks": {
+      "postgresql": {
+        "status": "ok"
+      },
+      "redis": {
+        "status": "ok"
+      }
+    }
+  }
+  ```
+- **Response (`503 Service Unavailable` when degraded):**
+  ```json
+  {
+    "status": "degraded",
+    "service": "personal-health-os-api",
+    "checks": {
+      "postgresql": {
+        "status": "error",
+        "error": "connection timeout"
+      },
+      "redis": {
+        "status": "ok"
+      }
+    }
+  }
+  ```
+

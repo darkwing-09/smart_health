@@ -1,12 +1,14 @@
 """FastAPI Application Entrypoint & Lifespan."""
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-from fastapi import FastAPI, Request
+from typing import Any, AsyncGenerator
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import ProblemDetailException, problem_detail_handler
+from app.db.session import get_db
 from app.observability.langsmith import configure_langsmith
 from app.observability.logging import configure_logging
 from app.observability.correlation import CorrelationIdMiddleware
@@ -69,3 +71,47 @@ app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 async def health_check() -> dict[str, str]:
     """Liveness probe endpoint."""
     return {"status": "healthy", "service": "personal-health-os-api"}
+
+
+@app.get("/ready", tags=["health"])
+async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
+    """
+    Readiness probe: validates PostgreSQL and Redis connectivity.
+    Returns HTTP 200 when all backends are reachable, HTTP 503 when degraded.
+    """
+    from fastapi.responses import JSONResponse
+    from sqlalchemy import text
+    import redis.asyncio as aioredis
+
+    checks: dict[str, Any] = {}
+    all_healthy = True
+
+    # PostgreSQL / TimescaleDB check
+    try:
+        result = await db.execute(text("SELECT 1"))
+        result.scalar()
+        checks["postgresql"] = {"status": "ok"}
+    except Exception as e:
+        checks["postgresql"] = {"status": "error", "detail": str(e)}
+        all_healthy = False
+
+    # Redis check
+    try:
+        r = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        pong = await r.ping()
+        await r.aclose()
+        checks["redis"] = {"status": "ok" if pong else "error"}
+        if not pong:
+            all_healthy = False
+    except Exception as e:
+        checks["redis"] = {"status": "error", "detail": str(e)}
+        all_healthy = False
+
+    response_data = {
+        "status": "ready" if all_healthy else "degraded",
+        "service": "personal-health-os-api",
+        "checks": checks,
+    }
+
+    status_code = 200 if all_healthy else 503
+    return JSONResponse(content=response_data, status_code=status_code)

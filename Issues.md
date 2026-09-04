@@ -203,3 +203,54 @@ This document tracks all active defects, architectural questions, security conce
 - **Resolution:** Updated non-escalation idempotency key generation to compute a deterministic window bucket:
   `window_bucket = int(now.timestamp() // (policy.dedup_window_hours * 3600))`
   `f"notif_{user_id}_{finding.id}_{primary_channel.value}_{window_bucket}"`, permitting legitimate re-alerting across successive 12-hour windows while maintaining strict deduplication within the active window.
+
+### `ISSUE-024`: Physical Android Device & Wearable Sensor Hardware Availability
+- **Category:** Integration Blocker / Hardware Peripheral
+- **Priority:** `P1`
+- **Status:** `BLOCKED`
+- **Description:** No physical Android smartphone, emulator AVD system image, or Bluetooth LE wearable sensor is connected to the development workstation.
+- **Resolution / Mitigation:** In compliance with healthcare engineering governance (zero-fabrication principle), hardware testing gates are strictly preserved as `BLOCKED`. All software architecture, data ingestion, state machines, and reporting were validated using the authoritative 14-hop deterministic simulation (`scripts/simulate_health_connect_pipeline.py`) and a 19-step hardware verification runbook was documented in `HARDWARE_TEST_PROTOCOL.md`.
+
+### `ISSUE-025`: Lock Screen PHI Exposure via System Notifications
+- **Category:** Privacy & Mobile Security
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Default Android notification channels could display sensitive biometric finding headlines on lock screens without requiring device unlocking.
+- **Resolution:** Updated `HealthOSNotificationManager.kt` with explicit `.setVisibility(NotificationCompat.VISIBILITY_PRIVATE)` on both attention and urgent channels, masking sensitive biometric details until the user authenticates. Verified via unit test suite `android/app/src/test/java/com/healthos/NotificationPrivacyTest.kt`.
+
+### `ISSUE-026`: Controlled Pilot Production Operations & Runbook Formalization
+- **Category:** SRE & Clinical Safety Governance
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Prior to real-world pilot deployment, the system required formalized SRE deployment checklists, Sev 1–4 incident response protocols, point-in-time recovery verification, and non-diagnostic participant safety guidelines.
+- **Resolution:** Authored `PILOT_DEPLOYMENT_CHECKLIST.md`, `INCIDENT_RESPONSE_RUNBOOK.md`, and `PILOT_SAFETY_PROTOCOL.md`. Formally adopted ADR-034 (Production Pilot Architecture & SRE Observability) and ADR-035 (Controlled Pilot Participant Safety Protocol). Verified operational invariants via 10 integration tests in `test_phase9_pilot_operations.py`.
+
+### `ISSUE-027`: Future Timestamp Quarantining & Sensor Detachment Ingestion Handling
+- **Category:** Ingestion Data Quality & Mobile Sync Resilience
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Client clock drift or sensor detachment could either cause mobile sync retry loops or allow corrupted data to skew rolling baselines.
+- **Resolution:** Ingestion pipeline routes future timestamps (> now + 5 min) and impossible biological values to `data_quality_flag = 'invalid'` and increments `invalid_count` while returning HTTP 200 `SUCCESS` so mobile clients do not loop in retry cycles. Sensor detachment (zero steps/HR) is preserved as `missing` without synthetic imputation. Verified under `test_phase9_pilot_operations.py`.
+
+### `ISSUE-028`: Stateless JWT Revocation Gap and Redis Blacklist Engine
+- **Category:** Authentication & Session Security
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** JWT access tokens were completely stateless and could not be revoked prior to expiration, leaving an exposure window if credentials were reset, an employee departed, or a user logged out.
+- **Resolution:** Implemented `jti` JWT claim generation, added `POST /v1/auth/logout` endpoint which stores revoked token IDs in Redis (`revoked_token:{jti}`) with matching remaining TTL, records an immutable `AuditLog` entry, and updated `get_current_user` to reject blacklisted tokens with HTTP 401. Verified via `test_token_revocation.py`.
+
+### `ISSUE-029`: Concurrent Mobile Batch Ingestion Race Condition
+- **Category:** Data Integrity & Mobile Sync Concurrency
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Simultaneous retry requests for the same sync batch under flaky cellular conditions threw unhandled `IntegrityError` collisions on `SyncBatch.id`, generating HTTP 500 exceptions and worker crashes.
+- **Resolution:** Updated `IngestionService.process_batch` to use PostgreSQL `insert(SyncBatch).on_conflict_do_nothing(index_elements=["id"])`. If a concurrent request commits first, the duplicate query safely loads the existing batch record and returns `status="ALREADY_PROCESSED"`. Verified with 10-worker concurrency drill in `test_ingest_concurrency.py`.
+
+### `ISSUE-030`: Background Worker Periodic Cadence Implementation Gaps
+- **Category:** SRE & Worker Cadence
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Background ARQ worker periodic cron functions (`cron_daily_baseline_recompute` and `cron_daily_report_pipeline`) were stubbed with empty return dictionaries rather than executing live calculations.
+- **Resolution:** Built full operational implementations in `worker.py`: `cron_daily_baseline_recompute` calculates rolling 30-day mean, standard deviation, and circadian profiles across 5 biometrics; `cron_daily_report_pipeline` compiles 24-hour vitals rollups, generates daily narratives, builds publication-grade ReportLab vector PDFs with SHA-256 seals, stores `Report` records, and handles zero-telemetry days via graceful `degraded_trends_only` fallback. Verified via `test_worker_cadence_e2e.py`.
+
+

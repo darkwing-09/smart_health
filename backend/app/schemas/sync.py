@@ -18,9 +18,13 @@ class MeasurementItemSchema(BaseModel):
     @field_validator("metric_type")
     @classmethod
     def validate_metric_type(cls, v: str) -> str:
-        allowed = {"heart_rate", "resting_heart_rate", "steps", "distance", "sleep_stage", "calories", "spo2"}
+        allowed = {
+            "heart_rate", "resting_heart_rate", "steps", "distance",
+            "sleep_stage", "calories", "active_calories", "spo2",
+            "respiratory_rate", "hrv", "body_temperature", "exercise_session"
+        }
         if v not in allowed:
-            raise ValueError(f"Unsupported metric_type '{v}'. Must be one of {allowed}")
+            raise ValueError(f"Unsupported metric_type '{v}'. Must be one of {sorted(allowed)}")
         return v
 
 
@@ -36,4 +40,5 @@ class BatchIngestResponse(BaseModel):
     batch_id: str = Field(..., description="Idempotency batch identifier")
     accepted_count: int = Field(..., description="Number of new records inserted")
     duplicate_count: int = Field(..., description="Number of duplicate records skipped")
+    invalid_count: int = Field(default=0, description="Number of records failing biological bounds validation")
     ingested_at: datetime = Field(..., description="Server completion timestamp")

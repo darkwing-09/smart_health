@@ -181,4 +181,69 @@ async def test_health_intel_explanation_grounding(mock_anomaly_telemetry):
   - Multi-tenant isolation: User A cannot read or mutate User B's notifications (HTTP 404).
   - WebSocket streaming (`/v1/ws/stream`): JWT authentication, tenant isolation, ping/pong heartbeat, missed-event catchup replay.
 
+---
 
+## 11. Real Device, Wearable & Production Pilot Validation Tests (Phase 8)
+
+- **Hardware Readiness Detection (`scripts/hardware_readiness_check.py`):**
+  - Evaluates 9 hardware gates: Android SDK 34, ADB 1.0.41, TimescaleDB, Redis, FCM Dry Run, Physical Phone, Android AVD, Health Connect runtime, Physical Wearable.
+  - Preserves zero-fabrication principle: physical hardware gates explicitly retained as BLOCKED without fabrication.
+- **Data Quality Under Real Conditions (`test_data_quality_real_conditions.py`):**
+  - Tests wearable off-wrist detachment windows (step count 0, HR 0 for $>30$ min) classified as sensor detachment.
+  - Tests impossible biological telemetry values quarantined as `invalid`.
+  - Tests 36-hour delayed batch sync with historical timestamps preserved.
+  - Tests client device clock drift $\ge 5$ min adaptation and multi-sync deduplication.
+- **Real-Time Degradation & Fallback (`test_realtime_pipeline_degradation.py`):**
+  - Tests 5 alert tiers, Level 4 emergency quiet hours bypass, 12-hour anti-fatigue deduplication, deterministic mathematical fallback under total LLM outage, FCM outage resilience, and push preview masking.
+- **Daily Report Validation & PDF Generation (`test_daily_report_e2e.py`):**
+  - Tests zero-data day graceful degradation, partial-wear days (4 hours data), active findings inclusion without diagnostic assertion, and vector PDF compilation with statutory non-diagnostic disclaimers.
+- **Pilot Adversarial Security (`test_pilot_adversarial_security.py`):**
+  - Tests cross-user measurement isolation, expired/forged JWT rejection, missing auth rejection, oversized batch rejection, unauthenticated health probe, HTTP security headers, cross-user device hijacking prevention, immediate consent revocation hard stop, cryptographically signed HMAC approval token tampering detection, and cross-action replay prevention.
+- **12 End-to-End Pilot Chaos Failure Drills (`test_pilot_12_failure_drills.py`):**
+  - Drill 1: Offline 24h batch ingestion (historical timestamp fidelity).
+  - Drill 2: Redis outage during sync (fail-open ingestion invariant).
+  - Drill 3: PostgreSQL transaction atomic rollback (no partial writes).
+  - Drill 4: Worker crash recovery (idempotent batch state preservation).
+  - Drill 5: Duplicate batch submission (idempotency key deduplication).
+  - Drill 6: FCM push service timeout/outage (in-app notification preservation).
+  - Drill 7: LLM outage fallback (deterministic mathematical explanation).
+  - Drill 8: WebSocket abrupt disconnect (state cleanup, persistent notification feed).
+  - Drill 9: App killed during sync simulation (client-side chunking watermark safety).
+  - Drill 10: Device reboot / boot completed rescheduling invariant.
+  - Drill 11: Wearable detachment gap (off-wrist heuristic, zero false bradycardia).
+  - Drill 12: Immediate consent revocation (hard-stop on clinical export).
+- **500-Worker Concurrency Load Test (`scripts/load_test_500_workers.py`):**
+  - 500 concurrent workers posting batches under 50-connection concurrency limit against live FastAPI/TimescaleDB.
+  - Verified throughput (13.26 req/s), success rate (99.8%), latency distribution (p50: 1753ms, p95: 12447ms), and connection pool stability.
+- **Android Real Device & Unit Tests:**
+  - `HealthSyncWorkerTest.kt`: 5 unit tests for batching, constraints, retry policy, and Room database interactions.
+  - `NotificationPrivacyTest.kt`: 3 unit tests verifying `NotificationCompat.VISIBILITY_PRIVATE` on all alert channels.
+  - Compilation & lint: `./gradlew testDebugUnitTest` (8 tests passing), `./gradlew lintDebug` (0 errors), `./gradlew compileDebugKotlin` (clean).
+
+### Phase 9: Real-World Pilot Launch, Hardware Validation & Production Operations (VERIFIED)
+- **Phase 9 Pilot Operations Integration Test Suite (`test_phase9_pilot_operations.py`):**
+  - `test_p9_01`: Multi-metric batch ingestion across 9 biometrics and TimescaleDB hypertable chunk persistence.
+  - `test_p9_02`: End-to-end data pipeline traversal from ingestion to ReportLab vector PDF visit summary with SHA-256 seal.
+  - `test_p9_03`: Offline synchronization recovery (22-hour delayed records) and idempotent re-transmission replay.
+  - `test_p9_04`: Clock skew resilience (5-minute jitter acceptance) and impossible future timestamp quarantine as `invalid`.
+  - `test_p9_05`: Wearable sensor detachment quality tracking (zero steps/HR) tagged `missing` without synthetic imputation.
+  - `test_p9_06`: Quiet hours postponement (Level 2 Attention) vs Level 4 Urgent emergency bypass invariance.
+  - `test_p9_07`: Multi-tenant isolation boundary (404 Not Found concealment on unauthorized finding access).
+  - `test_p9_08`: ActionGate cryptographic HMAC approval token user binding, tampering detection, and freshness validation.
+  - `test_p9_09`: India DPDP Act 2023 consent revocation immediate hard-stop across clinical summary endpoints.
+  - `test_p9_10`: Kubernetes/ECS container liveness (`/health`) and readiness (`/ready`) probes under live operation.
+- **Production Operational Runbooks:**
+  - `PILOT_DEPLOYMENT_CHECKLIST.md`: Pre-flight verification, environment checks, migration verification, and probe setup.
+  - `INCIDENT_RESPONSE_RUNBOOK.md`: Sev 1–4 incident triage, MTTA/MTTR bounds, PITR backup restoration, zero-downtime rollback protocols.
+  - `PILOT_SAFETY_PROTOCOL.md`: Participant onboarding, informed consent, device pairing, data quality limitations, non-diagnostic communication, and emergency escalation pathways.
+
+### Phase 9.1: Pilot Hardening, Concurrency & Operational Cadence (VERIFIED)
+- **Token Revocation Blacklist Security Suite (`test_token_revocation.py`):**
+  - `test_token_revocation_logout_flow`: Verifies JWT issuance with unique `jti` claim, blacklisting on `POST /v1/auth/logout`, rejection with HTTP 401 on subsequent requests, and audit log persistence.
+  - `test_revocation_user_isolation`: Confirms revoking User A's token does not invalidate User B's active token.
+- **Batch Ingestion Concurrency Suite (`test_ingest_concurrency.py`):**
+  - `test_concurrent_batch_ingest_race_condition`: 10 simultaneous asynchronous requests submitting the identical idempotency key; verifies zero 500 exceptions, 1 `SUCCESS`, 9 `ALREADY_PROCESSED`, and exactly 1 DB record persisted via `insert().on_conflict_do_nothing()`.
+- **Worker Cadence End-to-End Suite (`test_worker_cadence_e2e.py`):**
+  - `test_daily_baseline_recompute_e2e`: Computes rolling 30-day baseline over active user telemetry across 5 core biometrics, asserting valid mean, standard deviation, and hourly circadian curves.
+  - `test_daily_report_pipeline_e2e`: Synthesizes 24h health digest, produces ReportLab vector PDF, records database entry, and verifies download via REST API.
+  - `test_daily_report_zero_data_degraded_mode`: Verifies graceful degradation to `degraded_trends_only` when user has zero wearable recordings, avoiding crashes.
