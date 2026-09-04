@@ -369,3 +369,30 @@ A recorded architectural decision must never be modified or reversed silently. A
 - **Consequences:** Nighttime vital variations are calmly held for waking review, while acute biological emergencies penetrate quiet hours immediately.
 - **Status:** Accepted.
 
+---
+
+## ADR-030: Database Concurrency Resilience & Deterministic Windowed Idempotency Fallback
+- **Date:** 2026-09-04
+- **Decision:** Wrap notification entity insertion in `NotificationService` within a race-safe `try ... except IntegrityError:` block that rolls back the session, queries the existing notification by `idempotency_key`, and returns the persisted entity gracefully. Bucket non-escalation idempotency keys by `(timestamp // window_seconds)`.
+- **Context:** Concurrent ARQ background workers or rapid successive telemetry batches processing the same finding can attempt simultaneous inserts, causing PostgreSQL unique constraint violations on `uq_notifications_idempotency_key`. Furthermore, after a 12-hour anti-fatigue cycle passes, legitimate re-alerts must be possible without colliding with the previous window's key.
+- **Alternatives considered:**
+  - Distributed Redis locks: Rejected as a hard dependency because Redis outages would stall notification dispatch.
+  - Allowing unhandled IntegrityError to crash the worker: Rejected because it floods logs with false errors and routes healthy tasks to the dead-letter queue.
+- **Reasoning:** PostgreSQL unique constraints are the authoritative source of truth. In-process rollback and fetch ensures zero duplicate notifications, zero worker crashes, and seamless race-condition safety.
+- **Consequences:** Tested and verified under `test_concurrent_dispatch_race_condition`. Concurrent worker dispatches resolve safely to the exact same notification ID.
+- **Status:** Accepted.
+
+---
+
+## ADR-031: Engineering Phase Sequencing — Phase 8 Focus Rationale
+- **Date:** 2026-09-04
+- **Decision:** Sequence **Phase 8** as: **Daily Health Digests, Longitudinal Trend Reporting & Automated Vector PDF Generation**.
+- **Context:** Following completion of Phase 7 (Alert Hierarchy, Real-Time Streaming & Notification Delivery Engine), the immediate acute alert pathway is verified and hardened. External pathways remain gated: WhatsApp Cloud API requires Meta Business verification (BLK-01), live doctor directory integration requires commercial provider agreements (BLK-02), and automated appointment booking is legally restricted under DPDP 2023 (BLK-03 / ADR-003).
+- **Alternatives considered:**
+  - Jump directly to real wearable Bluetooth hardware ingestion: Rejected because wearable companion apps connect via Android Health Connect, which is already integrated and verified in Phase 1 & 2.
+  - Force WhatsApp integration via unofficial reverse-engineered web scrapers: Rejected as fragile, legally high-risk, and violating ADR-002.
+  - Autonomous doctor booking: Explicitly prohibited by ADR-003 and product safety invariants.
+- **Reasoning:** For the 99% of days when patients do not experience acute emergencies (Level 4 Urgent), the primary user value is proactive longitudinal wellness intelligence: 24-hour vitals rollups, sleep/exertion correlation, circadian stability scores, trend narrative synthesis, and publication-quality daily vector PDFs. This fulfills Agent 7 (`Daily Report Agent` in AGENTS.md), integrates directly with the verified Phase 4 data layer and Phase 7 notification delivery engine, and runs 100% on self-contained, fully-tested infrastructure.
+- **Consequences:** Phase 8 delivers end-to-end daily digest compilation, ARQ morning cadence scheduling, daily digest REST APIs, vector PDF generation with ReportLab, and Android Compose daily card UI.
+- **Status:** Accepted.
+

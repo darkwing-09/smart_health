@@ -174,7 +174,32 @@ This document tracks all active defects, architectural questions, security conce
 - **Description:** Repeated worker runs or telemetry batches can trigger duplicate alerts for the same ongoing physiological finding, leading to user alarm fatigue. However, naive deduplication can dangerously suppress life-threatening escalations (e.g., Level 2 Attention worsening to Level 4 Urgent).
 - **Resolution:** Implemented race-safe database-level deduplication query in `NotificationService`. Identical user/finding/channel dispatches within a 12-hour window are suppressed. If a finding escalates to a higher severity tier, suppression is automatically bypassed, dispatching the higher-severity alert immediately. Verified across unit, graph, and live integration tests.
 
+### `ISSUE-020`: Race Condition on Concurrent Duplicate Worker Dispatch
+- **Category:** Concurrency & Database Resilience
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** When two concurrent workers processed duplicate alerts for the same finding and channel simultaneously, both generated identical idempotency keys, triggering `IntegrityError` on unique constraint `uq_notifications_idempotency_key`.
+- **Resolution:** Wrapped notification creation in `NotificationService` with a race-safe `try ... except IntegrityError` block. Upon catching a constraint collision, the transaction rolls back cleanly, queries the existing notification by `idempotency_key`, and returns the previously persisted entity without crashing the worker. Verified via `test_concurrent_dispatch_race_condition`.
 
+### `ISSUE-021`: Missing Notification State Transition to EXPIRED
+- **Category:** State Machine Lifecycle
+- **Priority:** `P2`
+- **Status:** `RESOLVED`
+- **Description:** Stale or unacknowledged notifications past their TTL had no valid transition path to `EXPIRED` from `DELIVERED` in `NotificationStateMachine.VALID_TRANSITIONS`, throwing `InvalidNotificationStateTransition`.
+- **Resolution:** Added `NotificationState.EXPIRED` to `VALID_TRANSITIONS` for `DELIVERED`, and added `expire_notification()` method in `NotificationService`.
 
+### `ISSUE-022`: Corrupted Timezone Strings Crashing Quiet Hours Resolution
+- **Category:** Robustness & Input Validation
+- **Priority:** `P2`
+- **Status:** `RESOLVED`
+- **Description:** `get_safe_zoneinfo()` only caught `ZoneInfoNotFoundError`. Certain malformed timezone strings (e.g. containing null bytes, path traversal sequences, or slash anomalies) raise `ValueError` in Python `zoneinfo`, terminating quiet hours evaluation with an unhandled exception.
+- **Resolution:** Expanded exception handling in `get_safe_zoneinfo()` to catch `(ZoneInfoNotFoundError, ValueError, Exception)`, logging a warning and falling back to `DEFAULT_TIMEZONE` (`Asia/Kolkata`).
 
-
+### `ISSUE-023`: Idempotency Key Re-Alerting Window Bucketing
+- **Category:** Anti-Fatigue & Data Integrity
+- **Priority:** `P2`
+- **Status:** `RESOLVED`
+- **Description:** Non-escalation idempotency keys previously lacked a time-window component, meaning that after the 12-hour anti-fatigue window expired, a new legitimate alert for the same finding would collide with the existing historical notification record in `uq_notifications_idempotency_key`.
+- **Resolution:** Updated non-escalation idempotency key generation to compute a deterministic window bucket:
+  `window_bucket = int(now.timestamp() // (policy.dedup_window_hours * 3600))`
+  `f"notif_{user_id}_{finding.id}_{primary_channel.value}_{window_bucket}"`, permitting legitimate re-alerting across successive 12-hour windows while maintaining strict deduplication within the active window.
