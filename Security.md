@@ -230,4 +230,23 @@ Disaster recovery capabilities are verified via live restore drills against live
   - Recovery Time Objective (RTO): $< 30$ seconds.
   - Recovery Point Objective (RPO): Determined by backup schedule (target: $\le 1$ hour).
 
+---
 
+## 14. Notification Security, Multi-Tenant Isolation & Privacy Boundaries
+
+Phase 7 implements safety-critical notification delivery with defense-in-depth isolation:
+
+### 14.1 Multi-Tenant Isolation & Access Control
+- **REST Endpoints:** Every query and mutation in `/v1/notifications/*` and `/v1/users/preferences` enforces strict `WHERE user_id = :authenticated_user_id`. Cross-user access attempts return HTTP 404 (Not Found) to avoid leaking resource existence.
+- **WebSocket Streaming Isolation:** The WebSocket endpoint `/v1/ws/stream` validates JWT bearer credentials upon handshake. The `ConnectionManager` isolates socket registrations into per-user dictionaries. An event dispatched for User A is physically inaccessible to User B's active sockets.
+
+### 14.2 Device Token Ownership & Invalidation
+- **Token Ownership:** FCM tokens registered via `POST /v1/devices/fcm-token` are explicitly bound to `(user_id, device_token)`. A token registered by User A cannot be claimed or overwritten by User B without valid re-authentication.
+- **Automatic Deactivation:** Upon receiving FCM error codes indicating stale or unregistered tokens (`UNREGISTERED`, `INVALID_ARGUMENT`), `FcmNotificationService` immediately deactivates the device token in the database, preventing notification misdirection if an operating system reassigns the token.
+
+### 14.3 Privacy Minimization in Push Payloads
+- **Zero Raw PHI in Push:** Push payloads sent across Google FCM servers contain only calm, non-diagnostic titles and physiological summary descriptions. Raw telemetry arrays, diagnostic speculations, and detailed clinician notes are omitted from push notifications.
+- **Deep-Link Authentication:** Notification click intents navigate to internal Android routes (`healthos://findings/{id}`), requiring the user to authenticate via device biometric lock before viewing complete clinical context.
+
+### 14.4 Life-Safety Invariance
+- **Deterministic Level 4 Override:** Quiet hours and minimum severity thresholds are evaluated in deterministic code. User preference filters cannot suppress Level 4 Urgent physiological alerts.

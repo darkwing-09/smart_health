@@ -303,3 +303,69 @@ A recorded architectural decision must never be modified or reversed silently. A
 - **Reasoning:** Enforcing non-root UID 10001 and read-only filesystems prevents runtime binary tampering. Conducting a live restore drill into a temporary database (`healthos_db_drill`) proved 100% row parity across all 7 core tables and TimescaleDB hypertable chunks with $<30$ second RTO.
 - **Consequences:** `Dockerfile`, `docker-compose.prod.yml`, `scripts/backup_db.sh`, and `scripts/restore_db.sh` establish production-grade operational readiness.
 - **Status:** Accepted.
+
+---
+
+## ADR-025: Deterministic Notification Severity Ownership and 5-Tier Alert Hierarchy
+- **Date:** 2026-09-04
+- **Decision:** All alert tiers and severity ratings must strictly originate from the deterministic health pipeline (Rule H2 hard biological gates, NumPy z-score calculations, and baseline deviation modeling). The LangGraph notification agent (`NotificationGraph`) and any LLM node are strictly forbidden from changing, inferring, overriding, or recalculating severity or alert eligibility.
+- **Context:** An AI model interpreting notification urgency could hallucinate or downgrade a severe cardiovascular event (e.g. resting heart rate >= 150 bpm) or trigger alarmist push alerts for benign circadian fluctuations.
+- **Alternatives considered:**
+  - LLM-determined notification urgency: Rejected as an unsafe clinical anti-pattern.
+  - Hardcoded single-tier push notifications for all anomalies: Rejected due to catastrophic alert fatigue.
+- **Reasoning:** A deterministic 5-level policy (Level 0 Info, Level 1 Insight, Level 2 Attention, Level 3 Important, Level 4 Urgent) provides verifiable mathematical boundaries. Level 0 remains on the timeline, Level 1 is batched into daily digests, Level 2 updates in-app feeds, Level 3 triggers waking push alerts, and Level 4 executes immediate high-priority dispatch with emergency disclaimers.
+- **Consequences:** `NotificationPolicyEngine` operates as a pure deterministic service. In the event of total LLM failure, all alerts continue to generate and dispatch with 100% mathematical fidelity.
+- **Status:** Accepted.
+
+---
+
+## ADR-026: Authoritative PostgreSQL Notification State Machine
+- **Date:** 2026-09-04
+- **Decision:** Model notification lifecycle through an authoritative, persistent state machine in PostgreSQL: `CREATED` $\to$ `POLICY_EVALUATED` $\to$ `DEDUP_CHECKED` $\to$ `QUEUED` $\to$ `DISPATCHING` $\to$ `DELIVERED`. Support explicit failure transitions (`FAILED` $\to$ `RETRYING` $\to$ `DEAD_LETTER`), terminal dismissals (`ACKNOWLEDGED`, `DISMISSED`), and expirations (`EXPIRED`).
+- **Context:** Ephemeral, un-persisted message queues lose alert delivery state during process restarts and prevent reliable multi-device synchronization and clinical auditing.
+- **Alternatives considered:**
+  - In-memory dispatch tracking: Rejected due to data loss during worker restarts.
+  - Simple binary `sent: bool` column: Rejected because it cannot track retries, quiet hours deferrals, user acknowledgements, or dead-letter queue diagnostics.
+- **Reasoning:** Storing explicit state in `notifications.state` ensures auditability, supports bounded retries, and enables users to review active and historical alerts across multiple client sessions.
+- **Consequences:** Alembic migration `20260904_0005` added state machine columns, retry counters, and quiet hours hold flags. `NotificationStateMachine` validates all transitions.
+- **Status:** Accepted.
+
+---
+
+## ADR-027: WebSocket as Transport Separation and Missed-Event Catch-Up
+- **Date:** 2026-09-04
+- **Decision:** Design WebSocket streaming (`/v1/ws/stream`) strictly as an ephemeral transport mechanism. PostgreSQL remains the sole authoritative source of truth. The WebSocket protocol must support JWT authentication, tenant isolation, ping/pong heartbeats, and a cursor-based catch-up protocol (`?since=<timestamp>`) upon reconnection.
+- **Context:** Mobile clients on cellular networks frequently drop connections due to sleep modes or cell tower transitions. Relying on WebSocket message queues for durable storage leads to missing critical health events.
+- **Alternatives considered:**
+  - WebSocket as message store: Rejected due to memory overhead and potential data loss during socket reconnection.
+  - Client polling only: Rejected due to excessive network traffic and latency for critical alerts.
+- **Reasoning:** Coupling real-time WebSocket broadcast with a database replay protocol ensures instantaneous delivery when connected, while guaranteeing zero missed alerts upon reconnection.
+- **Consequences:** `WebSocketConnectionManager` isolates user sockets into dedicated pools and supports catch-up notification replay queries directly against PostgreSQL.
+- **Status:** Accepted.
+
+---
+
+## ADR-028: Atomic 12-Hour Deduplication with Severity Escalation Bypass
+- **Date:** 2026-09-04
+- **Decision:** Implement atomic, database-backed 12-hour deduplication window per `(user_id, finding_id, channel)`. Repeated worker evaluations of the same finding within 12 hours must be suppressed as duplicates (`SUPPRESSED_DUPLICATE`). However, if an existing finding escalates in severity (e.g. Level 2 Attention $\to$ Level 4 Urgent), the 12-hour window must be immediately bypassed to dispatch the urgent alert.
+- **Context:** Wearable devices sync continuously. If an anomaly persists across multiple sync batches, naive alerting will spam the user with identical push alerts every 15 minutes. Conversely, suppressing an alert whose physiological severity suddenly spiked to emergency levels is clinically dangerous.
+- **Alternatives considered:**
+  - Rigid 12-hour window with no escalation bypass: Rejected as life-threatening.
+  - Stateless deduplication in Redis only: Rejected because Redis restarts or cache evictions would cause alert storms.
+- **Reasoning:** Database query against recent notification states within the 12-hour cutoff combined with deterministic severity comparison (`current_tier > prior_tier`) guarantees both fatigue prevention and emergency escalation responsiveness.
+- **Consequences:** Verified by unit and integration tests: identical findings yield 0 duplicate notifications, while escalation to Level 4 immediately triggers new delivery.
+- **Status:** Accepted.
+
+---
+
+## ADR-029: Timezone-Aware Quiet Hours with Non-Negotiable Safety Override
+- **Date:** 2026-09-04
+- **Decision:** Enforce user quiet hours (default 22:00–07:00) calculated dynamically in the user's localized timezone (`ZoneInfo`). Non-urgent alerts (Levels 2 & 3) generated during quiet hours must be persisted to the in-app feed silently with `quiet_hours_held = True`, with audible FCM push postponed until quiet hours conclude. **Level 4 Urgent alerts strictly and permanently override quiet hours** and cannot be disabled by user preferences.
+- **Context:** Nocturnal alert fatigue causes patients to disable health monitoring apps entirely. However, dangerous biological thresholds (e.g. acute resting tachycardia >= 150 bpm) require immediate waking intervention.
+- **Alternatives considered:**
+  - UTC-based quiet hours: Rejected as completely erroneous for global users across differing timezones.
+  - Allowing users to mute Level 4 Urgent alerts: Rejected under safety guidelines.
+- **Reasoning:** `QuietHoursEvaluator` converts UTC timestamps to localized time and computes exact morning release UTC timestamps. `UserPreferenceService` permanently sets `emergency_override_enabled = True`.
+- **Consequences:** Nighttime vital variations are calmly held for waking review, while acute biological emergencies penetrate quiet hours immediately.
+- **Status:** Accepted.
+

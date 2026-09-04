@@ -160,6 +160,21 @@ This document tracks all active defects, architectural questions, security conce
 - **Description:** Database backup capability was unproven; lack of a verified restore drill posed a critical operational risk under audit.
 - **Resolution:** Authored `scripts/backup_db.sh` and `scripts/restore_db.sh`. Conducted an actual live disaster recovery drill against PostgreSQL: produced 2.2 MB compressed dump with SHA-256 seal, restored dump into a fresh `healthos_db_drill` database, and verified **100% exact table row and hypertable chunk parity across all 7 core tables** ($<30$s RTO).
 
+### `ISSUE-018`: Timezone-Aware Quiet Hours & Emergency Override Architecture
+- **Category:** Notification Safety & Scheduling
+- **Priority:** `P0`
+- **Status:** `RESOLVED`
+- **Description:** Static UTC quiet hours create acute risks of alerting sleeping users in non-UTC timezones or suppressing urgent alerts during nighttime cardiac emergencies.
+- **Resolution:** Implemented `QuietHoursEvaluator` with dynamic `zoneinfo.ZoneInfo` resolution, handling overnight intervals (e.g. 22:00–07:00 local time) and calculating exact morning release timestamps. Enforced deterministic Level 4 Urgent override: life-critical alerts immediately bypass quiet hours and cannot be suppressed by user preferences. Verified via unit and integration tests.
+
+### `ISSUE-019`: Atomic 12-Hour Deduplication & Severity Escalation Bypass
+- **Category:** Anti-Fatigue & Delivery Engine
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Repeated worker runs or telemetry batches can trigger duplicate alerts for the same ongoing physiological finding, leading to user alarm fatigue. However, naive deduplication can dangerously suppress life-threatening escalations (e.g., Level 2 Attention worsening to Level 4 Urgent).
+- **Resolution:** Implemented race-safe database-level deduplication query in `NotificationService`. Identical user/finding/channel dispatches within a 12-hour window are suppressed. If a finding escalates to a higher severity tier, suppression is automatically bypassed, dispatching the higher-severity alert immediately. Verified across unit, graph, and live integration tests.
+
+
 
 
 

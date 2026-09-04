@@ -111,15 +111,15 @@ This document formally specifies all 12 autonomous, semi-autonomous, and determi
 ---
 
 ### 6. Notification Agent (LangGraph Router Graph)
-- **Mission:** Route verified findings to appropriate delivery channels while strictly preventing alert fatigue.
-- **Engine Type:** **LangGraph Stateful Graph**.
-- **Responsibilities:** Evaluate user notification preferences, quiet hours, and the Finding state machine (ADR-005); deduplicate alerts; dispatch via FCM (MVP) or WhatsApp (V1).
-- **Inputs:** Approved `FindingExplanation` and user delivery preferences.
-- **Outputs:** Dispatched push/SMS/WhatsApp message, recorded `Notification` row.
-- **Tools & Permissions:** Write access to `notifications`; network access to FCM and WhatsApp APIs.
-- **Decision Boundaries:** Suppresses notifications for findings already in `notified` status unless severity has escalated.
-- **Failure Behavior:** Retries failed FCM pushes with exponential backoff (up to 3 attempts); records delivery failure.
-- **What It Must NEVER Do:** Send un-gated marketing or promotional alerts; re-notify for the same unresolved finding within the deduplication window.
+- **Mission:** Route verified findings to appropriate delivery channels while strictly preventing alert fatigue and guaranteeing emergency dispatch.
+- **Engine Type:** **LangGraph Stateful Graph (`NotificationGraph`)**.
+- **Responsibilities:** Orchestrate deterministic alert tiers (Levels 0–4); execute atomic 12-hour deduplication and escalation bypass; evaluate timezone-aware quiet hours with Level 4 emergency override; transition notifications through the authoritative 7-state PostgreSQL state machine (`CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING -> DELIVERED`); dispatch to FCM HTTP v1 and WebSocket streaming transports; track delivery fatigue metrics.
+- **Inputs:** Approved `FindingExplanation` / `Finding` payload, user delivery preferences, device FCM tokens.
+- **Outputs:** Transitioned `Notification` row in PostgreSQL, FCM HTTP v1 push, WebSocket broadcast event.
+- **Tools & Permissions:** Read access to `user_preferences`, `findings`; write access to `notifications`, `audit_logs`; network access to FCM API.
+- **Decision Boundaries:** Operates purely as an orchestration coordinator over deterministic inputs. Cannot change or infer alert severity. Level 4 Urgent alerts permanently bypass quiet hours.
+- **Failure Behavior:** Bounded exponential backoff retries (max 3); routes to `DEAD_LETTER` upon exhaustion; falls back to deterministic text templates during LLM outages.
+- **What It Must NEVER Do:** Alter, infer, or override deterministic severity; suppress Level 4 emergency alerts; re-notify for the same unresolved finding within 12 hours unless escalated; expose raw PHI in push payloads.
 
 ---
 

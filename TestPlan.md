@@ -149,3 +149,36 @@ async def test_health_intel_explanation_grounding(mock_anomaly_telemetry):
   - `EXPORT`: Compiles vector PDF with SHA-256 seal. Blocks unapproved exports with HTTP 400.
 - **Tenant Isolation:** User B attempting to access, redact, approve, or export User A's summary is blocked with HTTP 404/403.
 
+---
+
+## 10. Alert Hierarchy, Real-Time Streaming & Notification Delivery Tests (Phase 7)
+
+- **Deterministic 5-Tier Policy Evaluation (`test_notification_policy.py`):**
+  - Asserts exact mapping from Finding severity to 5 alert tiers (Level 0 Info, Level 1 Insight, Level 2 Attention, Level 3 Important, Level 4 Urgent).
+  - Asserts presence of `LEVEL_4_EMERGENCY_DISCLAIMER` on Level 4 Urgent alerts.
+  - Verifies quiet-hours suppression rules and channel eligibility per tier without LLM invocation.
+- **Notification State Machine Transitions (`test_notification_state_machine.py`):**
+  - Tests nominal forward lifecycle: `CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING -> DELIVERED`.
+  - Tests failure and retry mechanics: `FAILED -> RETRYING` (exponential backoff) $\to$ `DEAD_LETTER` upon exhausting max retries.
+  - Tests user actions: `DELIVERED -> ACKNOWLEDGED` and `DELIVERED -> DISMISSED`.
+  - Verifies invalid transition rejections (e.g. `DELIVERED -> CREATED` raises `InvalidStateTransitionError`).
+- **FCM HTTP v1 Dispatch & Token Invalidation (`test_fcm_service.py`):**
+  - Validates payload formatting conforming to Google Firebase HTTP v1 REST specifications.
+  - Validates high-priority urgent channel (`healthos_urgent`) and normal priority channel (`healthos_important`).
+  - Tests zero-external-call dry-run simulation mode for test environments.
+  - Tests automatic deactivation of device tokens returning `UNREGISTERED` or `INVALID_ARGUMENT`.
+  - Asserts bounded exponential backoff with max 3 retry attempts.
+- **NotificationGraph Orchestration (`test_notification_graph.py`):**
+  - Tests LangGraph stateful graph execution across all 5 alert levels.
+  - Validates deduplication node suppression and quiet-hours hold routing.
+  - Asserts pure orchestration behavior and seamless execution when LLM is offline.
+- **Phase 7 Real E2E Integration Suite (`test_phase7_notifications_e2e.py`):**
+  - Live PostgreSQL 16 persistence of notification state machine columns from migration `20260904_0005`.
+  - Atomic 12-hour deduplication and severity escalation bypass verification against live database.
+  - Timezone-aware quiet hours hold during simulated 23:30 night window; morning release timestamp calculation.
+  - Emergency Level 4 quiet hours override verification: dispatches immediately without hold.
+  - REST lifecycle verification: `GET /v1/notifications`, `POST /acknowledge`, `POST /dismiss`, `GET/PUT /v1/users/preferences`, `POST /v1/devices/fcm-token`.
+  - Multi-tenant isolation: User A cannot read or mutate User B's notifications (HTTP 404).
+  - WebSocket streaming (`/v1/ws/stream`): JWT authentication, tenant isolation, ping/pong heartbeat, missed-event catchup replay.
+
+

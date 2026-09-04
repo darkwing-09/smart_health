@@ -55,9 +55,10 @@ def test_cadence_scheduling_configuration():
     Verifies cron jobs are scheduled for deterministic rollups and NOT unnecessary LLM calls.
     """
     cron_jobs = WorkerSettings.cron_jobs
-    assert len(cron_jobs) == 3
+    assert len(cron_jobs) == 4
 
     job_names = [cj.coroutine.__name__ for cj in cron_jobs]
     assert "cron_hourly_trend_rollup" in job_names
     assert "cron_daily_baseline_recompute" in job_names
     assert "cron_daily_report_pipeline" in job_names
+    assert "cron_release_quiet_hour_notifications" in job_names

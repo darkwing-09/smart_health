@@ -218,3 +218,37 @@ Otherwise, APPROVE.
   "sanitized_output_text": "A significant deviation in resting heart rate was detected during sleep. Please consult a physician."
 }
 ```
+
+---
+
+## 5. Notification Orchestration Fallback & Tier Presentation Templates (Phase 7)
+
+- **Version:** `1.0.0`
+- **Target Agent:** `Notification Agent` / `NotificationPolicyEngine`
+- **Purpose:** Provide deterministic, non-alarmist notification content across all 5 alert tiers, ensuring zero disruption during LLM provider outages.
+
+### 5.1 Deterministic Level 4 Emergency Disclaimer
+Mandatory suffix appended to all Level 4 (Urgent) notifications:
+```markdown
+EMERGENCY ADVISORY: This reading represents a severe physiological deviation. If you are experiencing chest pain, shortness of breath, dizziness, or lightheadedness, seek immediate emergency medical care.
+```
+
+### 5.2 Deterministic Outage Fallback Templates
+When the LLM provider is unreachable or fails schema validation, notifications fallback to pure deterministic formatting:
+```python
+# Level 0 (Info)
+"Telemetry update recorded for {metric_type}: reading {observed_value} {unit}."
+
+# Level 1 (Insight)
+"A minor variation in your {metric_type} was observed ({observed_value} {unit} vs baseline {baseline_value} {unit}). Included in your daily digest."
+
+# Level 2 (Attention)
+"A sustained shift in your resting {metric_type} was observed ({observed_value} {unit} vs baseline {baseline_value} {unit}). Review in your health timeline."
+
+# Level 3 (Important)
+"Significant deviation in your {metric_type}: {observed_value} {unit} (baseline: {baseline_value} {unit}, deviation: +{deviation:.1f} {unit}). Please review your health summary."
+
+# Level 4 (Urgent)
+"URGENT ALERT: Severe physiological threshold breach detected in {metric_type} ({observed_value} {unit}). EMERGENCY ADVISORY: This reading represents a severe physiological deviation. If you are experiencing chest pain, shortness of breath, dizziness, or lightheadedness, seek immediate emergency medical care."
+```
+

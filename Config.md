@@ -69,11 +69,16 @@ Personal Health OS supports four operational tiers configured via `APP_ENV`:
 | :--- | :--- | :--- | :--- |
 | `FCM_PROJECT_ID` | string | *Required (Prod)*| Google Firebase project ID for push notification dispatch. |
 | `FCM_CREDENTIALS_JSON` | string | *Required (Prod)*| Base64-encoded Google service account credentials for FCM v1 API. |
+| `FCM_DRY_RUN` | bool | `false` | Enables zero-external-call simulation mode for tests and local development. |
+| `QUIET_HOURS_DEFAULT_START` | string | `22:00` | Default local start time for non-urgent notification hold. |
+| `QUIET_HOURS_DEFAULT_END` | string | `07:00` | Default local end time for quiet hours release. |
+| `NOTIFICATION_DEDUP_WINDOW_HOURS`| int | `12` | Hours before an un-escalated anomaly can re-alert the user. |
+| `NOTIFICATION_MAX_RETRIES` | int | `3` | Maximum retry attempts for failed FCM push dispatches. |
+| `NOTIFICATION_INITIAL_RETRY_DELAY_SEC`| int | `30` | Initial exponential backoff delay for notification retries. |
 | `WHATSAPP_PROVIDER` | string | `meta_cloud_api` | Messaging platform provider. |
 | `WHATSAPP_ENABLED` | bool | `false` | Feature flag gating WhatsApp Business API alerts. |
 | `WHATSAPP_ACCESS_TOKEN` | string | Optional | Permanent system user token for Meta Business Platform. |
 | `WHATSAPP_PHONE_NUMBER_ID` | string | Optional | Phone Number ID registered with WhatsApp Business Platform. |
-| `NOTIFICATION_DEDUP_WINDOW_HOURS`| int | `12` | Hours before an un-escalated anomaly can re-alert the user. |
 
 ### 2.6 Cryptographic Envelope & Rate Limiting Controls (Phase 6)
 | Parameter | Type | Default | Description |

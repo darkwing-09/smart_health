@@ -2,6 +2,60 @@
 
 All notable changes to Personal Health OS are documented in this file. Format adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-09-04
+
+### Added
+- **Phase 7: Alert Hierarchy, Real-Time Streaming & Notification Delivery Engine (VERIFIED):**
+  - **Alembic Migration `20260904_0005_notification_state_machine`:**
+    - Upgraded `notifications` table with state machine tracking columns: `state`, `retry_count`, `max_retries`, `next_retry_at`, `delivered_at`, `dismissed_at`, `expires_at`, and `quiet_hours_held`.
+    - Added high-throughput composite indices: `idx_notifications_user_state (user_id, state)` and `idx_notifications_held_retry (quiet_hours_held, next_retry_at)`.
+  - **Deterministic 5-Tier Notification Policy (`NotificationPolicyEngine`):**
+    - Enforced pure mathematical mapping from Finding severity to 5 alert tiers: Level 0 Info, Level 1 Insight, Level 2 Attention, Level 3 Important, Level 4 Urgent.
+    - Permanently prohibited LLM from computing, altering, or overriding alert tier or safety level.
+    - Appended mandatory calm emergency disclaimer on all Level 4 Urgent alerts.
+  - **Timezone-Aware Quiet Hours Engine (`QuietHoursEvaluator`):**
+    - Dynamic user timezone resolution using Python `zoneinfo.ZoneInfo`, with graceful UTC fallback.
+    - Full overnight interval calculation (e.g. 22:00–07:00 local time) with morning release timestamp calculation.
+    - Deterministic Level 4 Emergency Override: Level 4 alerts immediately bypass quiet hours and dispatch without delay.
+  - **Atomic 12-Hour Deduplication & Severity Escalation Bypass:**
+    - Race-safe database-level deduplication preventing alert fatigue for identical user/finding/channel pairs within a 12-hour window.
+    - Escalation bypass: Higher-severity findings (e.g., Level 2 Attention escalating to Level 4 Urgent) immediately bypass suppression.
+  - **Authoritative 7-State Notification State Machine (`NotificationStateMachine`):**
+    - State lifecycle: `CREATED -> POLICY_EVALUATED -> DEDUP_CHECKED -> QUEUED -> DISPATCHING -> DELIVERED`, retries (`RETRYING`), dead-lettering (`DEAD_LETTER`), and user actions (`ACKNOWLEDGED`, `DISMISSED`).
+    - Validates all forward transitions and prevents invalid backward state alterations. Persisted authoritatively in PostgreSQL 16.
+  - **FCM HTTP v1 Push Notification Dispatcher (`FcmNotificationService`):**
+    - Full Google Firebase Cloud Messaging HTTP v1 REST API payload formatting.
+    - Notification channel segregation: `healthos_urgent` (high priority, heads-up banner) and `healthos_important` (normal priority).
+    - Invalid device token deactivation (`UNREGISTERED` / `INVALID_ARGUMENT`), bounded exponential backoff (max 3 retries), and dry-run simulation mode.
+  - **Real-Time WebSocket Streaming & Catch-Up Protocol (`ConnectionManager` & `/v1/ws/stream`):**
+    - Authenticated per-user WebSocket streaming with strict multi-tenant isolation.
+    - Periodic ping/pong heartbeats to detect disconnected clients.
+    - Domain event broadcasting for live findings, notifications, and telemetry updates.
+    - Missed-event catch-up replay protocol allowing clients to fetch undelivered notifications using a timestamp cursor upon reconnect.
+  - **Notification & User Preference REST APIs:**
+    - `GET /v1/notifications` with cursor-based pagination and status filtering.
+    - `GET /v1/notifications/{id}` for single alert lookup.
+    - `POST /v1/notifications/{id}/acknowledge` and `POST /v1/notifications/{id}/dismiss` for user lifecycle interaction.
+    - `GET /v1/users/preferences` and `PUT /v1/users/preferences` for timezone, quiet hours, and channel settings.
+    - `POST /v1/devices/fcm-token` for device push registration.
+  - **Notification Orchestration Graph (`NotificationGraph`):**
+    - LangGraph stateful graph implementing pure orchestration: deterministic alert tiering, deduplication, quiet hours hold, and delivery channel routing.
+    - Zero LLM medical inference; fully functional under complete LLM outage.
+  - **Android Notification Channels & Feed (SDK 34):**
+    - `HealthOSNotificationManager.kt` configures system notification channels with audio attributes and vibrations.
+    - `NotificationsScreen.kt` Jetpack Compose reactive feed with acknowledge/dismiss buttons and navigation to Finding detail.
+    - Android compilation verified with Gradle 8.4 (`compileDebugSources` clean, marked **✅ COMPILES**).
+  - **Notification Fatigue Telemetry & ARQ Cadence:**
+    - `NotificationMetricsService` records notifications/day, tier distributions, suppressions, holds, and delivery latencies.
+    - ARQ worker cadence upgraded with 15-minute cron `cron_release_quiet_hour_notifications` to dispatch held notifications when quiet hours conclude.
+  - **Architectural Decision Records (ADR-025 to ADR-029):**
+    - Documented in `Decisions.md`: Deterministic notification severity ownership, authoritative PostgreSQL state machine, WebSocket transport/source-of-truth separation, atomic 12-hour deduplication with escalation bypass, and timezone-aware quiet hours with emergency override.
+  - **Automated Test Suite Expansion:**
+    - 22 new tests across unit, graph, and real E2E integration suites.
+    - Total test suite expanded to **82 / 82 PASSING** in 6.17s.
+
+---
+
 ## [0.6.0] - 2026-09-04
 
 ### Added

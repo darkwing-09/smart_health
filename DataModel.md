@@ -175,14 +175,22 @@ CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     finding_id UUID REFERENCES findings(id) ON DELETE SET NULL,
-    channel VARCHAR(32) NOT NULL, -- 'in_app', 'push', 'email', 'whatsapp_future'
-    severity VARCHAR(32) NOT NULL,
+    channel VARCHAR(32) NOT NULL, -- 'in_app', 'fcm', 'websocket', 'email', 'whatsapp_future'
+    severity VARCHAR(32) NOT NULL, -- 'info', 'insight', 'attention', 'important', 'urgent'
     title TEXT NOT NULL,
     body TEXT NOT NULL,
-    delivery_status VARCHAR(32) NOT NULL DEFAULT 'SENT', -- 'SENT', 'DELIVERED', 'FAILED'
+    delivery_status VARCHAR(32) NOT NULL DEFAULT 'SENT', -- legacy 'SENT', 'DELIVERED', 'FAILED'
+    state VARCHAR(32) NOT NULL DEFAULT 'created', -- 'created', 'policy_evaluated', 'dedup_checked', 'queued', 'dispatching', 'delivered', 'failed', 'retrying', 'dead_letter', 'acknowledged', 'dismissed', 'expired'
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    max_retries INTEGER NOT NULL DEFAULT 3,
+    next_retry_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ,
+    acknowledged_at TIMESTAMPTZ,
+    dismissed_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    quiet_hours_held BOOLEAN NOT NULL DEFAULT FALSE,
     sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    acknowledged_at TIMESTAMPTZ,
     payload JSONB NOT NULL DEFAULT '{}',
     failure_info TEXT,
     idempotency_key VARCHAR(128)
@@ -190,6 +198,8 @@ CREATE TABLE notifications (
 CREATE INDEX idx_notifications_user_sent ON notifications(user_id, sent_at DESC);
 CREATE UNIQUE INDEX idx_notifications_idempotency ON notifications(idempotency_key);
 CREATE INDEX idx_notifications_finding_channel ON notifications(finding_id, channel);
+CREATE INDEX idx_notifications_user_state ON notifications(user_id, state);
+CREATE INDEX idx_notifications_held_retry ON notifications(quiet_hours_held, next_retry_at);
 ```
 
 ### 2.5 Daily Reports

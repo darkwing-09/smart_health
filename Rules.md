@@ -12,6 +12,9 @@ These rules are strictly enforced across the Personal Health OS codebase, config
 4. **Rule H4 (Deterministic Anomaly Gating):** An LLM or AI agent must never independently declare an anomaly that was not first identified by the deterministic analytics engine (ADR-004).
 5. **Rule H5 (Explicit Action Authorization):** The system must never initiate an outbound communication, appointment request, or external data transmission without explicit, single-action human authorization. Blanket or persistent authorizations for external actions are strictly prohibited.
 6. **Rule H6 (No Silent Gap Filling):** Missing sensor data must never be imputed or interpolated as "normal." Data gaps must be recorded explicitly as `missing` or `gap` in quality flags.
+7. **Rule H7 (Deterministic Notification Severity Ownership):** Notification severity, alert tiers (Levels 0–4), and emergency safety classifications are strictly computed by deterministic Python code from the Finding layer. LangGraph agents and LLMs may NEVER alter, infer, or override these values.
+8. **Rule H8 (Level 4 Emergency Quiet Hours Override):** Emergency Level 4 alerts must unconditionally override user quiet hours and preference minimums. Quiet hours must never delay or suppress life-critical physiological alerts.
+9. **Rule H9 (12-Hour Anti-Fatigue Deduplication & Escalation Bypass):** Repeated findings for the same user, metric, and channel within a 12-hour window are suppressed, unless a higher severity tier is detected (e.g. Level 2 escalating to Level 4), which must immediately bypass suppression.
 
 ---
 
@@ -21,6 +24,7 @@ These rules are strictly enforced across the Personal Health OS codebase, config
 2. **Rule A2 (Adapter Isolation):** All external data sources (Health Connect, Fitbit, Garmin) must be encapsulated within a standardized `DataSourceAdapter` interface. No vendor-specific SDK calls or data shapes may leak into the core normalized timeline.
 3. **Rule A3 (Anti-Fatigue State Machine):** Notifications must adhere to the Finding state machine (ADR-005). An active, unresolved anomaly must never re-trigger a notification at the same severity tier within the configured deduplication window.
 4. **Rule A4 (Graceful Offline Degradation):** All mobile operations must be offline-first. Ingestion records must be queued in local persistent storage (Room DB) and synchronized opportunistically without blocking the user interface.
+5. **Rule A5 (WebSocket Transport Boundary):** WebSockets (`/v1/ws/stream`) serve strictly as a real-time event transport. PostgreSQL remains the single source of truth for notification states and health records. Reconnecting clients must synchronize missing state via cursor replay before resuming live feeds.
 
 ---
 

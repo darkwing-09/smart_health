@@ -102,6 +102,18 @@ Every finding classified as Level 2 (Attention) or higher must contain all seven
 - Upgraded Care Navigation Graph with clinician consultation notes, patient uncertainty explanation, and human approval gating.
 - Verified hospital and clinic directory search with explicit user authorization.
 
+### Phase 7 Scope (Alert Hierarchy, Real-Time Streaming & Notification Delivery Engine - VERIFIED)
+- Deterministic 5-tier notification policy engine (Levels 0–4) strictly derived from Finding layer.
+- Timezone-aware quiet hours evaluation with automatic morning release cadence.
+- Level 4 Urgent emergency override permanently bypassing quiet hours.
+- Atomic 12-hour deduplication preventing alert fatigue while allowing higher-severity escalation bypass.
+- Authoritative PostgreSQL-persisted notification state machine (7 operational states, retries, dead-letter, user actions).
+- Google Firebase Cloud Messaging (FCM) HTTP v1 dispatcher with dry-run mode and high/normal priority channels.
+- Authenticated per-user WebSocket streaming (`/v1/ws/stream`) with heartbeat and missed-event catch-up protocol.
+- REST endpoints for notification feed pagination, acknowledgement, dismissal, user preferences, and FCM token registration.
+- Android Jetpack Compose notification feed with channel configurations and finding detail deep-linking.
+- Notification fatigue telemetry service tracking distribution, latencies, suppressions, and delivery rates.
+
 
 ### V2/V3 Scope (Deferred)
 - Garmin Health API integration (pending B2B partnership approval).

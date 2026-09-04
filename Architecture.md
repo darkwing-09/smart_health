@@ -252,3 +252,43 @@ All third-party services are wrapped behind Python abstract base classes:
 - `NotificationChannel`: Standard interface for FCM Push Dispatcher and WhatsApp Cloud API Adapter.
 - `HealthcareDirectoryProvider`: Standard interface for Google Places API and OpenStreetMap clinic lookups.
 - **Hard Rule:** Third-party integrations must never leak vendor-specific models into the core domain or database schema.
+
+---
+
+## 11. Notification Engine, Streaming & Fatigue Control Architecture
+
+Phase 7 establishes a safety-critical notification delivery pipeline adhering strictly to the principle of deterministic ownership:
+
+```
+Finding
+  └── Deterministic Severity (Calculated purely by Python/NumPy analytical tier)
+        └── Deterministic 5-Tier Policy (Level 0 Info to Level 4 Urgent)
+              └── User Preferences (Agent 11: quiet hours, channel preferences)
+                    └── Atomic 12-Hour Deduplication (Database-level race-safe check)
+                          └── Severity Escalation Bypass (Level 2 -> Level 4 bypasses suppression)
+                                └── Notification State Machine (PostgreSQL-persisted authoritative state)
+                                      ├── Async Dispatch (ARQ job with unique key)
+                                      ├── FCM Push (HTTP v1, urgent/important channel separation)
+                                      ├── Real-Time WebSocket Streaming (/v1/ws/stream with replay cursor)
+                                      └── Immutable Audit Trail (audit_logs)
+```
+
+### 11.1 Deterministic 5-Tier Notification Policy
+1. **Level 0 (Info):** Background trends, nominal data updates. In-app feed only; no push notification.
+2. **Level 1 (Insight):** Micro-trend insights, circadian notes. Daily digest inclusion; quiet hours suppressed.
+3. **Level 2 (Attention):** Early drift, minor anomalies. In-app feed; postponed push during quiet hours.
+4. **Level 3 (Important):** Sustained physiological shifts, multi-hour anomalies. High-priority push; held during quiet hours for morning delivery.
+5. **Level 4 (Urgent):** Hard physiological boundary breaches (e.g. resting HR $>130$ bpm, nocturnal tachyarrhythmia). High-priority heads-up push with sound/vibration; **PERMANENTLY OVERRIDES QUIET HOURS**; includes mandatory emergency advisory.
+
+### 11.2 Authoritative 7-State Notification State Machine
+Authoritative state is persisted in PostgreSQL:
+`CREATED` $\to$ `POLICY_EVALUATED` $\to$ `DEDUP_CHECKED` $\to$ `QUEUED` $\to$ `DISPATCHING` $\to$ `DELIVERED`.
+Failure paths: `FAILED` $\to$ `RETRYING` (bounded exponential backoff, max 3) $\to$ `DEAD_LETTER`.
+User interaction states: `ACKNOWLEDGED`, `DISMISSED`. Stale notifications: `EXPIRED`.
+
+### 11.3 Real-Time WebSocket Streaming & Catch-Up Replay
+WebSocket connections (`/v1/ws/stream`) serve strictly as a delivery transport, while PostgreSQL remains the single source of truth. Features:
+- JWT-authenticated handshake with tenant-isolated connection registry (`ConnectionManager`).
+- Periodic ping/pong heartbeats to prune broken sockets.
+- Missed-event catch-up protocol: reconnecting clients query events since a timestamp cursor (`catchup` message) before resuming live broadcasts.
+

@@ -32,8 +32,11 @@ This document defines the complete RESTful HTTP API contract for Personal Health
 | `/v1/sync/*` | Mobile Client | Batch biometric ingestion, sync status checking |
 | `/v1/measurements/*` | Mobile Client | Querying normalized health timeline |
 | `/v1/findings/*` | Mobile Client | Querying anomalies, acknowledging alerts |
+| `/v1/notifications/*` | Mobile Client | Querying alert feed, acknowledging/dismissing notifications |
+| `/v1/users/*` | Mobile Client | User preferences, quiet hours, channel settings |
 | `/v1/reports/*` | Mobile Client | Querying daily digests, downloading vector PDFs |
 | `/v1/care/*` | Mobile Client | Care navigation, hospital research, visit summary generation |
+| `/v1/ws/stream` | Mobile Client | Real-time WebSocket streaming, domain event broadcast & replay |
 | `/internal/*` | Internal Services | Worker cadence triggers, agent orchestration, audit logs |
 
 ---
@@ -351,9 +354,117 @@ Evaluates deterministic specialty routing based strictly on objective mathematic
   }
   ```
 
-#### `POST /v1/care/research`
-Initiates research into verified nearby facilities (Requires explicit user authorization).
+### 3.5 Notifications, User Preferences & Real-Time Streaming
 
+#### `GET /v1/notifications`
+Retrieves a paginated list of user notifications with status filtering.
+- **Query Parameters:**
+  - `state` (optional): Filter by state (`created`, `queued`, `dispatching`, `delivered`, `acknowledged`, `dismissed`, `failed`).
+  - `limit` (optional, default: 50, max: 100): Items per page.
+  - `cursor` (optional): ISO-8601 timestamp cursor for pagination.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "items": [
+      {
+        "id": "notif_94a82b1c",
+        "user_id": "usr_94a82b",
+        "finding_id": "fnd_7f39b1a",
+        "channel": "fcm",
+        "title": "Resting Heart Rate Elevation",
+        "content": "A sustained elevation of 98 bpm was detected...",
+        "severity": "urgent",
+        "state": "delivered",
+        "quiet_hours_held": false,
+        "created_at": "2026-09-04T02:15:00Z",
+        "delivered_at": "2026-09-04T02:15:02Z",
+        "acknowledged_at": null,
+        "dismissed_at": null
+      }
+    ],
+    "next_cursor": "2026-09-04T02:15:00Z",
+    "has_more": false
+  }
+  ```
+
+#### `GET /v1/notifications/{id}`
+Retrieves a single notification by ID with tenant isolation.
+- **Response (`200 OK`):** Notification detail object.
+
+#### `POST /v1/notifications/{id}/acknowledge`
+Marks a notification as acknowledged by the user.
+- **Response (`200 OK`):** Updated notification with `state: "acknowledged"` and `acknowledged_at`.
+
+#### `POST /v1/notifications/{id}/dismiss`
+Dismisses a notification from the active feed.
+- **Response (`200 OK`):** Updated notification with `state: "dismissed"` and `dismissed_at`.
+
+#### `GET /v1/users/preferences`
+Retrieves the user's notification preferences, quiet hours, and timezone settings.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "user_id": "usr_94a82b",
+    "timezone": "Asia/Kolkata",
+    "quiet_hours_enabled": true,
+    "quiet_hours_start": "22:00",
+    "quiet_hours_end": "07:00",
+    "fcm_enabled": true,
+    "websocket_enabled": true,
+    "email_enabled": false,
+    "whatsapp_enabled": false,
+    "min_notification_severity": "info"
+  }
+  ```
+
+#### `PUT /v1/users/preferences`
+Updates notification preferences and quiet hours.
+- **Request Body:**
+  ```json
+  {
+    "timezone": "Asia/Kolkata",
+    "quiet_hours_enabled": true,
+    "quiet_hours_start": "22:00",
+    "quiet_hours_end": "07:00",
+    "min_notification_severity": "attention"
+  }
+  ```
+- **Response (`200 OK`):** Updated user preferences. Note: Level 4 Urgent alerts permanently override quiet hours and minimum severity.
+
+#### `POST /v1/devices/fcm-token`
+Registers or updates an FCM registration token for push notifications.
+- **Request Body:**
+  ```json
+  {
+    "device_token": "fcm_token_abc123...",
+    "device_type": "android",
+    "app_version": "1.0.0"
+  }
+  ```
+- **Response (`200 OK`):** `{"status": "registered", "device_token": "fcm_token_abc123..."}`.
+
+#### `WS /v1/ws/stream`
+Authenticated real-time WebSocket connection for streaming health domain events (findings, notifications, sync status).
+- **Handshake URL:** `wss://api.healthos.local/v1/ws/stream?token=<jwt_access_token>`
+- **Protocol:**
+  - **Heartbeat:** Client sends `{"type": "ping"}`; server responds `{"type": "pong"}`.
+  - **Catch-up Replay:** Client can request missed events upon reconnect:
+    `{"type": "catchup", "since": "2026-09-04T00:00:00Z"}`.
+  - **Live Event Push:**
+    ```json
+    {
+      "event_type": "notification_delivered",
+      "data": {
+        "notification_id": "notif_94a82b1c",
+        "finding_id": "fnd_7f39b1a",
+        "severity": "urgent",
+        "title": "Resting Heart Rate Elevation",
+        "content": "..."
+      },
+      "timestamp": "2026-09-04T02:15:02Z"
+    }
+    ```
+- **Tenant Isolation:** Connections are strictly mapped by `user_id`. Cross-user broadcast is prevented.
 
 ---
 
