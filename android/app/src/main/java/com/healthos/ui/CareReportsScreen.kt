@@ -203,7 +203,7 @@ fun CareReportsScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Personal Health OS is a personal health observation tool and does not provide diagnostic conclusions. Consult your physician for medical advice.",
+                    text = "HealthAgent is a personal health observation tool and does not provide diagnostic conclusions. Consult your physician for medical advice.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

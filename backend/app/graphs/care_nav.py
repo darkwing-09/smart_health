@@ -24,7 +24,7 @@ PROHIBITED_DIAGNOSTIC_TERMS = [
 ]
 
 CLINICAL_DISCLAIMER = (
-    "CLINICAL ADVISORY & STATUTORY DISCLAIMER: Personal Health OS is a personal health data infrastructure "
+    "CLINICAL ADVISORY & STATUTORY DISCLAIMER: HealthAgent is a personal health data infrastructure "
     "and telemetry interpreter, NOT a diagnostic medical device or emergency dispatch service. "
     "This summary is compiled from consumer wearable sensors solely to assist patient-physician consultations. "
     "It does not constitute a medical diagnosis, clinical treatment plan, or electrocardiographic assessment. "
@@ -139,7 +139,7 @@ async def node_verify_human_approval(state: CareNavState) -> Dict[str, Any]:
             f"Dear Doctor / Clinic Team,\n\n"
             f"I would like to schedule a consultation regarding my health telemetry patterns.\n"
             f"Reason: Discussion of recent resting vital observations outside my 30-day personal baseline.\n"
-            f"I have compiled an approved clinical consultation brief from my Personal Health OS (Ref Token: {token[:12]}).\n\n"
+            f"I have compiled an approved clinical consultation brief from HealthAgent (Ref Token: {token[:12]}).\n\n"
             f"Thank you,\nPatient"
         )
         return {"outreach_draft": outreach_draft}

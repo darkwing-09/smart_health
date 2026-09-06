@@ -1,4 +1,4 @@
-# Multi-stage production container for Personal Health OS backend
+# Multi-stage production container for HealthAgent backend
 FROM python:3.11-slim AS builder
 
 WORKDIR /app

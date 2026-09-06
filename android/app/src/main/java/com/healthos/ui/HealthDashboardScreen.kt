@@ -601,7 +601,7 @@ private fun AiWellnessInsightCard(insight: DailyInsightUi) {
             }
 
             Text(
-                text = "Personal Health OS observations are generated for wellness awareness and do not constitute clinical diagnosis.",
+                text = "HealthAgent observations are generated for wellness awareness and do not constitute clinical diagnosis.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 fontSize = 9.sp

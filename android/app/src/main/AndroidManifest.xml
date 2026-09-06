@@ -16,9 +16,9 @@
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="Personal Health OS"
+        android:label="HealthAgent"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PersonalHealthOS">
+        android:theme="@style/Theme.HealthAgent">
 
 
         <activity
@@ -26,7 +26,7 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:roundIcon="@mipmap/ic_launcher_round"
-            android:theme="@style/Theme.PersonalHealthOS">
+            android:theme="@style/Theme.HealthAgent">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

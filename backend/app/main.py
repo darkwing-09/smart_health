@@ -27,8 +27,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="Personal Health OS API",
-    description="Privacy-first longitudinal personal health operating system platform",
+    title="HealthAgent API",
+    description="Privacy-first longitudinal health intelligence and agentic platform",
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -82,7 +82,7 @@ if os.path.exists(_static_dir):
 @app.get("/", include_in_schema=False)
 @app.get("/dashboard", include_in_schema=False)
 async def serve_dashboard() -> FileResponse:
-    """Serves the interactive Personal Health OS Web Control Center."""
+    """Serves the interactive HealthAgent Web Control Center."""
     index_path = os.path.join(_static_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
@@ -96,7 +96,7 @@ app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 @app.get("/health", tags=["health"])
 async def health_check() -> dict[str, str]:
     """Liveness probe endpoint."""
-    return {"status": "healthy", "service": "personal-health-os-api"}
+    return {"status": "healthy", "service": "healthagent-api"}
 
 
 @app.get("/ready", tags=["health"])
@@ -135,7 +135,7 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
 
     response_data = {
         "status": "ready" if all_healthy else "degraded",
-        "service": "personal-health-os-api",
+        "service": "healthagent-api",
         "checks": checks,
     }
 

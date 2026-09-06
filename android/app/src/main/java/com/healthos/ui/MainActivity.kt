@@ -455,7 +455,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     var y = 50f
-                    canvas.drawText("Personal Health OS — Physician Consultation Note", 40f, y, titlePaint)
+                    canvas.drawText("HealthAgent — Physician Consultation Note", 40f, y, titlePaint)
                     y += 18f
                     canvas.drawText("Longitudinal Physiological Dossier • DPDP Act 2023 Consent ID: CC-2026-PILOT-09", 40f, y, metaPaint)
                     y += 24f

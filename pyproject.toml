@@ -1,12 +1,12 @@
 [project]
-name = "personal-health-os"
+name = "healthagent"
 version = "0.1.0"
-description = "A privacy-first longitudinal personal health operating system"
+description = "A privacy-first longitudinal health intelligence and agentic operating system"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [
-    { name = "Personal Health OS Architecture Team" }
+    { name = "HealthAgent Architecture Team" }
 ]
 dependencies = [
     "fastapi>=0.111.0",

@@ -74,14 +74,14 @@ class DoctorVisitSummaryPdfService:
         )
 
         # 1. Header & Title
-        story.append(Paragraph("<b>Personal Health OS — Clinical Consultation Brief</b>", title_style))
+        story.append(Paragraph("<b>HealthAgent — Clinical Consultation Brief</b>", title_style))
         story.append(Paragraph("<i>Longitudinal Wearable Telemetry & Baseline Analytics Summary</i>", meta_style))
         story.append(Spacer(1, 6))
 
         # 2. Prominent Non-Diagnostic Advisory Box
         disclaimer_text = (
             "<b>CLINICAL ADVISORY & STATUTORY DISCLAIMER:</b> "
-            "Personal Health OS is a personal health data infrastructure and telemetry interpreter, "
+            "HealthAgent is a personal health data infrastructure and telemetry interpreter, "
             "NOT a medical diagnostic device or emergency dispatch service. This document is compiled "
             "from consumer wearable sensors solely to assist patient-physician consultations. "
             "It does NOT constitute a clinical diagnosis, treatment recommendation, or ECG evaluation. "

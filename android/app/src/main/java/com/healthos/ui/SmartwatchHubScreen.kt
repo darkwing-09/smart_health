@@ -208,7 +208,7 @@ fun SmartwatchHubScreen(
                 StepRow(
                     stepNum = "4",
                     title = "Grant Health Connect Permissions",
-                    desc = "Ensure Personal Health OS has read permission for Heart Rate, Steps, SpO2, Sleep, and Respiratory Rate."
+                    desc = "Ensure HealthAgent has read permission for Heart Rate, Steps, SpO2, Sleep, and Respiratory Rate."
                 )
             }
         }

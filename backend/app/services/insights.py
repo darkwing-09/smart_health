@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
 MANDATORY_DISCLAIMER = (
-    "Personal Health OS observations are generated for wellness awareness "
+    "HealthAgent observations are generated for wellness awareness "
     "and do not constitute clinical diagnosis."
 )
 
@@ -65,7 +65,7 @@ class GeminiInsightsService:
         model = settings.GEMINI_MODEL or "gemini-2.5-flash"
 
         metrics = digest.metrics
-        prompt = f"""You are Personal Health OS's calm, non-diagnostic health observation engine.
+        prompt = f"""You are HealthAgent's calm, non-diagnostic health observation engine.
 Analyze the user's daily biometric summary and provide an objective, reassuring wellness insight.
 
 MANDATORY SAFETY GUARDRAILS:

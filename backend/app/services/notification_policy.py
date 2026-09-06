@@ -41,7 +41,7 @@ NotificationChannel = DeliveryChannel
 # Mandatory non-diagnostic emergency disclaimer for Level 4 Urgent alerts (Rule H1 / Safety Agent)
 LEVEL_4_EMERGENCY_DISCLAIMER = (
     "SAFETY NOTICE: A significant physiological deviation was recorded. "
-    "Personal Health OS does not provide medical diagnoses. "
+    "HealthAgent does not provide medical diagnoses. "
     "If you are experiencing acute chest pain, shortness of breath, dizziness, "
     "or severe distress, please seek emergency medical evaluation immediately."
 )

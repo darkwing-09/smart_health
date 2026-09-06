@@ -1,5 +1,5 @@
 /**
- * Personal Health OS — Interactive Client Engine & Telemetry Controller
+ * HealthAgent — Interactive Client Engine & Telemetry Controller
  * Connects to FastAPI REST endpoints and real-time WebSocket stream.
  */
 

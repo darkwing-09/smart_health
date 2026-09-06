@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚕️ Personal Health OS
+# ⚕️ HealthAgent
 ### **Intelligent Longitudinal Health Timeline & Calm Physiological Observation**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -23,13 +23,13 @@
 
 ---
 
-## 📖 What is Personal Health OS?
+## 📖 What is HealthAgent?
 
 Today's consumer wearable apps either flood users with raw uncurated charts (leaving interpretation to anxious individuals) or trigger noisy alerts based on crude population averages (e.g., *"heart rate > 100 bpm is high"*). 
 
-**Personal Health OS operates on a fundamentally different thesis:**
+**HealthAgent operates on a fundamentally different thesis:**
 
-1. **Personal Baselines over Universal Thresholds:** What is normal for an endurance athlete is alarming for a sedentary desk worker. Personal Health OS computes rolling 30-day circadian baselines (EWMA, mean, variance) tailored strictly to *you*.
+1. **Personal Baselines over Universal Thresholds:** What is normal for an endurance athlete is alarming for a sedentary desk worker. HealthAgent computes rolling 30-day circadian baselines (EWMA, mean, variance) tailored strictly to *you*.
 2. **Deterministic Mathematical Gating with Grounded AI Interpretation:** Biometric anomalies are detected using rigorous mathematical methods (rolling z-scores, CUSUM change-point detection, hard physiological guardrails). Generative AI is never permitted to hallucinate diagnoses; its role is strictly to explain *what changed, why it changed relative to your baseline, and what practical next steps to discuss with a physician*.
 3. **Continuous Provenance & Integrity:** Every single measurement preserves immutable provenance (sensor manufacturer, sync timestamp, confidence score). Gaps in data are never treated as normal.
 4. **Human-in-the-Loop Care Navigation:** When sustained deviations occur, the system provides clinical visit summaries (vector PDF reports) and identifies appropriate local medical specialties. It **never** shares health records without explicit, single-action authorization.
@@ -147,7 +147,7 @@ SMART_HEALTH/
 │   ├── build.gradle.kts        # Android build configuration
 │   └── gradlew                 # Gradle wrapper
 │
-├── backend/                    # Personal Health OS Core Engine
+├── backend/                    # HealthAgent Core Engine
 │   ├── app/
 │   │   ├── api/v1/endpoints/   # Auth, Ingest, Timeline, Findings, Insights, Reports, WS
 │   │   ├── core/               # Configuration, Security, JWT, Database Engine
@@ -235,7 +235,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ### 1. Noise Watch Setup (NoiseFit + Health Connect)
 1. Pair your Noise Watch with your phone using the official **NoiseFit** app.
 2. In **NoiseFit Settings $\rightarrow$ Data Sharing**, enable synchronization with **Google Health Connect**.
-3. Launch **Personal Health OS** on your phone.
+3. Launch **HealthAgent** on your phone.
 4. When prompted, grant read permissions for:
    * Heart Rate
    * Steps & Distance
@@ -279,7 +279,7 @@ The repository follows a clean, component-isolated branching model:
 
 > [!CAUTION]
 > ### **NOT A CERTIFIED MEDICAL DEVICE**
-> Personal Health OS is an assistive software system designed for personal wellness tracking, longitudinal pattern recognition, and informational care preparation. It is **NOT** a diagnostic tool, does **NOT** substitute for professional clinical medical advice, and must never be used in acute medical emergencies. In an emergency, contact your local emergency services (e.g., 112 / 911 / 108) immediately.
+> HealthAgent is an assistive software system designed for personal wellness tracking, longitudinal pattern recognition, and informational care preparation. It is **NOT** a diagnostic tool, does **NOT** substitute for professional clinical medical advice, and must never be used in acute medical emergencies. In an emergency, contact your local emergency services (e.g., 112 / 911 / 108) immediately.
 
 * **Non-Diagnostic Language (Rule H1):** All AI observations are framed calmly as objective telemetry trends (e.g., *"Observed 3-day elevation in resting heart rate above your 30-day baseline"* rather than *"You may have tachycardia"*).
 * **Statutory Compliance:** Built with regional data residency capabilities aligned with the **India Digital Personal Data Protection (DPDP) Act 2023** and **GDPR** principles (Zero plaintext health storage, encrypted columns, user-controlled data export and deletion).
@@ -302,5 +302,5 @@ All detailed architectural specifications, agent runbooks, and protocols are ava
 
 <div align="center">
   <b>Built for calm, intelligent personal health awareness.</b><br>
-  <sub>Licensed under the MIT License. Copyright © 2026 Personal Health OS Contributors.</sub>
+  <sub>Licensed under the MIT License. Copyright © 2026 HealthAgent Contributors.</sub>
 </div>
