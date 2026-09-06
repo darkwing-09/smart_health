@@ -159,14 +159,6 @@ SMART_HEALTH/
 │   ├── scripts/                # Database backup, restore, and load-test scripts
 │   └── tests/                  # Unit, integration, and chaos test suites
 │
-├── docs/                       # Architecture, Agent Specs, and DevOps Runbooks
-│   ├── AGENTS.md               # Specifications for all 12 autonomous health agents
-│   ├── Architecture.md         # Detailed technical design and data flows
-│   ├── API.md                  # Complete REST and WebSocket OpenAPI specifications
-│   ├── Decisions.md            # Architecture Decision Records (ADRs)
-│   ├── Deployment.md           # Production deployment topologies & DevOps runbook
-│   └── Security.md             # Threat modeling, DPDP Act 2023, & HIPAA guidelines
-│
 ├── docker/                     # Docker setup & TimescaleDB init scripts
 ├── docker-compose.yml          # Local and staging orchestration
 ├── docker-compose.prod.yml     # Production cluster orchestration
@@ -283,20 +275,6 @@ The repository follows a clean, component-isolated branching model:
 
 * **Non-Diagnostic Language (Rule H1):** All AI observations are framed calmly as objective telemetry trends (e.g., *"Observed 3-day elevation in resting heart rate above your 30-day baseline"* rather than *"You may have tachycardia"*).
 * **Statutory Compliance:** Built with regional data residency capabilities aligned with the **India Digital Personal Data Protection (DPDP) Act 2023** and **GDPR** principles (Zero plaintext health storage, encrypted columns, user-controlled data export and deletion).
-
----
-
-## 📚 Complete System Documentation
-
-All detailed architectural specifications, agent runbooks, and protocols are available in the [`docs/`](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs) directory:
-
-* 📖 [Master Architecture & Data Flows](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Architecture.md)
-* 🤖 [12 System Agents Specification](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/AGENTS.md)
-* 🌐 [Complete API Documentation](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/API.md)
-* 🚀 [Cloud Deployment & DevOps Runbook](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Deployment.md)
-* 🛡️ [Security, Threat Modeling, & Privacy](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Security.md)
-* 📐 [Data Models & TimescaleDB Schemas](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/DataModel.md)
-* 📋 [Pilot Safety Protocol](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/PILOT_SAFETY_PROTOCOL.md)
 
 ---
 
