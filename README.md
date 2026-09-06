@@ -1,213 +1,306 @@
-# Personal Health OS
+<div align="center">
 
-> A privacy-first, longitudinal personal health operating system that continuously observes biometric streams from smartwatches, establishes personal baselines, detects meaningful deviations using deterministic statistics, explains them via grounded AI agents, and assists with care navigation under strict user authorization.
+# ⚕️ Personal Health OS
+### **Intelligent Longitudinal Health Timeline & Calm Physiological Observation**
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Android](https://img.shields.io/badge/Android_14-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
+[![Kotlin](https://img.shields.io/badge/Kotlin_2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-FDB515?style=for-the-badge&logo=postgresql&logoColor=black)](https://www.timescale.com/)
+[![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)](https://ai.google.dev/)
+
+<p align="center">
+  <b>A privacy-first personal health operating system that continuously aggregates smartwatch biometrics, establishes rolling individualized circadian baselines, flags physiological deviations with deterministic statistics, explains changes via grounded AI, and assists with care navigation under strict user consent.</b>
+</p>
+
+[Key Features](#-key-features) • [System Architecture](#-system-architecture) • [Repository Structure](#-repository-structure) • [Quickstart](#-quickstart-guide) • [Hardware Connection](#-hardware--smartwatch-integration) • [API Reference](#-api-endpoints-cheat-sheet) • [Clinical Safety](#-clinical-safety--compliance)
+
+</div>
 
 ---
 
-## What is Personal Health OS?
+## 📖 What is Personal Health OS?
 
-Personal Health OS transforms commodity wearable biometric data into actionable, clinical-grade personal health intelligence. Today's consumer health platforms either show isolated raw charts (leaving interpretation to anxious users) or trigger noisy alerts based on crude population averages (e.g., "heart rate > 100 bpm is high"). 
+Today's consumer wearable apps either flood users with raw uncurated charts (leaving interpretation to anxious individuals) or trigger noisy alerts based on crude population averages (e.g., *"heart rate > 100 bpm is high"*). 
 
 **Personal Health OS operates on a fundamentally different thesis:**
-1. **Personal Baseline over Universal Thresholds:** What is normal for a trained marathon runner is alarming for a sedentary desk worker. The system learns *your* individual circadian and rolling baseline (mean, variance, seasonality).
-2. **Deterministic Gating with Grounded AI Interpretation:** Deterministic mathematics (EWMA, rolling z-scores, CUSUM) detect anomalies. AI agents never fabricate diagnoses; they explain *why* a deviation occurred, what data caused it, how confident the system is, and what practical next steps to consider.
-3. **Continuous Data Provenance & Quality:** Every single biometric reading maintains immutable provenance (sensor brand, firmware, sync timestamp, confidence flags). Missing data is never treated as normal.
-4. **Human-in-the-Loop Care Navigation:** If a metric shows a concerning trend, the system researches appropriate medical specialties and providers. It **never** books or shares data without explicit, single-action user authorization.
+
+1. **Personal Baselines over Universal Thresholds:** What is normal for an endurance athlete is alarming for a sedentary desk worker. Personal Health OS computes rolling 30-day circadian baselines (EWMA, mean, variance) tailored strictly to *you*.
+2. **Deterministic Mathematical Gating with Grounded AI Interpretation:** Biometric anomalies are detected using rigorous mathematical methods (rolling z-scores, CUSUM change-point detection, hard physiological guardrails). Generative AI is never permitted to hallucinate diagnoses; its role is strictly to explain *what changed, why it changed relative to your baseline, and what practical next steps to discuss with a physician*.
+3. **Continuous Provenance & Integrity:** Every single measurement preserves immutable provenance (sensor manufacturer, sync timestamp, confidence score). Gaps in data are never treated as normal.
+4. **Human-in-the-Loop Care Navigation:** When sustained deviations occur, the system provides clinical visit summaries (vector PDF reports) and identifies appropriate local medical specialties. It **never** shares health records without explicit, single-action authorization.
 
 ---
 
-## System Architecture Overview
+## 🚀 Key Features
 
+### 📱 Android Mobile Application (`android/`)
+* **Modern Jetpack Compose Health Dashboard:**
+  * **Health Readiness Hero Card:** Dynamic greeting, personalized daily readiness score, and live sync pill.
+  * **2×2 Interactive Vitals Grid:** Real-time Heart Rate (BPM), Daily Steps, Active Energy (kCal), and Sleep Duration with animated radial progress rings.
+  * **7-Day Trend Canvas Sparklines:** Custom hardware-accelerated Bezier curve canvas with circadian baseline overlays.
+  * **Clinical Findings Alert Feed:** Interactive severity chips (`Normal Variation`, `Worth Monitoring`, `Potentially Concerning`, `Urgent`).
+  * **AI Wellness Insight Card:** Grounded, calm observations synthesized via Google Gemini.
+* **Smartwatch & Hardware Hub:**
+  * Direct telemetry status for **Noise Watch** (ColorFit / NoiseFit BLE), **Wear OS**, and **Samsung Galaxy Watch**.
+  * **Android Health Connect SDK:** Native bidirectional synchronization with local encryption.
+* **Offline-First Resilience:**
+  * High-performance local **Room DB** buffering up to 14 days of telemetry with background **WorkManager** synchronization.
+* **Custom Home Screen Experience:**
+  * High-definition Android 8.0+ adaptive launcher icon (`ic_launcher` & `ic_launcher_round`) across all screen densities (`mdpi` to `xxxhdpi`).
+* **One-Tap Doctor Visit Export:**
+  * Secure `FileProvider` PDF download and instant Android Sharesheet dispatch.
+
+### ⚡ Backend & Intelligence Platform (`backend/`)
+* **High-Throughput Ingestion Engine:**
+  * FastAPI asynchronous ingestion gateway processing batches of thousands of biometric records with sub-10ms response times.
+* **TimescaleDB Longitudinal Hypertables:**
+  * Automated chunk partitioning, compression policies, and hypertable analytics for continuous longitudinal health data.
+* **Deterministic Anomaly & Baseline Engine:**
+  * Continuous recalculation of rolling 30-day exponential weighted moving averages (EWMA) and dynamic standard deviations.
+* **Grounded AI Health Intelligence Service:**
+  * Powered by Google Gemini 2.5 Flash / OpenAI GPT-4o with strict Rule H1 enforcement (non-diagnostic, calm, objective observations).
+* **Automated Clinical Vector PDF Synthesis:**
+  * Server-side PDF report compilation using ReportLab vector graphics for doctor appointments.
+* **Real-Time WebSocket Streaming:**
+  * Bi-directional WebSocket endpoint (`/v1/ws/stream`) streaming live biometrics to web dashboards and mobile clients.
+* **Interactive Glassmorphic Web Dashboard:**
+  * Clean, dark-mode, real-time monitoring interface served directly at `/static/index.html`.
+  * Mobile APK direct download portal served at `/static/download.html`.
+
+---
+
+## 🏗 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph SENSORS ["⌚ Hardware & Sensor Tier"]
+        NW["Noise Watch (NoiseFit BLE)"]
+        WOS["Wear OS Smartwatch"]
+        SAM["Samsung Health / Fitbit"]
+    end
+
+    subgraph CLIENT ["📱 Android Mobile App (android/)"]
+        HC["Health Connect SDK"]
+        ROOM[("Room Local Buffer DB")]
+        WM["WorkManager Sync Queue"]
+        UI["Jetpack Compose Dashboard"]
+        NW --> HC
+        WOS --> HC
+        SAM --> HC
+        HC --> ROOM
+        ROOM --> WM
+        ROOM --> UI
+    end
+
+    subgraph INGRESS ["🌐 Gateway Tier"]
+        NGX["NGINX / Reverse Proxy (TLS 1.3)"]
+        API["FastAPI Ingestion & WebSocket Engine"]
+        WM -->|JWT HTTPS / Batch Ingest| NGX
+        NGX --> API
+    end
+
+    subgraph STORAGE ["💾 Data & Caching Tier"]
+        TSDB[("TimescaleDB (PostgreSQL 16)")]
+        RDS[("Redis 7 Cache & Task Queue")]
+        API --> TSDB
+        API --> RDS
+    end
+
+    subgraph ANALYTICS ["🧮 Deterministic & AI Intelligence Tier"]
+        ENG["Deterministic Analytics Engine\n(EWMA, Z-Scores, CUSUM)"]
+        WORKER["Arq Background Worker"]
+        GEMINI["Google Gemini / LLM Agent\n(Grounded Explainability)"]
+        PDF["ReportLab PDF Synthesis"]
+        TSDB --> ENG
+        ENG --> WORKER
+        WORKER --> GEMINI
+        WORKER --> PDF
+    end
+
+    subgraph OUTPUT ["📑 Delivery & Doctor Summary"]
+        DASH["Live Web Dashboard (/static/index.html)"]
+        DOC["Doctor Visit Summary PDF (/reports)"]
+        API -.->|WebSocket Stream| DASH
+        PDF --> DOC
+    end
 ```
- ┌────────────────────────────────────────────────────────┐
- │                      DATA SOURCES                      │
- │  Wear OS (Health Connect) │ Samsung │ Fitbit (V1)      │
- └────────────────────────────┬───────────────────────────┘
-                              │ On-Device Sync (Android OS)
-                              ▼
- ┌────────────────────────────────────────────────────────┐
- │                      ANDROID APP                       │
- │  - Health Connect Adapter     - WorkManager Sync Queue │
- │  - Local Room DB Buffer       - FCM Notification UI    │
- │  - Biometric Auth Gate        - Daily PDF Viewer       │
- └────────────────────────────┬───────────────────────────┘
-                              │ TLS 1.3 / JWT Bearer
-                              ▼
- ┌────────────────────────────────────────────────────────┐
- │                    BACKEND PLATFORM                    │
- │  ┌──────────────────────────────────────────────────┐  │
- │  │ FastAPI Ingestion & Sync Gateway                 │  │
- │  └─────────────────────────┬────────────────────────┘  │
- │                            ▼                           │
- │  ┌──────────────────────────────────────────────────┐  │
- │  │ Normalized Longitudinal Timeline (Postgres/TSDB) │  │
- │  └──────┬───────────────────────────────────────────┘  │
- │         │                                              │
- │         ▼                                              │
- │  ┌──────────────────────────────────────────────────┐  │
- │  │ Deterministic Analytics Engine                   │  │
- │  │ - Rolling Baseline Service (EWMA, 30-Day Window) │  │
- │  │ - Anomaly Detector (Z-Score, CUSUM, Hard Gates)  │  │
- │  └──────┬───────────────────────────────────────────┘  │
- │         │ Candidate Findings                           │
- │         ▼                                              │
- │  ┌──────────────────────────────────────────────────┐  │
- │  │ Agent Orchestrator & State Machine               │  │
- │  │ - Finding State Machine (ADR-005 Anti-Fatigue)   │  │
- │  │ - Health Intelligence Agent (Explanation)        │  │
- │  │ - Daily Report Agent (PDF Synthesis + Quote)     │  │
- │  │ - Research Agent (Care Discovery, Read-Only)     │  │
- │  │ - Policy/Safety Guardrail Agent                  │  │
- │  └──────┬───────────────────────────────────────────┘  │
- │         │ Alerts & Artifacts                           │
- │         ▼                                              │
- │  ┌──────────────────────────────────────────────────┐  │
- │  │ Dispatchers: FCM Push (MVP) │ WhatsApp API (V1)  │  │
- │  └──────────────────────────────────────────────────┘  │
- └────────────────────────────────────────────────────────┘
-```
 
 ---
 
-## Core Capabilities
+## 📂 Repository Structure
 
-- **Multi-Resolution Event Processing:**
-  - **Event-Driven:** Near-real-time evaluation of acute deterministic breaches (e.g., sustained resting tachycardia).
-  - **Hourly Rollup:** Evaluation of short-term physiological shifts and micro-trends.
-  - **Daily Deep Analysis:** Full rolling baseline recalculation, circadian rhythm adjustment, and daily summary compilation.
-- **Five-Tier Severity Hierarchy:**
-  - `normal_variation`: Within expected personal baseline variance.
-  - `unusual`: Statistically infrequent, low clinical risk; batched in daily report.
-  - `worth_monitoring`: Multi-hour or multi-day trend shift; single in-app badge/notification.
-  - `potentially_concerning`: Significant personal deviation corroborated across metrics; immediate push notification.
-  - `urgent`: Severe acute breach meeting hard safety rules; immediate multi-channel alert + directive to seek emergency care.
-- **Mandatory 7-Part Explainability Structure:**
-  Every user alert includes:
-  1. *What changed*
-  2. *Which measurements caused the flag*
-  3. *How it differs from your personal baseline*
-  4. *Relevant historical context*
-  5. *Confidence & data quality level*
-  6. *Why it matters physiologically*
-  7. *Practical, non-diagnostic next steps to consider*
-- **Automated Daily Health Report:**
-  Vector PDF generated every evening summarizing daily exertion, sleep architecture, vitals, open/resolved anomalies, and a contextually synthesized motivational/reflective quote.
-- **Care Navigation:**
-  On-demand or alert-driven research into local specialists and clinics. Formats a structured clinical summary the user can share, without automated booking in MVP (strict safety isolation per ADR-003).
-
----
-
-## Repository Documentation Map
-
-This repository operates under a strict 21-document engineering operating system. Every file serves a specific, non-overlapping architectural function:
-
-| Document | Purpose & Scope |
-| :--- | :--- |
-| [CLAUDE.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/CLAUDE.md) | Master operating manual, non-negotiable engineering principles, and definition of done. |
-| [README.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/README.md) | High-level system overview, value proposition, quickstart, and directory navigation. |
-| [PRD.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/PRD.md) | Product Requirements Document, user stories, personas, scope tiers (MVP/V1/V2), and non-goals. |
-| [Architecture.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Architecture.md) | Complete technical architecture, subsystem boundaries, data flow diagrams, and design rationales. |
-| [Plan.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Plan.md) | Master phased implementation roadmap with strict dependencies and exit criteria. |
-| [Implementation.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Implementation.md) | Technical implementation playbook: Android Health Connect, FastAPI backend, and pipelines. |
-| [Rules.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Rules.md) | Enforceable engineering constraints: coding standards, safety rules, and PR policies. |
-| [SKILL.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/SKILL.md) | Reusable domain skills and operational capabilities for AI assistants and engineers. |
-| [AGENTS.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/AGENTS.md) | Complete specification of all system agents: missions, inputs, outputs, tools, and hard boundaries. |
-| [PROMPTS.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/PROMPTS.md) | Canonical, versioned prompt library with strict JSON schemas and evaluation benchmarks. |
-| [API.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/API.md) | Complete OpenAPI/REST specification: auth, sync, measurements, findings, and care navigation. |
-| [DataModel.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/DataModel.md) | Conceptual and relational schema definitions, entity relationships, and immutability rules. |
-| [Config.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Config.md) | Environment configuration reference, feature flags, baseline tuning, and threshold settings. |
-| [.env.example](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/.env.example) | Sanitized environment template with comprehensive variable documentation. |
-| [Progress.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Progress.md) | Live execution tracker: completed tasks, active work streams, blockers, and milestone status. |
-| [Changelog.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Changelog.md) | Chronological log of changes adhering to the Keep a Changelog standard. |
-| [Decisions.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Decisions.md) | Architecture Decision Records (ADRs) capturing rationale, alternatives, and consequences. |
-| [Issues.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Issues.md) | Registry of active bugs, architectural debt, integration blockers, and research questions. |
-| [TestPlan.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/TestPlan.md) | Quality assurance strategy: unit tests, statistical test vectors, agent evaluation, and E2E runs. |
-| [Deployment.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Deployment.md) | Infrastructure, Docker configurations, CI/CD pipelines, database migrations, and disaster recovery. |
-| [Security.md](file:///home/darkwing/Desktop/SMART_HEALTH%20/files/Security.md) | Health data privacy spec, STRIDE threat model, encryption standards, and DPDP compliance. |
-
----
-
-## Technology Stack
-
-- **Mobile Client:** Native Android (Kotlin, Jetpack Compose, Health Connect SDK, Room DB, WorkManager, Retrofit).
-- **Backend Framework:** Python 3.11+, FastAPI (async), Pydantic v2, SQLAlchemy 2.0 (asyncio).
-- **Database & Storage:** PostgreSQL 16 with TimescaleDB extension, Redis (caching & task queues), Local/S3-compatible Object Storage for PDF reports.
-- **Analytics & Math:** NumPy, SciPy (rolling statistical baselines, CUSUM, EWMA deviation modeling).
-- **Agent Orchestration & LLMs:** LangChain / LiteLLM router (Claude 3.5 Sonnet / GPT-4o) with strict Pydantic structured outputs.
-- **Reporting Engine:** ReportLab / WeasyPrint (server-side vector PDF generation).
-- **Push & Messaging:** Firebase Cloud Messaging (FCM) for MVP; Meta WhatsApp Business Cloud API for V1.
-
----
-
----
-
-## Repository Structure
-
-The project is organized cleanly around two primary application directories and system documentation:
+The project is strictly organized into two primary applications and system documentation:
 
 ```
 SMART_HEALTH/
-├── android/            # Native Android Mobile Application (Kotlin, Jetpack Compose, Health Connect)
-│   ├── app/            # Main application module, UI screens, Room DB, WorkManager sync
-│   └── build.gradle.kts
-├── backend/            # Personal Health OS Core Platform (FastAPI, Python 3.11)
-│   ├── app/            # 12 System Agents, API endpoints, TimescaleDB models, web dashboard
-│   ├── alembic/        # Database schema migrations
-│   ├── scripts/        # Database backup, restore, and load-testing scripts
-│   └── tests/          # Comprehensive unit, integration, and chaos test suites
-├── docs/               # Architecture, Agent Specifications, Deployment & Safety Protocols
-├── docker/             # TimescaleDB initialization scripts
-├── docker-compose.yml  # Local and development cluster orchestration
-├── docker-compose.prod.yml # Production deployment cluster
-├── .env.example        # Environment variables template
-└── README.md           # Project guide and overview
+├── android/                    # Native Android Mobile Application
+│   ├── app/
+│   │   ├── src/main/java/com/healthos/
+│   │   │   ├── data/           # Room DB, Health Connect Manager, API Service
+│   │   │   └── ui/             # Jetpack Compose Screens, Theme, & Components
+│   │   └── src/main/res/       # Vector assets, Adaptive App Icons, Themes
+│   ├── build.gradle.kts        # Android build configuration
+│   └── gradlew                 # Gradle wrapper
+│
+├── backend/                    # Personal Health OS Core Engine
+│   ├── app/
+│   │   ├── api/v1/endpoints/   # Auth, Ingest, Timeline, Findings, Insights, Reports, WS
+│   │   ├── core/               # Configuration, Security, JWT, Database Engine
+│   │   ├── models/             # SQLAlchemy & TimescaleDB Hypertables
+│   │   ├── services/           # Anomaly Detector, Baselines, Gemini Insights, PDF Generator
+│   │   ├── static/             # Live Web Dashboard & Mobile Download Portal
+│   │   └── workers/            # Arq background workers
+│   ├── alembic/                # Database schema migrations
+│   ├── scripts/                # Database backup, restore, and load-test scripts
+│   └── tests/                  # Unit, integration, and chaos test suites
+│
+├── docs/                       # Architecture, Agent Specs, and DevOps Runbooks
+│   ├── AGENTS.md               # Specifications for all 12 autonomous health agents
+│   ├── Architecture.md         # Detailed technical design and data flows
+│   ├── API.md                  # Complete REST and WebSocket OpenAPI specifications
+│   ├── Decisions.md            # Architecture Decision Records (ADRs)
+│   ├── Deployment.md           # Production deployment topologies & DevOps runbook
+│   └── Security.md             # Threat modeling, DPDP Act 2023, & HIPAA guidelines
+│
+├── docker/                     # Docker setup & TimescaleDB init scripts
+├── docker-compose.yml          # Local and staging orchestration
+├── docker-compose.prod.yml     # Production cluster orchestration
+├── Dockerfile                  # Multi-stage production container build
+├── .env.example                # Sanitized environment template
+└── README.md                   # Project overview & documentation
 ```
 
 ---
 
-## Development Prerequisites
+## ⚡ Quickstart Guide
 
-- **Host OS:** Linux (Ubuntu 22.04+ LTS recommended) or macOS.
-- **Python:** Version 3.11 or higher with `uv` or `pip`.
-- **Android Development:** Android Studio Hedgehog (2023.1.1+) or newer, JDK 17, Android SDK Platform 34+.
-- **Database:** Docker & Docker Compose to run PostgreSQL 16 + TimescaleDB and Redis.
-- **Wearable Test Setup:** Wear OS 3.0+ watch, Noise Watch via NoiseFit / Health Connect, or Android Emulator.
+### Prerequisites
+* **Docker & Docker Compose** (version 24.0+)
+* **Python 3.11+**
+* **JDK 17** & **Android Studio** (for Android client development)
 
 ---
 
-## Quickstart (Local Development)
+### Step 1: Launch Backend with Docker Compose
 
-### 1. Backend & Supporting Infrastructure
 ```bash
-# 1. Configure environment
+# 1. Clone repository
+git clone https://github.com/darkwing-09/smart_health.git
+cd smart_health
+
+# 2. Configure environment
 cp .env.example .env
+# (Optional) Add your GEMINI_API_KEY in .env
 
-# 2. Start database, redis, backend, and background worker
-docker compose up -d
+# 3. Start PostgreSQL/TimescaleDB, Redis, API, and Worker
+docker compose up -d --build
 
-# 3. Verify backend health
+# 4. Verify backend health
 curl http://localhost:8000/health
+# Response: {"status":"healthy","service":"personal-health-os-api"}
 ```
-- Interactive API Documentation: `http://localhost:8000/docs`
-- Live Web Dashboard & Telemetry Stream: `http://localhost:8000/static/index.html`
-- Mobile APK Download Portal: `http://localhost:8000/static/download.html`
 
-### 2. Android Mobile Application
+* **Interactive OpenAPI Docs:** [`http://localhost:8000/docs`](http://localhost:8000/docs)
+* **Live Web Dashboard:** [`http://localhost:8000/static/index.html`](http://localhost:8000/static/index.html)
+* **Mobile APK Download Portal:** [`http://localhost:8000/static/download.html`](http://localhost:8000/static/download.html)
+
+---
+
+### Step 2: Build & Run the Android Mobile App
+
 ```bash
-# In the android/ directory:
 cd android
 
-# Build debug APK with custom launcher icon
+# Grant execute permissions
+chmod +x gradlew
+
+# Build the debug APK with the new adaptive icon
 ./gradlew assembleDebug
 
-# Install directly to connected device (via USB)
+# Install directly to your connected Android phone via USB
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+*Alternatively, open your mobile browser, navigate to your computer's IP address (e.g., `http://<your-ip>:8000/static/download.html`), and tap **Download APK** to install directly!*
+
 ---
 
-## Security & Clinical Safety Warning
+## ⌚ Hardware & Smartwatch Integration
+
+### 1. Noise Watch Setup (NoiseFit + Health Connect)
+1. Pair your Noise Watch with your phone using the official **NoiseFit** app.
+2. In **NoiseFit Settings $\rightarrow$ Data Sharing**, enable synchronization with **Google Health Connect**.
+3. Launch **Personal Health OS** on your phone.
+4. When prompted, grant read permissions for:
+   * Heart Rate
+   * Steps & Distance
+   * Total Calories Burned
+   * Sleep Stages & Sessions
+5. Biometrics will immediately stream into your local Room database and synchronize with the backend!
+
+### 2. Wear OS & Samsung Galaxy Watch
+* Wear OS devices with Health Connect enabled sync natively without companion bridge apps.
+
+---
+
+## 🔌 API Endpoints Cheat Sheet
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/health` | Liveness & cluster readiness check |
+| `POST` | `/v1/auth/token` | User authentication & JWT bearer token issuance |
+| `POST` | `/v1/ingest/batch` | Batch ingestion of normalized smartwatch biometrics |
+| `GET` | `/v1/timeline` | Query longitudinal time-series data with downsampling |
+| `GET` | `/v1/findings` | Retrieve evaluated biometric findings & 7-part explanations |
+| `GET` | `/v1/insights/daily` | Fetch grounded daily wellness insight generated by Gemini |
+| `GET` | `/v1/reports/daily/{id}/download` | Download clinical-grade vector PDF visit summary |
+| `WS` | `/v1/ws/stream` | Real-time bi-directional biometrics and anomaly WebSocket |
+
+---
+
+## 🌿 Git Branching Strategy
+
+The repository follows a clean, component-isolated branching model:
+
+| Branch | Purpose |
+| :--- | :--- |
+| **`main`** | **Production Root**: Fully tested, unified repository containing working backend, android app, and documentation. |
+| **`backend`** | **Backend Core**: Dedicated branch tracking FastAPI endpoints, database migrations, TimescaleDB models, and workers. |
+| **`android`** | **Mobile Client**: Dedicated branch tracking Jetpack Compose UI, Health Connect SDK, Room DB, and wearable hubs. |
+
+---
+
+## 🔒 Clinical Safety & Compliance
 
 > [!CAUTION]
-> **NOT A CERTIFIED MEDICAL DEVICE**
-> Personal Health OS is an assistive software tool designed for personal wellness tracking, longitudinal pattern recognition, and informational health navigation. It is **NOT** a diagnostic system, does **NOT** substitute for professional medical advice, diagnosis, or treatment, and should never be used during an acute medical emergency. In the event of a medical crisis, users must immediately contact their regional emergency medical services (e.g., 112 / 911 / 108).
+> ### **NOT A CERTIFIED MEDICAL DEVICE**
+> Personal Health OS is an assistive software system designed for personal wellness tracking, longitudinal pattern recognition, and informational care preparation. It is **NOT** a diagnostic tool, does **NOT** substitute for professional clinical medical advice, and must never be used in acute medical emergencies. In an emergency, contact your local emergency services (e.g., 112 / 911 / 108) immediately.
+
+* **Non-Diagnostic Language (Rule H1):** All AI observations are framed calmly as objective telemetry trends (e.g., *"Observed 3-day elevation in resting heart rate above your 30-day baseline"* rather than *"You may have tachycardia"*).
+* **Statutory Compliance:** Built with regional data residency capabilities aligned with the **India Digital Personal Data Protection (DPDP) Act 2023** and **GDPR** principles (Zero plaintext health storage, encrypted columns, user-controlled data export and deletion).
+
+---
+
+## 📚 Complete System Documentation
+
+All detailed architectural specifications, agent runbooks, and protocols are available in the [`docs/`](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs) directory:
+
+* 📖 [Master Architecture & Data Flows](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Architecture.md)
+* 🤖 [12 System Agents Specification](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/AGENTS.md)
+* 🌐 [Complete API Documentation](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/API.md)
+* 🚀 [Cloud Deployment & DevOps Runbook](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Deployment.md)
+* 🛡️ [Security, Threat Modeling, & Privacy](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/Security.md)
+* 📐 [Data Models & TimescaleDB Schemas](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/DataModel.md)
+* 📋 [Pilot Safety Protocol](file:///home/darkwing/Desktop/SMART_HEALTH%20/docs/PILOT_SAFETY_PROTOCOL.md)
+
+---
+
+<div align="center">
+  <b>Built for calm, intelligent personal health awareness.</b><br>
+  <sub>Licensed under the MIT License. Copyright © 2026 Personal Health OS Contributors.</sub>
+</div>
