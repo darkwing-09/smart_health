@@ -1,9 +1,12 @@
 """FastAPI Application Entrypoint & Lifespan."""
 
+import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -55,12 +58,35 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:; "
+        "connect-src 'self' ws: wss: http: https:; "
+        "img-src 'self' data: https:; "
+        "frame-ancestors 'none';"
+    )
     return response
 
 
 # Register RFC 7807 Exception Handlers
 app.add_exception_handler(ProblemDetailException, problem_detail_handler)
+
+
+# Mount static directory for interactive Web Control Center
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+
+@app.get("/", include_in_schema=False)
+@app.get("/dashboard", include_in_schema=False)
+async def serve_dashboard() -> FileResponse:
+    """Serves the interactive Personal Health OS Web Control Center."""
+    index_path = os.path.join(_static_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return FileResponse(os.path.join(_static_dir, "index.html"))
 
 
 # Include v1 API routes

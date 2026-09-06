@@ -109,6 +109,7 @@ class HealthSyncWorkerTest {
 
     @Test
     fun testWorkerOutputDataKeysIntegrity() {
+        assertEquals("records_read", com.healthos.service.HealthSyncWorker.KEY_RECORDS_READ)
         assertEquals("records_staged", com.healthos.service.HealthSyncWorker.KEY_RECORDS_STAGED)
         assertEquals("records_synced", com.healthos.service.HealthSyncWorker.KEY_RECORDS_SYNCED)
         assertEquals("status_message", com.healthos.service.HealthSyncWorker.KEY_STATUS_MESSAGE)
@@ -125,19 +126,57 @@ class HealthSyncWorkerTest {
     fun testSyncUiStateRepresentations() {
         val idleState: com.healthos.ui.SyncUiState = com.healthos.ui.SyncUiState.Idle
         val queuedState: com.healthos.ui.SyncUiState = com.healthos.ui.SyncUiState.Queued
-        val syncingState: com.healthos.ui.SyncUiState = com.healthos.ui.SyncUiState.Syncing
+        val syncingState: com.healthos.ui.SyncUiState = com.healthos.ui.SyncUiState.Syncing("Reading Health Connect...")
         val waitingState: com.healthos.ui.SyncUiState = com.healthos.ui.SyncUiState.WaitingForConstraint
-        val successState = com.healthos.ui.SyncUiState.Success(message = "Synced 10 records", isOffline = false)
-        val offlineState = com.healthos.ui.SyncUiState.Success(message = "Staged 5 records", isOffline = true)
+        val successState = com.healthos.ui.SyncUiState.Success(
+            message = "Synced 10 records",
+            recordsRead = 10,
+            recordsStaged = 5,
+            recordsSynced = 5,
+            isOffline = false
+        )
+        val offlineState = com.healthos.ui.SyncUiState.Success(
+            message = "Staged 5 records",
+            recordsRead = 5,
+            recordsStaged = 5,
+            recordsSynced = 0,
+            isOffline = true
+        )
         val errorState = com.healthos.ui.SyncUiState.Error(message = "Auth failed")
 
         assertTrue(idleState is com.healthos.ui.SyncUiState.Idle)
         assertTrue(queuedState is com.healthos.ui.SyncUiState.Queued)
         assertTrue(syncingState is com.healthos.ui.SyncUiState.Syncing)
+        assertEquals("Reading Health Connect...", (syncingState as com.healthos.ui.SyncUiState.Syncing).message)
         assertTrue(waitingState is com.healthos.ui.SyncUiState.WaitingForConstraint)
         assertFalse(successState.isOffline)
+        assertEquals(10, successState.recordsRead)
+        assertEquals(5, successState.recordsStaged)
+        assertEquals(5, successState.recordsSynced)
         assertTrue(offlineState.isOffline)
         assertEquals("Auth failed", errorState.message)
+    }
+
+    @Test
+    fun testVitalsSummaryDefaultsAndCopy() {
+        val defaultVitals = com.healthos.ui.VitalsSummary()
+        assertNull(defaultVitals.latestHeartRateBpm)
+        assertNull(defaultVitals.latestHeartRateRecordedAt)
+        assertEquals(0, defaultVitals.todaySteps)
+        assertEquals(0, defaultVitals.todayCaloriesKcal)
+        assertNull(defaultVitals.latestSleepMinutes)
+        assertEquals(0, defaultVitals.totalMeasurementsCount)
+
+        val updatedVitals = defaultVitals.copy(
+            latestHeartRateBpm = 75.0,
+            todaySteps = 6500,
+            todayCaloriesKcal = 420,
+            totalMeasurementsCount = 120
+        )
+        assertEquals(75.0, updatedVitals.latestHeartRateBpm!!, 0.01)
+        assertEquals(6500, updatedVitals.todaySteps)
+        assertEquals(420, updatedVitals.todayCaloriesKcal)
+        assertEquals(120, updatedVitals.totalMeasurementsCount)
     }
 
     @Test

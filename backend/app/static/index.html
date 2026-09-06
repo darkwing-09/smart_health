@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Health OS — Intelligent Longitudinal Health Timeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <!-- Global Application Shell -->
+  <div class="app-shell">
+    
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-badge">
+          <span class="pulsing-radar"></span>
+          <span class="brand-icon">⚕</span>
+        </div>
+        <div class="brand-titles">
+          <h1 class="brand-name">Personal Health OS</h1>
+          <p class="brand-sub">Longitudinal Health Intelligence & Calm Observation</p>
+        </div>
+      </div>
+
+      <!-- Live Hardware & Gateway Status Ribbon -->
+      <div class="header-status-ribbon">
+        <div class="status-chip watch-chip" id="watchStatusChip">
+          <span class="device-icon">⌚</span>
+          <div class="chip-text">
+            <span class="chip-label">NOISE WATCH</span>
+            <span class="chip-val highlight-green" id="watchStateText">Connected (Phone BLE)</span>
+          </div>
+        </div>
+
+        <div class="status-chip cluster-chip">
+          <div class="cluster-probes">
+            <span class="probe-pill ok" title="TimescaleDB Hypertable"><span class="dot"></span> DB: 5435</span>
+            <span class="probe-pill ok" title="Redis Cache & Queue"><span class="dot"></span> Redis: 6380</span>
+            <span class="probe-pill ok" title="Arq Background Worker"><span class="dot"></span> Worker</span>
+            <span class="probe-pill ok" id="wsProbePill" title="Live WebSocket Stream"><span class="dot"></span> Live WS</span>
+          </div>
+        </div>
+
+        <button class="btn-primary-pulse" id="btnSyncNow">
+          <span class="icon">↻</span> Sync Timeline
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="main-tabs" role="tablist">
+      <button class="tab-item active" data-tab="tab-vitals" role="tab" id="tabBtnVitals">
+        <span class="tab-icon">📈</span> Live Vitals & Timeline
+      </button>
+      <button class="tab-item" data-tab="tab-device" role="tab" id="tabBtnDevice">
+        <span class="tab-icon">⌚</span> Noise Watch & Device Hub
+      </button>
+      <button class="tab-item" data-tab="tab-findings" role="tab" id="tabBtnFindings">
+        <span class="tab-icon">🔔</span> Findings & 7-Part Insights
+        <span class="badge-count" id="findingsCountBadge">0</span>
+      </button>
+      <button class="tab-item" data-tab="tab-care" role="tab" id="tabBtnCare">
+        <span class="tab-icon">📑</span> Doctor Summary & PDF
+      </button>
+      <button class="tab-item" data-tab="tab-stream" role="tab" id="tabBtnStream">
+        <span class="tab-icon">⚡</span> Live WebSocket Feed
+      </button>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="app-main">
+
+      <!-- TAB 1: LIVE VITALS & BIOMETRICS -->
+      <section class="tab-content active" id="tab-vitals">
+        
+        <!-- Quick Stats Banner -->
+        <div class="vitals-hero-grid">
+          
+          <!-- Heart Rate Card -->
+          <div class="metric-card glow-cyan">
+            <div class="card-header">
+              <span class="metric-title">HEART RATE</span>
+              <span class="live-pill"><span class="pulse-dot"></span> LIVE</span>
+            </div>
+            <div class="card-body">
+              <div class="value-display">
+                <span class="big-num" id="valHeartRate">--</span>
+                <span class="unit">bpm</span>
+              </div>
+              <div class="baseline-diff" id="diffHeartRate">
+                <span class="diff-arrow">↕</span> 30d Baseline: <strong id="baseHeartRate">68.4 bpm</strong>
+              </div>
+            </div>
+            <div class="sparkline-bar">
+              <div class="spark-fill cyan" style="width: 65%;"></div>
+            </div>
+            <div class="card-footer">
+              <span class="timestamp" id="timeHeartRate">Updated seconds ago</span>
+              <span class="status-tag nominal" id="tagHeartRate">Nominal</span>
+            </div>
+          </div>
+
+          <!-- Daily Steps Card -->
+          <div class="metric-card glow-emerald">
+            <div class="card-header">
+              <span class="metric-title">TODAY'S STEPS</span>
+              <span class="source-tag">NoiseFit Sync</span>
+            </div>
+            <div class="card-body">
+              <div class="value-display">
+                <span class="big-num" id="valSteps">--</span>
+                <span class="unit">steps</span>
+              </div>
+              <div class="baseline-diff" id="diffSteps">
+                Goal Progress: <strong id="goalSteps">68% of 10,000</strong>
+              </div>
+            </div>
+            <div class="sparkline-bar">
+              <div class="spark-fill emerald" style="width: 68%;"></div>
+            </div>
+            <div class="card-footer">
+              <span class="timestamp" id="timeSteps">Cumulative today</span>
+              <span class="status-tag active">Active Day</span>
+            </div>
+          </div>
+
+          <!-- SpO2 Blood Oxygen -->
+          <div class="metric-card glow-blue">
+            <div class="card-header">
+              <span class="metric-title">BLOOD OXYGEN (SPO₂)</span>
+              <span class="source-tag">Optical PPG</span>
+            </div>
+            <div class="card-body">
+              <div class="value-display">
+                <span class="big-num" id="valSpO2">--</span>
+                <span class="unit">%</span>
+              </div>
+              <div class="baseline-diff">
+                Baseline Norm: <strong>97% – 99%</strong>
+              </div>
+            </div>
+            <div class="sparkline-bar">
+              <div class="spark-fill blue" style="width: 98%;"></div>
+            </div>
+            <div class="card-footer">
+              <span class="timestamp" id="timeSpO2">Nominal nocturnal average</span>
+              <span class="status-tag nominal">Optimal</span>
+            </div>
+          </div>
+
+          <!-- Sleep Quality Card -->
+          <div class="metric-card glow-purple">
+            <div class="card-header">
+              <span class="metric-title">LAST SLEEP</span>
+              <span class="source-tag">Rest Score</span>
+            </div>
+            <div class="card-body">
+              <div class="value-display">
+                <span class="big-num" id="valSleep">--</span>
+                <span class="unit">hours</span>
+              </div>
+              <div class="baseline-diff">
+                Deep: <strong>1h 45m</strong> | REM: <strong>2h 10m</strong>
+              </div>
+            </div>
+            <div class="sparkline-bar">
+              <div class="spark-fill purple" style="width: 82%;"></div>
+            </div>
+            <div class="card-footer">
+              <span class="timestamp" id="timeSleep">Logged last night</span>
+              <span class="status-tag nominal">Restorative</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Longitudinal Trend & Baseline Distribution View -->
+        <div class="content-split-grid">
+          
+          <div class="panel-glass">
+            <div class="panel-header">
+              <h3>📈 24-Hour Circadian Trajectory vs. Personal Baseline</h3>
+              <div class="panel-actions">
+                <button class="pill-btn active">Today</button>
+                <button class="pill-btn">7 Days</button>
+                <button class="pill-btn">30 Days</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="circadian-chart-placeholder">
+                <div class="chart-legend">
+                  <span><span class="legend-dot cyan"></span> Live Biometric Stream</span>
+                  <span><span class="legend-dot gray"></span> 30-Day Circadian Mean</span>
+                  <span><span class="legend-dot range"></span> Expected ±2σ Range</span>
+                </div>
+                <!-- SVG Interactive Chart Visualizer -->
+                <svg class="trend-svg" viewBox="0 0 800 240" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.18"/>
+                      <stop offset="100%" stop-color="#00f2fe" stop-opacity="0.02"/>
+                    </linearGradient>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#00e676"/>
+                      <stop offset="50%" stop-color="#00f2fe"/>
+                      <stop offset="100%" stop-color="#7c4dff"/>
+                    </linearGradient>
+                  </defs>
+                  
+                  <!-- Circadian Baseline Envelope (Mean +- 2SD) -->
+                  <path d="M 0,140 Q 200,160 400,110 T 800,130 L 800,190 Q 600,170 400,180 T 0,200 Z" fill="url(#bandGrad)"/>
+                  <path d="M 0,170 Q 200,180 400,145 T 800,160" fill="none" stroke="#5c6b8c" stroke-dasharray="4,4" stroke-width="2"/>
+                  
+                  <!-- Actual Measurements Trajectory -->
+                  <path class="animated-path" d="M 0,175 Q 100,185 200,170 T 350,130 T 450,115 T 550,140 T 680,120 T 800,135" fill="none" stroke="url(#lineGrad)" stroke-width="3.5"/>
+                  
+                  <!-- Interactive Hover Points -->
+                  <circle cx="200" cy="170" r="5" fill="#00e676" class="data-dot"/>
+                  <circle cx="450" cy="115" r="6" fill="#00f2fe" class="data-dot"/>
+                  <circle cx="680" cy="120" r="5" fill="#7c4dff" class="data-dot"/>
+                </svg>
+                <div class="chart-timeline-labels">
+                  <span>00:00 (Sleep)</span>
+                  <span>06:00 (Wake)</span>
+                  <span>12:00 (Noon)</span>
+                  <span>18:00 (Evening)</span>
+                  <span>23:59 (Current)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Findings Sidebar -->
+          <div class="panel-glass">
+            <div class="panel-header">
+              <h3>🚨 Active Observations</h3>
+              <span class="badge-mini" id="miniFindingsCount">Loading...</span>
+            </div>
+            <div class="panel-body findings-mini-list" id="miniFindingsList">
+              <div class="loading-spinner">Loading timeline observations...</div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- TAB 2: NOISE WATCH & DEVICE HUB -->
+      <section class="tab-content" id="tab-device">
+        <div class="device-hub-container">
+          
+          <!-- Connection Topology Card -->
+          <div class="panel-glass full-width">
+            <div class="panel-header">
+              <h3>🔗 Wearable Gateway Topology: Noise Watch → Personal Health OS</h3>
+              <span class="status-tag nominal">Live Synchronized</span>
+            </div>
+            <div class="panel-body">
+              <div class="topology-diagram">
+                
+                <div class="topo-node active">
+                  <div class="node-icon">⌚</div>
+                  <div class="node-title">Noise Watch</div>
+                  <div class="node-desc">Optical PPG & Accelerometer</div>
+                  <div class="node-sub highlight-green">BLE Paired to Phone</div>
+                </div>
+
+                <div class="topo-connector active">
+                  <div class="signal-flow"></div>
+                  <span>Bluetooth LE</span>
+                </div>
+
+                <div class="topo-node active">
+                  <div class="node-icon">📱</div>
+                  <div class="node-title">NoiseFit Companion</div>
+                  <div class="node-desc">OEM Mobile App</div>
+                  <div class="node-sub highlight-green">Syncs with Google Fit</div>
+                </div>
+
+                <div class="topo-connector active">
+                  <div class="signal-flow"></div>
+                  <span>Health Connect API</span>
+                </div>
+
+                <div class="topo-node active">
+                  <div class="node-icon">🏥</div>
+                  <div class="node-title">HealthOS Android App</div>
+                  <div class="node-desc">Room SQLite Queue & Worker</div>
+                  <div class="node-sub highlight-green">Syncs via USB / Wi-Fi</div>
+                </div>
+
+                <div class="topo-connector active">
+                  <div class="signal-flow"></div>
+                  <span>HTTPS / TLS 1.3</span>
+                </div>
+
+                <div class="topo-node active">
+                  <div class="node-icon">☁️</div>
+                  <div class="node-title">Personal Health OS</div>
+                  <div class="node-desc">FastAPI + TimescaleDB</div>
+                  <div class="node-sub highlight-green">Port 8000 (Active)</div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Noise Watch Setup Instructions & Physical USB Steps -->
+          <div class="content-split-grid">
+            
+            <div class="panel-glass">
+              <div class="panel-header">
+                <h3>📋 Noise Watch Setup & Verification Steps</h3>
+              </div>
+              <div class="panel-body">
+                <ol class="step-guide">
+                  <li>
+                    <strong>Step 1: NoiseFit → Google Fit Link</strong>
+                    <p>Open <em>NoiseFit</em> on your phone → Settings → Connected Apps → Link with <strong>Google Fit</strong>.</p>
+                  </li>
+                  <li>
+                    <strong>Step 2: Google Fit → Health Connect</strong>
+                    <p>Open <em>Google Fit</em> → Profile → Settings gear → toggle <strong>"Sync Fit with Health Connect"</strong> to <strong>ON</strong>.</p>
+                  </li>
+                  <li>
+                    <strong>Step 3: Authorize Personal Health OS</strong>
+                    <p>Open <em>Personal Health OS</em> on the phone → Tap <strong>"Grant Health Connect Permissions"</strong> → Allow read access to Heart Rate, Steps, SpO₂, Sleep, and Respiratory Rate.</p>
+                  </li>
+                  <li>
+                    <strong>Step 4: Enable USB Debugging (For Direct ADB Sync)</strong>
+                    <p>On your phone: <em>Settings → About Phone → Tap 'Build Number' 7 times</em> → <em>System → Developer Options → Enable <strong>USB Debugging</strong></em>. When prompted on screen, tap <em>"Always allow from this computer"</em>.</p>
+                  </li>
+                </ol>
+
+                <div class="info-callout">
+                  <strong>💡 Reverse Port Forwarding Command:</strong>
+                  <p>To let the connected phone communicate with this workstation over USB, run:</p>
+                  <code>/home/darkwing/Android/Sdk/platform-tools/adb reverse tcp:8000 tcp:8000</code>
+                </div>
+              </div>
+            </div>
+
+            <!-- Virtual Smartwatch Telemetry Simulator -->
+            <div class="panel-glass">
+              <div class="panel-header">
+                <h3>🧪 Interactive Smartwatch Telemetry Simulator</h3>
+                <span class="badge-mini">Direct Batch Injection</span>
+              </div>
+              <div class="panel-body">
+                <p class="section-intro">
+                  Test the real-time ingestion, baseline z-score calculation, and anomaly detection engine instantly by simulating real wearable events:
+                </p>
+
+                <div class="sim-presets-grid">
+                  <button class="btn-sim preset-nominal" onclick="sendSimulatedBatch('nominal')">
+                    <span class="sim-title">🟢 Normal Resting</span>
+                    <span class="sim-desc">HR 68 bpm, 0 steps, SpO₂ 99% (Nominal Baseline)</span>
+                  </button>
+
+                  <button class="btn-sim preset-exertion" onclick="sendSimulatedBatch('exertion')">
+                    <span class="sim-title">🔵 Exercise Exertion</span>
+                    <span class="sim-desc">HR 138 bpm, 140 steps/min (Exertion Suppressed)</span>
+                  </button>
+
+                  <button class="btn-sim preset-brady" onclick="sendSimulatedBatch('bradycardia')">
+                    <span class="sim-title">🟡 Nocturnal Bradycardia</span>
+                    <span class="sim-desc">HR 42 bpm (Level 2 Attention Finding)</span>
+                  </button>
+
+                  <button class="btn-sim preset-urgent" onclick="sendSimulatedBatch('urgent_tachycardia')">
+                    <span class="sim-title">🔴 Acute Resting Tachycardia</span>
+                    <span class="sim-desc">HR 165 bpm, 0 steps (Level 4 Urgent Alert!)</span>
+                  </button>
+                </div>
+
+                <div class="sim-feedback" id="simFeedbackBox" style="display: none;">
+                  <div class="feedback-header">
+                    <span id="simFeedbackStatus">✓ Batch Transmitted</span>
+                    <span id="simFeedbackTime">Just now</span>
+                  </div>
+                  <pre id="simFeedbackLog">Payload response will appear here...</pre>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 3: FINDINGS & 7-PART EXPLAINABILITY -->
+      <section class="tab-content" id="tab-findings">
+        <div class="findings-container">
+          
+          <div class="findings-filter-bar">
+            <div class="filter-group">
+              <button class="filter-btn active" data-filter="all">All Levels</button>
+              <button class="filter-btn" data-filter="urgent">Level 4: Urgent</button>
+              <button class="filter-btn" data-filter="important">Level 3: Important</button>
+              <button class="filter-btn" data-filter="attention">Level 2: Attention</button>
+              <button class="filter-btn" data-filter="insight">Level 1: Insight</button>
+            </div>
+            <div class="findings-meta">
+              <span id="findingsTotalLabel">Loading findings from TimescaleDB...</span>
+            </div>
+          </div>
+
+          <!-- Findings Cards Feed -->
+          <div class="findings-grid" id="findingsFeed">
+            <div class="loading-spinner">Loading findings...</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 4: DOCTOR SUMMARY & PDF EXPORT -->
+      <section class="tab-content" id="tab-care">
+        <div class="care-container">
+          
+          <div class="content-split-grid">
+            
+            <div class="panel-glass">
+              <div class="panel-header">
+                <h3>📄 Clinical Doctor Visit Summary</h3>
+                <span class="status-tag nominal">DPDP Act Compliant</span>
+              </div>
+              <div class="panel-body">
+                <p>
+                  Personal Health OS automatically compiles longitudinal trends into an authoritative physician consultation note with zero hallucinations and strict mathematical provenance.
+                </p>
+
+                <div class="care-summary-box" id="careSummaryBox">
+                  <div class="summary-field">
+                    <label>Patient Clinical Consent:</label>
+                    <span class="highlight-green">✓ Active & Verifiable (DPDP Consent #CC-2026-09)</span>
+                  </div>
+                  <div class="summary-field">
+                    <label>Longitudinal Window:</label>
+                    <span>Past 30 Days (197,849 Biometric Measurements)</span>
+                  </div>
+                  <div class="summary-field">
+                    <label>Deterministic Specialty Routing:</label>
+                    <span class="tag-specialty">Cardiology / Preventive Medicine</span>
+                  </div>
+                  <div class="summary-field">
+                    <label>Physician Summary Brief:</label>
+                    <p class="physician-note">
+                      "Patient displays established circadian resting heart rate (mean 68.2 bpm, SD 7.1). Three nocturnal tachycardia events detected over the past 14 days occurring between 02:00–04:00 with zero concurrent accelerometer motion. SpO₂ remained stable at 97.4%. Recommended clinical review: ECG assessment and nocturnal autonomic evaluation."
+                    </p>
+                  </div>
+                </div>
+
+                <div class="care-actions-bar">
+                  <button class="btn-primary" id="btnDownloadPdf" onclick="downloadLatestPdf()">
+                    📥 Download ReportLab Vector PDF
+                  </button>
+                  <button class="btn-secondary" onclick="generateNewReport()">
+                    ⚡ Compile Fresh Daily Digest
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF Preview Card -->
+            <div class="panel-glass">
+              <div class="panel-header">
+                <h3>📑 PDF Publication Preview</h3>
+                <span class="badge-mini">Vector Graphics</span>
+              </div>
+              <div class="panel-body">
+                <div class="pdf-preview-mockup">
+                  <div class="pdf-page-mock">
+                    <div class="pdf-mock-header">
+                      <span class="pdf-logo">PERSONAL HEALTH OS</span>
+                      <span class="pdf-stamp">CONFIDENTIAL MEDICAL DIGEST</span>
+                    </div>
+                    <div class="pdf-mock-line title"></div>
+                    <div class="pdf-mock-line subtitle"></div>
+                    <div class="pdf-mock-grid">
+                      <div class="pdf-mock-cell"></div>
+                      <div class="pdf-mock-cell"></div>
+                      <div class="pdf-mock-cell"></div>
+                    </div>
+                    <div class="pdf-mock-chart"></div>
+                    <div class="pdf-mock-line text"></div>
+                    <div class="pdf-mock-line text short"></div>
+                    <div class="pdf-mock-footer">
+                      <span>Statutory Disclaimer: Rule H1 Non-Diagnostic Record</span>
+                      <span>SHA-256 HMAC Verified</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 5: LIVE WEBSOCKET TELEMETRY STREAM -->
+      <section class="tab-content" id="tab-stream">
+        <div class="stream-container">
+          <div class="panel-glass full-width">
+            <div class="panel-header">
+              <h3>⚡ Real-Time WebSocket Telemetry Log (<code>/v1/ws</code>)</h3>
+              <div class="stream-controls">
+                <span class="status-dot green" id="streamStatusDot"></span>
+                <span id="streamConnectionStatus">Connected</span>
+                <button class="pill-btn" onclick="clearStreamLog()">Clear Console</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="console-terminal" id="streamConsole">
+                <div class="console-line info">[SYSTEM] Initializing Personal Health OS Telemetry Client...</div>
+                <div class="console-line success">[WS] Connected to ws://localhost:8000/v1/ws</div>
+                <div class="console-line">[READY] Listening for live biometrics, baseline deviations, and worker events...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 7-Part Explainability Modal Dialog -->
+    <div class="modal-overlay" id="explainModal" style="display: none;">
+      <div class="modal-glass">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="severity-badge" id="modalSeverityBadge">URGENT</span>
+            <h2 id="modalFindingTitle">Physiological Finding Explanation</h2>
+          </div>
+          <button class="modal-close" onclick="closeExplainModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          
+          <div class="explain-seven-parts">
+            
+            <div class="part-item">
+              <div class="part-num">1</div>
+              <div class="part-content">
+                <h4>What Changed</h4>
+                <p id="partWhatChanged">Significant elevated heart rate observed during quiet rest window.</p>
+              </div>
+            </div>
+
+            <div class="part-item">
+              <div class="part-num">2</div>
+              <div class="part-content">
+                <h4>Measurements That Caused Flag</h4>
+                <p id="partMeasurements">Resting Heart Rate = 162 bpm at 03:14 AM UTC. Accelerometer activity = 0 steps.</p>
+              </div>
+            </div>
+
+            <div class="part-item">
+              <div class="part-num">3</div>
+              <div class="part-content">
+                <h4>Difference from Personal Baseline</h4>
+                <p id="partBaselineDiff">Your 30-day baseline for this hour is 64.2 bpm (SD = 6.8). This is a deviation of +14.4 standard deviations (Z = 14.4).</p>
+              </div>
+            </div>
+
+            <div class="part-item">
+              <div class="part-num">4</div>
+              <div class="part-content">
+                <h4>Historical Context</h4>
+                <p id="partHistorical">This is the 2nd instance of nocturnal elevation above 120 bpm in the last 60 days.</p>
+              </div>
+            </div>
+
+            <div class="part-item">
+              <div class="part-num">5</div>
+              <div class="part-content">
+                <h4>Confidence & Data Quality</h4>
+                <p id="partConfidence">Continuous contact verified. PPG confidence = 96%. Optical fit nominal with zero motion artifacts detected.</p>
+              </div>
+            </div>
+
+            <div class="part-item">
+              <div class="part-num">6</div>
+              <div class="part-content">
+                <h4>Physiological Meaning (Non-Diagnostic)</h4>
+                <p id="partPhysiology">Elevated resting heart rate without physical exertion may reflect acute sympathetic nervous system activation, dehydration, or an arrhythmia event.</p>
+              </div>
+            </div>
+
+            <div class="part-item highlight">
+              <div class="part-num">7</div>
+              <div class="part-content">
+                <h4>What You Can Consider Doing Next</h4>
+                <p id="partNextSteps">Rest calmly in a comfortable position, hydrate, and verify watch snugness. If accompanied by shortness of breath, dizziness, or chest discomfort, seek emergency medical care immediately.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer-actions">
+            <button class="btn-danger" id="btnAckModal" onclick="acknowledgeCurrentFinding()">
+              ✓ Acknowledge Observation
+            </button>
+            <button class="btn-secondary" onclick="closeExplainModal()">
+              Close Details
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

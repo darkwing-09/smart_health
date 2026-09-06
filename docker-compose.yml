@@ -74,6 +74,11 @@ services:
     volumes:
       - ./backend:/app/backend
       - reportdata:/app/data/reports
+    healthcheck:
+      test: ["CMD", "python", "-c", "import asyncio, redis.asyncio as aioredis; asyncio.run(aioredis.from_url('redis://redis:6379/0').ping())"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     command: ["arq", "app.workers.worker.WorkerSettings"]
 
 volumes:

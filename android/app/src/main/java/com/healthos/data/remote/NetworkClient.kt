@@ -1,6 +1,5 @@
 package com.healthos.data.remote
 
-import android.os.Build
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,23 +8,16 @@ import java.util.concurrent.TimeUnit
 
 object NetworkClient {
 
-    private const val BASE_URL = "https://api.healthos.local/" // Configurable per build flavor
+    private const val BASE_URL = "http://10.181.181.106:8000/"
 
-    /**
-     * Determines if the app is running in a debuggable build.
-     * Uses ApplicationInfo.FLAG_DEBUGGABLE as the source of truth
-     * since BuildConfig is not generated in this project configuration.
-     */
     private var isDebugMode: Boolean = false
 
     fun setDebugMode(debug: Boolean) {
         isDebugMode = debug
     }
 
-    private val okHttpClient by lazy {
+    private val okHttpClient: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {
-            // SECURITY: Use BASIC in debug builds (headers only, no body).
-            // Use NONE in release builds to prevent any PHI or auth token leakage.
             level = if (isDebugMode) {
                 HttpLoggingInterceptor.Level.BASIC
             } else {
@@ -33,7 +25,6 @@ object NetworkClient {
             }
         }
 
-        // Redact the Authorization header to prevent bearer token leakage
         logging.redactHeader("Authorization")
 
         OkHttpClient.Builder()

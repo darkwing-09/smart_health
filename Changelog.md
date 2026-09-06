@@ -2,6 +2,33 @@
 
 All notable changes to Personal Health OS are documented in this file. Format adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-09-04
+
+### Fixed & Enhanced
+- **Android Health Timeline Manual Sync & Offline UX Architecture:**
+  - **Decoupled Local Staging from Network Availability:**
+    - Modified `triggerImmediateSync()` in `MainActivity.kt` to omit `NetworkType.CONNECTED` constraints so manual taps immediately trigger Health Connect local read and Room DB staging even if offline or on airplane mode.
+    - Added `isNetworkAvailable()` checks in `HealthSyncWorker.kt`: if offline, measurements are safely retained in Room with status `PENDING`, returning rich WorkManager output data (`is_offline = true`, `records_staged`).
+    - Handled host resolution `IOException` (e.g. `api.healthos.local` unreachable on non-VPN cellular networks) by automatically reverting `IN_FLIGHT` records back to `PENDING`, preserving local queue integrity with zero data loss.
+  - **WorkManager Deduplication & Reactive State Tracking:**
+    - Transitioned `HealthSyncWorker` immediate invocation from anonymous `enqueue()` to `ExistingWorkPolicy.REPLACE` using unique work identifier `HealthOS_ImmediateSync`.
+    - Added `MeasurementDao.getPendingCountFlow(): Flow<Int>` for real-time Room observation, eliminating stale queue counters in Jetpack Compose UI.
+    - Bound `MainActivity` to `WorkManager.getWorkInfosForUniqueWorkFlow()` to stream active worker state directly into Compose.
+  - **Expanded Health Connect Biometric Queries:**
+    - Expanded query time window in `HealthConnectManager.kt` from 6 hours to 24 hours (`hoursBack = 24`).
+    - Added queries for `TotalCaloriesBurnedRecord` and `SleepSessionRecord` alongside `HeartRateRecord` and `StepsRecord`.
+    - Replaced empty catch blocks with structured diagnostic logging.
+  - **Jetpack Compose Sync Feedback & Activity Banner:**
+    - Implemented `SyncUiState` (`Idle`, `Queued`, `Syncing`, `Success`, `Error`) in `HealthDashboardScreen.kt`.
+    - Added animated `CircularProgressIndicator` spinner and dynamic button text ("Synchronizing Timeline...").
+    - Added an informational Activity Banner in the Device Gateway card displaying queue depth, stage counts, and offline retention messages.
+  - **Empirical Hardware Verification on Physical Device:**
+    - Deployed and verified on physical vivo I2214 (Android 16 / API 36, ADB ID `10BD1Y16FL0005Z`).
+    - Verified Health Connect 24-hour query execution across 4 records via logcat.
+    - Executed offline queue injection drill: staged pending measurement into device SQLite, tapped sync, verified offline preservation banner on device screen (`Offline Queue Depth: 1 records pending`), and cleaned up test data.
+  - **Automated Unit Testing & Lint:**
+    - Added 4 new unit tests in `HealthSyncWorkerTest.kt` (keys integrity, unique work name convention, SyncUiState representations, offline retention logic). Total Android test suite: **12 / 12 PASSING (100%)**, Android Lint: **0 errors**. Total system test suite: **165 / 165 PASSING (100%)**.
+
 ## [0.9.1] - 2026-09-04
 
 ### Added

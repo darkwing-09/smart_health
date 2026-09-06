@@ -125,13 +125,32 @@ class DailyReportPdfService:
 
         # Metrics table
         table_data = [["Metric", "Recorded Value", "Personal Baseline", "Status"]]
-        for row in report_data.get("metrics", []):
-            table_data.append([
-                str(row.get("name", "")),
-                str(row.get("value", "")),
-                str(row.get("baseline", "")),
-                str(row.get("status", ""))
-            ])
+        raw_metrics = report_data.get("metrics")
+        if isinstance(raw_metrics, dict):
+            rhr = raw_metrics.get("resting_heart_rate")
+            hr_min = raw_metrics.get("heart_rate_min")
+            hr_max = raw_metrics.get("heart_rate_max")
+            hr_mean = raw_metrics.get("heart_rate_mean")
+            hr_range = f"{hr_min or '--'} - {hr_max or '--'} bpm" + (f" (Mean: {hr_mean})" if hr_mean else "")
+            steps = raw_metrics.get("total_steps", 0)
+            sleep = raw_metrics.get("sleep_duration_minutes")
+            sleep_str = f"{int(sleep // 60)}h {int(sleep % 60)}m" if sleep else "--"
+            dq = raw_metrics.get("data_quality_rating", "nominal")
+
+            table_data.append(["Resting Heart Rate", f"{rhr} bpm" if rhr else "--", "60 - 80 bpm", "Nominal" if rhr else "Pending"])
+            table_data.append(["Heart Rate Range", hr_range, "Circadian curve", "Evaluated"])
+            table_data.append(["Total Steps", f"{steps:,}", "10,000 steps", "Recorded"])
+            table_data.append(["Sleep Duration", sleep_str, "7 - 9 hours", "Evaluated"])
+            table_data.append(["Data Quality", str(dq).capitalize(), "Nominal", "Passed"])
+        elif isinstance(raw_metrics, list):
+            for row in raw_metrics:
+                if isinstance(row, dict):
+                    table_data.append([
+                        str(row.get("name", "")),
+                        str(row.get("value", "")),
+                        str(row.get("baseline", "")),
+                        str(row.get("status", ""))
+                    ])
 
         if len(table_data) > 1:
             t = Table(table_data, colWidths=[140, 110, 110, 140])

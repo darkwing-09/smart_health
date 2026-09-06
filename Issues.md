@@ -207,9 +207,9 @@ This document tracks all active defects, architectural questions, security conce
 ### `ISSUE-024`: Physical Android Device & Wearable Sensor Hardware Availability
 - **Category:** Integration Blocker / Hardware Peripheral
 - **Priority:** `P1`
-- **Status:** `BLOCKED`
-- **Description:** No physical Android smartphone, emulator AVD system image, or Bluetooth LE wearable sensor is connected to the development workstation.
-- **Resolution / Mitigation:** In compliance with healthcare engineering governance (zero-fabrication principle), hardware testing gates are strictly preserved as `BLOCKED`. All software architecture, data ingestion, state machines, and reporting were validated using the authoritative 14-hop deterministic simulation (`scripts/simulate_health_connect_pipeline.py`) and a 19-step hardware verification runbook was documented in `HARDWARE_TEST_PROTOCOL.md`.
+- **Status:** `RESOLVED (Device) / BLOCKED (Wearable)`
+- **Description:** Previously, physical Android smartphone and wearable hardware were unavailable.
+- **Resolution / Current State:** A physical Android device (vivo I2214 running Android 16 / API 36, ADB ID `10BD1Y16FL0005Z`) is now connected, verified, and running the `com.healthos.android` application. Health Connect is installed with full read permissions. Real WorkManager execution, Room offline queueing, and UI reactivity were empirically verified on the physical hardware. However, a physical Bluetooth LE smartwatch paired and actively populating Health Connect records remains an external hardware blocker.
 
 ### `ISSUE-025`: Lock Screen PHI Exposure via System Notifications
 - **Category:** Privacy & Mobile Security
@@ -252,5 +252,23 @@ This document tracks all active defects, architectural questions, security conce
 - **Status:** `RESOLVED`
 - **Description:** Background ARQ worker periodic cron functions (`cron_daily_baseline_recompute` and `cron_daily_report_pipeline`) were stubbed with empty return dictionaries rather than executing live calculations.
 - **Resolution:** Built full operational implementations in `worker.py`: `cron_daily_baseline_recompute` calculates rolling 30-day mean, standard deviation, and circadian profiles across 5 biometrics; `cron_daily_report_pipeline` compiles 24-hour vitals rollups, generates daily narratives, builds publication-grade ReportLab vector PDFs with SHA-256 seals, stores `Report` records, and handles zero-telemetry days via graceful `degraded_trends_only` fallback. Verified via `test_worker_cadence_e2e.py`.
+
+### `ISSUE-031`: Manual Health Timeline Sync Button Deadlock & Offline Staging UX
+- **Category:** Android Client Architecture & UX
+- **Priority:** `P1`
+- **Status:** `RESOLVED`
+- **Description:** Tapping "Sync Health Timeline Now" produced zero visible feedback or execution on the physical device because:
+  1. `triggerImmediateSync()` attached `NetworkType.CONNECTED` to the `OneTimeWorkRequest`, blocking all local Health Connect staging when network connectivity was unavailable.
+  2. Anonymous `enqueue()` lacked unique work coordination and state tracking.
+  3. Health Connect query window was overly narrow (6h) and omitted calories and sleep.
+  4. Jetpack Compose UI had no reactive state for sync progress, offline retention, or error reporting.
+- **Resolution:**
+  1. Decoupled local Health Connect staging from network availability: immediate sync executes immediately to read Health Connect and stage into Room DB.
+  2. Transitioned to `ExistingWorkPolicy.REPLACE` with unique work name `HealthOS_ImmediateSync`.
+  3. Added reactive `getPendingCountFlow(): Flow<Int>` in `MeasurementDao` and observed WorkManager unique work state in `MainActivity`.
+  4. Expanded Health Connect query to 24h across HeartRate, Steps, Calories, and SleepSession.
+  5. Implemented `SyncUiState` (`Idle`, `Queued`, `Syncing`, `Success`, `Error`), activity banner with spinner, and graceful network failure retention (`is_offline = true`).
+  6. Verified on physical vivo I2214 (Android 16 / API 36) with live logcat, UI verification, offline injection drill, and 12/12 unit tests passing.
+
 
 

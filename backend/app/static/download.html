@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Personal Health OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 32, 54, 0.7);
+      --primary: #00E5FF;
+      --accent: #FF5252;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #172554 0%, var(--bg) 80%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 36px 28px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .app-icon {
+      width: 108px;
+      height: 108px;
+      border-radius: 26px;
+      margin: 0 auto 20px;
+      box-shadow: 0 10px 30px rgba(0, 229, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      display: block;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 229, 255, 0.12);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid rgba(0, 229, 255, 0.25);
+    }
+    p.desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #00E5FF 0%, #2979FF 50%, #7C4DFF 100%);
+      color: #0A0F1D;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 24px;
+      border-radius: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 25px rgba(0, 229, 255, 0.35);
+    }
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 229, 255, 0.45);
+    }
+    .meta {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-val { font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/static/ic_launcher.png" alt="Personal Health OS Emblem" class="app-icon" onerror="this.src='/static/app.css'">
+    <div class="badge">LATEST PRODUCTION BUILD</div>
+    <h1>Personal Health OS</h1>
+    <p class="desc">Interactive biometric timeline, 7-day cardiac trajectory sparkline, Gemini AI insights, and vector PDF reports.</p>
+    
+    <a href="/static/PersonalHealthOS.apk" download="PersonalHealthOS.apk" class="btn-download">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download APK (28 MB)
+    </a>
+
+    <div class="meta">
+      <div class="meta-item"><span>Version</span><span class="meta-val">v0.1.0-pilot</span></div>
+      <div class="meta-item"><span>Package</span><span class="meta-val">com.healthos</span></div>
+      <div class="meta-item"><span>Architecture</span><span class="meta-val">arm64 / universal</span></div>
+    </div>
+  </div>
+</body>
+</html>

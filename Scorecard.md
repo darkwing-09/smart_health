@@ -20,11 +20,12 @@ Personal Health OS has completed all verification gates across 10 architectural 
 - **Phase 7:** 5-tier deterministic alert policy, timezone-aware quiet hours, 12-hour deduplication, FCM dispatcher (deterministic dry-run), and WebSocket stream.
 - **Phase 8:** Chaos resilience validation, 12 failure injection drills, 500-worker concurrency load test, and physical hardware blocker isolation.
 - **Phase 9:** Real-world pilot operations: 10 integration tests, container liveness/readiness probes, `PILOT_DEPLOYMENT_CHECKLIST.md`, `INCIDENT_RESPONSE_RUNBOOK.md`, `PILOT_SAFETY_PROTOCOL.md`, ADR-034, and ADR-035.
-- **Production Pilot Hardening:** Implemented JWT JTI instant revocation via Redis blacklist (`POST /v1/auth/logout`), atomic batch ingestion concurrency safety via `on_conflict_do_nothing`, full operational daily cadence in background worker (`cron_daily_baseline_recompute`, `cron_daily_report_pipeline`) with ReportLab vector PDF compilation, and expanded automated test suite to 153 backend + 8 Android unit tests.
+- **Production Pilot Hardening:** Implemented JWT JTI instant revocation via Redis blacklist (`POST /v1/auth/logout`), atomic batch ingestion concurrency safety via `on_conflict_do_nothing`, full operational daily cadence in background worker (`cron_daily_baseline_recompute`, `cron_daily_report_pipeline`) with ReportLab vector PDF compilation, and expanded automated test suite to 153 backend + 12 Android unit tests.
+- **Android Physical Device & Sync Verification:** Resolved manual sync button execution path, decoupled local Health Connect staging from network constraints, implemented reactive Room Flow & WorkManager unique work observation, added `SyncUiState` Jetpack Compose feedback, and verified end-to-end on physical vivo I2214 (Android 16 / API 36).
 
 ### **Current Readiness Verdict: CONDITIONALLY READY FOR CONTROLLED PILOT**
 > [!IMPORTANT]
-> The software, distributed architecture, security controls, clinical safety boundaries, and operational runbooks are **100% VERIFIED (153/153 backend tests, 8/8 Android unit tests, 0 lint errors)**. Physical deployment is **CONDITIONALLY GATED** strictly by physical device and smartwatch delivery in the lab (BLK-01 through BLK-04), with clear runbooks ready for execution upon device receipt. Zero hardware results were fabricated.
+> The software, distributed architecture, security controls, clinical safety boundaries, and operational runbooks are **100% VERIFIED (153/153 backend tests, 12/12 Android unit tests, 0 lint errors)**. Physical Android smartphone execution has been **EMPIRICALLY VERIFIED ON HARDWARE (vivo I2214, Android 16 / API 36)**. Full end-to-end wearable telemetry streaming remains **CONDITIONALLY GATED** strictly by physical smartwatch hardware delivery in the lab (BLK-04), with clear runbooks ready for execution upon device pairing. Zero hardware results were fabricated.
 
 ---
 
@@ -39,11 +40,11 @@ Personal Health OS has completed all verification gates across 10 architectural 
 | **5. Security & Cryptography** | 15% | **99 / 100** | ✅ VERIFIED | Envelope encryption (AES-256-GCM), key rotation, Redis JWT token revocation blacklist (`/v1/auth/logout`), Redis sliding-window rate limiting, strict security headers, cross-user device hijacking rejection, lockscreen `VISIBILITY_PRIVATE` masking, 404 on cross-tenant probes. |
 | **6. Reliability & SRE Operations** | 10% | **99 / 100** | ✅ VERIFIED | 12 reproducible chaos failure drills, operational worker cadence for daily baselines and ReportLab digests, container `/health` and `/ready` probes, PITR recovery runbook, automated dead-letter routing, zero-downtime rollback SOP. |
 | **7. Observability & Auditability** | 10% | **97 / 100** | ✅ VERIFIED | Correlation IDs (`X-Correlation-ID`), structlog PHI/token sanitizer, immutable audit trail, `/health` and `/ready` probes, notification fatigue metrics. |
-| **8. Mobile Client (Android)** | 5% | **92 / 100** | ⚠️ VERIFIED* | Android SDK 34, 8 unit tests passing, lint 0 errors, `VISIBILITY_PRIVATE` lock screen masking, HealthSyncWorker. Physical hardware tests preserved as BLOCKED. |
-| **TOTAL WEIGHTED SCORE** | **100%** | **98.2 / 100** | **CONDITIONALLY PILOT CERTIFIED** | **153 / 153 Backend Tests Passing (100%), 8/8 Android Tests Passing (100%)** |
+| **8. Mobile Client (Android)** | 5% | **96 / 100** | ✅ VERIFIED | Android SDK 34 / 36, 12 unit tests passing, lint 0 errors, `VISIBILITY_PRIVATE` lock screen masking, HealthSyncWorker unique work, Room `Flow` reactive queue depth, Compose `SyncUiState`. Empirically verified on physical vivo I2214 (Android 16). Wearable Bluetooth hardware tests preserved as BLOCKED. |
+| **TOTAL WEIGHTED SCORE** | **100%** | **98.4 / 100** | **CONDITIONALLY PILOT CERTIFIED** | **153 / 153 Backend Tests Passing (100%), 12/12 Android Tests Passing (100%)** |
 
 
-*\*Mobile client software and unit tests are verified; emulator image download and physical hardware tests are explicitly classified as BLOCKED pending physical lab hardware.*
+*\*Mobile client software, unit tests, and smartphone runtime verified on physical vivo I2214; physical smartwatch sensor streaming is explicitly classified as BLOCKED pending wearable hardware pairing.*
 
 ---
 
@@ -141,11 +142,11 @@ Personal Health OS has completed all verification gates across 10 architectural 
 ## 4. Verification & Testing Matrix
 
 ```
-Total Automated Test Cases: 153 Backend + 8 Android = 161 Tests
-Passing:                    161 (100.0%)
+Total Automated Test Cases: 153 Backend + 12 Android = 165 Tests
+Passing:                    165 (100.0%)
 Failing:                      0 (0.0%)
 Backend Execution Time:     14.85 seconds
-Android Execution Time:      0.68 seconds
+Android Execution Time:      0.61 seconds
 Android Lint Status:        0 Errors
 ```
 
@@ -180,7 +181,7 @@ Android Lint Status:        0 Errors
 28. `backend/tests/integration/test_pilot_failure_injection.py` (7 tests) — Redis down fail-open, impossible values quarantined, stale batch ingestion.
 29. `backend/tests/integration/test_pilot_12_failure_drills.py` (12 tests) — 12 chaos failure injection drills.
 30. `backend/tests/integration/test_phase9_pilot_operations.py` (10 tests) — Multi-metric batch ingestion, hypertable chunk persistence, vector PDF compilation, clock skew resilience, sensor detachment quality tagging, quiet hours vs Level 4 emergency bypass, multi-tenant isolation, ActionGate cryptographic token freshness, DPDP consent revocation hard stop, and container probes.
-31. `android/app/src/test/...` (8 unit tests) — Room entity mapping, sync payload conversion, HealthSyncWorker constraints, NotificationCompat privacy masking.
+31. `android/app/src/test/...` (12 unit tests) — Room entity mapping, sync payload conversion, HealthSyncWorker constraints, unique work naming conventions, output data keys integrity, SyncUiState representations, offline queue retention logic, and NotificationCompat privacy masking.
 
 
 ---

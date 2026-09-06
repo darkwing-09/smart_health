@@ -27,6 +27,7 @@ class HealthSyncWorker(
         const val TAG = "HealthSyncWorker"
         const val ORPHAN_TIMEOUT_MS = 15 * 60 * 1000L  // 15 minutes
 
+        const val KEY_RECORDS_READ = "records_read"
         const val KEY_RECORDS_STAGED = "records_staged"
         const val KEY_RECORDS_SYNCED = "records_synced"
         const val KEY_STATUS_MESSAGE = "status_message"
@@ -39,52 +40,59 @@ class HealthSyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            Log.i(TAG, "HealthSyncWorker execution started [id=$id]")
+            Log.i(TAG, "🚀 [WORKER_START] HealthSyncWorker execution started [id=$id]")
 
             // 0. Crash Recovery: Reset orphaned IN_FLIGHT records from previous worker crashes
             val recoveredCount = db.measurementDao().resetOrphanedInFlightRecords(
                 timeoutThresholdMs = System.currentTimeMillis() - ORPHAN_TIMEOUT_MS
             )
             if (recoveredCount > 0) {
-                Log.i(TAG, "Recovered $recoveredCount orphaned IN_FLIGHT records back to PENDING")
+                Log.i(TAG, "🔄 [RECOVERY] Recovered $recoveredCount orphaned IN_FLIGHT records back to PENDING")
             }
 
             // 1. Ingest latest measurements from Health Connect into offline Room DB (Always executed locally, offline-safe)
-            var stagedCount = 0
-            if (healthConnectManager.isHealthConnectAvailable() && healthConnectManager.hasAllPermissions()) {
+            var recordsRead = 0
+            var newlyStagedCount = 0
+            val isAvailable = healthConnectManager.isHealthConnectAvailable()
+            val hasPermissions = healthConnectManager.hasAnyPermissions()
+            Log.i(TAG, "🔍 [HEALTH_CONNECT_CHECK] Available=$isAvailable, HasAnyPermissions=$hasPermissions")
+
+            if (isAvailable && hasPermissions) {
                 try {
-                    val freshRecords = healthConnectManager.readRecentMeasurements(hoursBack = 24)
+                    val freshRecords = healthConnectManager.readRecentMeasurements(hoursBack = 30 * 24)
+                    recordsRead = freshRecords.size
                     if (freshRecords.isNotEmpty()) {
                         val insertedRowIds = db.measurementDao().insertAll(freshRecords)
-                        stagedCount = insertedRowIds.count { it != -1L }
-                        Log.i(TAG, "Health Connect read: ${freshRecords.size} records found, newly staged $stagedCount in Room")
+                        newlyStagedCount = insertedRowIds.count { it != -1L }
+                        val alreadyExisted = recordsRead - newlyStagedCount
+                        Log.i(TAG, "💾 [DATABASE_WRITE] Read $recordsRead from Health Connect: Newly inserted = $newlyStagedCount, Already stored = $alreadyExisted")
                     } else {
-                        Log.i(TAG, "Health Connect read: 0 records found in 24h window")
+                        Log.i(TAG, "ℹ️ [HEALTH_CONNECT_READ] 0 records returned by Health Connect in 30-day window. (If using NoiseFit/Google Fit, check Google Fit 'Sync Fit with Health Connect' setting).")
                     }
                 } catch (e: Exception) {
-                    Log.w(TAG, "Health Connect read non-fatal error: ${e.message}")
+                    Log.e(TAG, "❌ [HEALTH_CONNECT_ERROR] Health Connect read non-fatal error: ${e.message}", e)
                 }
             } else {
                 Log.w(
                     TAG,
-                    "Health Connect unavailable or permissions missing. " +
-                        "available=${healthConnectManager.isHealthConnectAvailable()}, " +
-                        "permissions=${healthConnectManager.hasAllPermissions()}"
+                    "⚠️ [PERMISSIONS] Health Connect unavailable ($isAvailable) or no permissions granted ($hasPermissions)"
                 )
             }
 
             // 2. Fetch syncable batch (PENDING + retryable FAILED with backoff)
             val pending = db.measurementDao().getSyncableBatch(limit = 200)
             if (pending.isEmpty()) {
-                val completionMessage = if (stagedCount > 0) {
-                    "Staged $stagedCount records in offline database"
-                } else {
-                    "Health Connect is up to date (0 new records)"
+                val completionMessage = when {
+                    newlyStagedCount > 0 -> "Staged $newlyStagedCount new records in local timeline database"
+                    recordsRead > 0 -> "All $recordsRead Health Connect records are already saved in local timeline"
+                    !hasPermissions -> "Health Connect permissions required to read data"
+                    else -> "Health Connect query completed (0 records found in 30-day window)"
                 }
-                Log.i(TAG, "Sync complete. No pending records to transmit across network. $completionMessage")
+                Log.i(TAG, "🏁 [SYNC_COMPLETE] No pending records to transmit across network. $completionMessage")
                 return Result.success(
                     workDataOf(
-                        KEY_RECORDS_STAGED to stagedCount,
+                        KEY_RECORDS_READ to recordsRead,
+                        KEY_RECORDS_STAGED to newlyStagedCount,
                         KEY_RECORDS_SYNCED to 0,
                         KEY_IS_OFFLINE to false,
                         KEY_STATUS_MESSAGE to completionMessage
@@ -95,11 +103,12 @@ class HealthSyncWorker(
             // 3. Check network availability before attempting HTTP dispatch
             val isConnected = isNetworkAvailable(applicationContext)
             if (!isConnected) {
-                val offlineMsg = "Offline: Staged $stagedCount records. ${pending.size} records queued in local database."
-                Log.i(TAG, "Device is offline. $offlineMsg")
+                val offlineMsg = "Offline: Read $recordsRead records ($newlyStagedCount new). ${pending.size} records queued in local database."
+                Log.i(TAG, "🌐 [OFFLINE] Device is offline. $offlineMsg")
                 return Result.success(
                     workDataOf(
-                        KEY_RECORDS_STAGED to stagedCount,
+                        KEY_RECORDS_READ to recordsRead,
+                        KEY_RECORDS_STAGED to newlyStagedCount,
                         KEY_RECORDS_SYNCED to 0,
                         KEY_IS_OFFLINE to true,
                         KEY_STATUS_MESSAGE to offlineMsg
@@ -141,14 +150,15 @@ class HealthSyncWorker(
                 )
             } catch (e: IOException) {
                 // Network unreachable, DNS failure, or connection refused: revert batch to PENDING so records are preserved
-                Log.w(TAG, "Backend unreachable (${e.javaClass.simpleName}: ${e.message}). Reverting ${ids.size} records to PENDING.")
+                Log.w(TAG, "🌐 [NETWORK_FAILURE] Backend unreachable (${e.javaClass.simpleName}: ${e.message}). Reverting ${ids.size} records to PENDING.")
                 db.measurementDao().updateSyncStatus(ids, SyncStatus.PENDING)
                 return Result.success(
                     workDataOf(
-                        KEY_RECORDS_STAGED to stagedCount,
+                        KEY_RECORDS_READ to recordsRead,
+                        KEY_RECORDS_STAGED to newlyStagedCount,
                         KEY_RECORDS_SYNCED to 0,
                         KEY_IS_OFFLINE to true,
-                        KEY_STATUS_MESSAGE to "Server unreachable. ${pending.size} records preserved locally in queue."
+                        KEY_STATUS_MESSAGE to "Server unreachable. Read $recordsRead records. ${pending.size} records preserved locally in queue."
                     )
                 )
             }
@@ -156,22 +166,24 @@ class HealthSyncWorker(
             if (response.isSuccessful) {
                 db.measurementDao().updateSyncStatus(ids, SyncStatus.SYNCED)
                 val successMsg = "Successfully synced ${ids.size} records to timeline"
-                Log.i(TAG, successMsg)
+                Log.i(TAG, "🏁 [SYNC_SUCCESS] $successMsg")
                 Result.success(
                     workDataOf(
-                        KEY_RECORDS_STAGED to stagedCount,
+                        KEY_RECORDS_READ to recordsRead,
+                        KEY_RECORDS_STAGED to newlyStagedCount,
                         KEY_RECORDS_SYNCED to ids.size,
                         KEY_IS_OFFLINE to false,
                         KEY_STATUS_MESSAGE to successMsg
                     )
                 )
             } else {
-                handleServerError(response.code(), ids, stagedCount)
+                handleServerError(response.code(), ids, newlyStagedCount)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected sync worker error: ${e.message}", e)
+            Log.e(TAG, "❌ [WORKER_ERROR] Unexpected sync worker error: ${e.message}", e)
             Result.failure(
                 workDataOf(
+                    KEY_RECORDS_READ to 0,
                     KEY_RECORDS_STAGED to 0,
                     KEY_RECORDS_SYNCED to 0,
                     KEY_STATUS_MESSAGE to "Sync failed: ${e.message}"
@@ -225,13 +237,18 @@ class HealthSyncWorker(
         }
     }
 
-    private fun isNetworkAvailable(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return false
-        val network = cm.activeNetwork ?: return false
-        val caps = cm.getNetworkCapabilities(network) ?: return false
-        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
+private fun isNetworkAvailable(context: Context): Boolean {
+    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+        as? ConnectivityManager ?: return false
 
+    val network = cm.activeNetwork ?: return false
+    val caps = cm.getNetworkCapabilities(network) ?: return false
+
+    return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
+           caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+           caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+           caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+}
 
     /**
      * Resolves the authentication bearer token.

@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE_HEALTH_INTEL: float = 0.1
     LLM_MAX_TOKENS_HEALTH_INTEL: int = 1000
 
+    # Gemini API Settings (Google AI)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_TEMPERATURE: float = 0.3
+    GEMINI_MAX_TOKENS: int = 500
+
     # LangSmith Observability
     LANGCHAIN_TRACING_V2: bool = True
     LANGCHAIN_API_KEY: str = ""
