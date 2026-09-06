@@ -17,7 +17,9 @@ from app.services.action_gate import ActionGate, ActionTier, ActionApprovalStatu
 
 @pytest.fixture
 def eval_dataset():
-    path = Path(__file__).resolve().parent.parent.parent.parent / "evals" / "eval_datasets.json"
+    path = Path(__file__).resolve().parent / "eval_datasets.json"
+    if not path.exists():
+        path = Path(__file__).resolve().parent.parent.parent.parent / "evals" / "eval_datasets.json"
     with open(path, "r") as f:
         return json.load(f)
 

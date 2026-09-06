@@ -51,4 +51,10 @@ backups/
 *.dump
 data/reports/*.pdf
 backend/data/
+var/
+
+# Build Binaries & Packages
+*.apk
+*.aab
+
 

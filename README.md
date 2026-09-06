@@ -139,46 +139,70 @@ This repository operates under a strict 21-document engineering operating system
 
 ---
 
+---
+
+## Repository Structure
+
+The project is organized cleanly around two primary application directories and system documentation:
+
+```
+SMART_HEALTH/
+├── android/            # Native Android Mobile Application (Kotlin, Jetpack Compose, Health Connect)
+│   ├── app/            # Main application module, UI screens, Room DB, WorkManager sync
+│   └── build.gradle.kts
+├── backend/            # Personal Health OS Core Platform (FastAPI, Python 3.11)
+│   ├── app/            # 12 System Agents, API endpoints, TimescaleDB models, web dashboard
+│   ├── alembic/        # Database schema migrations
+│   ├── scripts/        # Database backup, restore, and load-testing scripts
+│   └── tests/          # Comprehensive unit, integration, and chaos test suites
+├── docs/               # Architecture, Agent Specifications, Deployment & Safety Protocols
+├── docker/             # TimescaleDB initialization scripts
+├── docker-compose.yml  # Local and development cluster orchestration
+├── docker-compose.prod.yml # Production deployment cluster
+├── .env.example        # Environment variables template
+└── README.md           # Project guide and overview
+```
+
+---
+
 ## Development Prerequisites
 
 - **Host OS:** Linux (Ubuntu 22.04+ LTS recommended) or macOS.
-- **Python:** Version 3.11 or higher with `uv` or `poetry`.
+- **Python:** Version 3.11 or higher with `uv` or `pip`.
 - **Android Development:** Android Studio Hedgehog (2023.1.1+) or newer, JDK 17, Android SDK Platform 34+.
 - **Database:** Docker & Docker Compose to run PostgreSQL 16 + TimescaleDB and Redis.
-- **Wearable Test Setup:** Wear OS 3.0+ physical watch or Android Emulator with Health Connect installed.
+- **Wearable Test Setup:** Wear OS 3.0+ watch, Noise Watch via NoiseFit / Health Connect, or Android Emulator.
 
 ---
 
 ## Quickstart (Local Development)
 
-### 1. Clone & Configure Environment
+### 1. Backend & Supporting Infrastructure
 ```bash
-git clone https://github.com/your-org/personal-health-os.git
-cd personal-health-os
-cp files/.env.example .env
-# Edit .env with your local test configuration and LLM API keys
-```
+# 1. Configure environment
+cp .env.example .env
 
-### 2. Start Supporting Infrastructure
+# 2. Start database, redis, backend, and background worker
+docker compose up -d
+
+# 3. Verify backend health
+curl http://localhost:8000/health
+```
+- Interactive API Documentation: `http://localhost:8000/docs`
+- Live Web Dashboard & Telemetry Stream: `http://localhost:8000/static/index.html`
+- Mobile APK Download Portal: `http://localhost:8000/static/download.html`
+
+### 2. Android Mobile Application
 ```bash
-docker compose up -d db redis
-```
+# In the android/ directory:
+cd android
 
-### 3. Run Database Migrations
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-```
+# Build debug APK with custom launcher icon
+./gradlew assembleDebug
 
-### 4. Launch FastAPI Local Server
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Install directly to connected device (via USB)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
-
-Interactive API documentation will be available at `http://localhost:8000/docs`.
 
 ---
 
