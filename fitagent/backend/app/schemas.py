@@ -1,0 +1,206 @@
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import Literal
+from zoneinfo import available_timezones
+
+from fitagent_agents.schemas import WeeklyPlan
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+WorkoutTypeName = Literal["WALK", "RUN", "CYCLE", "STRENGTH", "HIIT", "YOGA", "SWIM", "SPORTS", "DANCE", "OTHER"]
+Metric = Literal["steps", "workout_minutes", "active_days"]
+
+_TIMEZONES = available_timezones()
+
+
+def _check_tz(tz: str | None) -> str | None:
+    if tz is not None and tz not in _TIMEZONES:
+        raise ValueError("unknown IANA timezone")
+    return tz
+
+
+# ── Auth ────────────────────────────────────────────────────────────────────
+
+class RegisterIn(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    display_name: str = Field(min_length=1, max_length=60)
+    timezone: str = "UTC"
+
+    _tz = field_validator("timezone")(_check_tz)
+
+
+class LoginIn(BaseModel):
+    email: EmailStr
+    password: str = Field(max_length=128)
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+# ── Profile ─────────────────────────────────────────────────────────────────
+
+class GoalsModel(BaseModel):
+    daily_steps: int = Field(8000, ge=1000, le=50000)
+    daily_active_kcal: int = Field(400, ge=50, le=3000)
+    daily_workout_minutes: int = Field(30, ge=5, le=300)
+    weekly_workouts: int = Field(4, ge=1, le=14)
+
+
+class ProfileOut(BaseModel):
+    id: str
+    email: str
+    display_name: str
+    timezone: str
+    age: int | None
+    height_cm: int | None
+    weight_kg: float | None
+    goals: GoalsModel
+
+
+class ProfileUpdate(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=60)
+    timezone: str | None = None
+    age: int | None = Field(None, ge=10, le=100)
+    height_cm: int | None = Field(None, ge=100, le=250)
+    weight_kg: float | None = Field(None, ge=25, le=300)
+    goals: GoalsModel | None = None
+
+    _tz = field_validator("timezone")(_check_tz)
+
+
+# ── Sync ────────────────────────────────────────────────────────────────────
+
+class DayIn(BaseModel):
+    date: date
+    steps: int = Field(0, ge=0, le=200_000)
+    distance_m: float = Field(0, ge=0, le=300_000)
+    active_kcal: int = Field(0, ge=0, le=15_000)
+    workout_minutes: int = Field(0, ge=0, le=1440)
+    resting_hr: int | None = Field(None, ge=25, le=220)
+    avg_hr: int | None = Field(None, ge=25, le=230)
+    sleep_minutes: int | None = Field(None, ge=0, le=1440)
+
+
+class WorkoutIn(BaseModel):
+    client_id: str = Field(min_length=1, max_length=80)
+    type: WorkoutTypeName
+    title: str | None = Field(None, max_length=120)
+    start: datetime
+    end: datetime
+    active_seconds: int = Field(ge=0, le=86_400)
+    kcal: float = Field(0, ge=0, le=10_000)
+    source: Literal["APP", "HEALTH_CONNECT"] = "APP"
+
+    @model_validator(mode="after")
+    def _order(self) -> WorkoutIn:
+        if self.start.tzinfo is None or self.end.tzinfo is None:
+            raise ValueError("start/end must include a timezone offset")
+        if self.end < self.start:
+            raise ValueError("end must be after start")
+        return self
+
+
+class SyncIn(BaseModel):
+    timezone: str | None = None
+    days: list[DayIn] = Field(default_factory=list, max_length=400)
+    workouts: list[WorkoutIn] = Field(default_factory=list, max_length=500)
+    deleted_workout_ids: list[str] = Field(default_factory=list, max_length=500)
+
+    _tz = field_validator("timezone")(_check_tz)
+
+
+class SyncOut(BaseModel):
+    days_upserted: int
+    workouts_upserted: int
+    workouts_deleted: int
+    server_time: datetime
+
+
+class DayOut(DayIn):
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WorkoutOut(WorkoutIn):
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ── Challenges ──────────────────────────────────────────────────────────────
+
+class ChallengeCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=60)
+    metric: Metric = "steps"
+    start_date: date | None = None
+    days: int = Field(7, ge=1, le=90)
+
+
+class JoinIn(BaseModel):
+    code: str = Field(min_length=4, max_length=8)
+
+
+class LeaderboardRow(BaseModel):
+    rank: int
+    user_id: str
+    display_name: str
+    value: float
+    is_me: bool
+
+
+class ChallengeOut(BaseModel):
+    id: str
+    code: str
+    name: str
+    metric: Metric
+    start_date: date
+    end_date: date
+    is_owner: bool
+    status: Literal["upcoming", "active", "finished"]
+    participants: int
+    my_rank: int | None
+    leaderboard: list[LeaderboardRow]
+
+
+# ── Coach ───────────────────────────────────────────────────────────────────
+
+class ChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+
+
+class ChatOut(BaseModel):
+    reply: str
+    safety: str | None
+    tools_used: list[str]
+    ai_powered: bool
+
+
+class MessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    role: Literal["user", "assistant"]
+    content: str
+    safety: str | None
+    created_at: datetime
+
+
+class ReadinessOut(BaseModel):
+    score: int
+    band: Literal["PUSH", "STEADY", "RECOVER"]
+    components: dict[str, int]
+    reasons: list[str]
+
+
+class PlanOut(BaseModel):
+    id: str
+    starts_on: date
+    created_at: datetime
+    source: Literal["llm", "rules"]
+    readiness: ReadinessOut
+    plan: WeeklyPlan

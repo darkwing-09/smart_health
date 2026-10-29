@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **The current project lives in [`fitagent/`](fitagent/README.md)** — a ground-up rebuild as an AI fitness coach
+> for students (Android + FastAPI + LangGraph agents). The `android/` and `backend/` folders below are the earlier
+> HealthAgent prototype, kept for reference. See [`fitagent/docs/IMPLEMENTATION_PLAN.md`](fitagent/docs/IMPLEMENTATION_PLAN.md)
+> for why it was rebuilt.
+
 <div align="center">
 
 # ⚕️ HealthAgent
