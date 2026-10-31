@@ -19,7 +19,14 @@ import com.fitagent.data.remote.dto.ReadinessDto
 import com.fitagent.data.remote.dto.SessionDto
 import com.fitagent.data.remote.dto.WeeklyPlanDto
 import com.fitagent.domain.ActiveSession
+import com.fitagent.data.DataSource
+import com.fitagent.data.SyncEvent
 import com.fitagent.domain.DeviceDay
+import com.fitagent.domain.HrBucket
+import com.fitagent.domain.NightSignals
+import com.fitagent.domain.SleepSegment
+import com.fitagent.domain.SleepStage
+import com.fitagent.domain.SleepStages
 import com.fitagent.domain.IntervalConfig
 import com.fitagent.domain.Profile
 import com.fitagent.domain.Workout
@@ -29,6 +36,7 @@ import com.fitagent.domain.buildDays
 import com.fitagent.domain.computeAchievements
 import com.fitagent.domain.computeReadiness
 import com.fitagent.domain.computeStreak
+import com.fitagent.domain.sleepStagesOf
 import com.fitagent.domain.suggestToday
 import com.fitagent.domain.workoutKcal
 import com.fitagent.domain.workoutsThisWeek
@@ -36,6 +44,10 @@ import com.fitagent.ui.screens.ActiveWorkoutScreen
 import com.fitagent.ui.screens.CoachScreen
 import com.fitagent.ui.screens.OnboardingScreen
 import com.fitagent.ui.screens.SquadScreen
+import com.fitagent.ui.screens.DevicesScreen
+import com.fitagent.ui.screens.HeartScreen
+import com.fitagent.ui.screens.ReadinessScreen
+import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.YouScreen
@@ -57,8 +69,15 @@ class ScreenshotTest {
 
     private val pad = PaddingValues(top = 28.dp, bottom = 16.dp)
 
-    @Test fun today() = snap { TodayScreen(home, pad, {}, {}, {}) }
-    @Test fun today_light() = snap(dark = false) { TodayScreen(home, pad, {}, {}, {}) }
+    @Test fun today() = snap { TodayScreen(home, pad, {}, {}, {}, hourly, lastNight) }
+    @Test fun today_light() = snap(dark = false) { TodayScreen(home, pad, {}, {}, {}, hourly, lastNight) }
+    @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
+    @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
+    @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }
+    @Test fun devices() = snap {
+        DevicesScreen(home.health.copy(backgroundRead = true), home.lastWatchSync, clock.millis() - 50 * 60_000, true, sources,
+            syncLog, CompatibilityState.Idle, false, {}, {}, {}, {})
+    }
     @Test fun today_not_connected() = snap {
         TodayScreen(home.copy(health = HealthStatus(HealthAvailability.NOT_INSTALLED)), pad, {}, {}, {})
     }
@@ -107,11 +126,44 @@ class ScreenshotTest {
             workoutKcal(type, 58.0, minutes * 60L), if (ago == 7L) WorkoutSource.HEALTH_CONNECT else WorkoutSource.APP)
     }
 
+    private val lastNight: List<SleepSegment> = run {
+        var t = today.minusDays(1).atTime(23, 41).atZone(zone).toInstant().toEpochMilli()
+        listOf(SleepStage.LIGHT to 25, SleepStage.DEEP to 50, SleepStage.LIGHT to 40, SleepStage.REM to 22, SleepStage.LIGHT to 55,
+            SleepStage.DEEP to 32, SleepStage.AWAKE to 6, SleepStage.LIGHT to 48, SleepStage.REM to 35, SleepStage.LIGHT to 52,
+            SleepStage.REM to 38, SleepStage.AWAKE to 5, SleepStage.LIGHT to 40, SleepStage.REM to 20, SleepStage.AWAKE to 13)
+            .map { (stage, min) -> SleepSegment(t, t + min * 60_000L, stage).also { t += min * 60_000L } }
+    }
+
     private val device: Map<LocalDate, DeviceDay> = (0L..29L).associate { ago ->
         val d = today.minusDays(ago)
         val steps = if (ago == 0L) 6_240L else listOf(9_800L, 7_200L, 11_400L, 5_600L, 8_900L, 10_300L, 6_700L)[(ago % 7).toInt()]
-        d to DeviceDay(d, steps, steps * 0.74, steps * 0.045, restingHr = if (ago == 0L) 57 else 59 + (ago % 3).toInt(),
-            avgHr = 74, sleepMinutes = if (ago == 0L) 462 else 410 + (ago % 4).toInt() * 20)
+        val tonight = ago == 0L
+        val sleep = if (tonight) lastNight.filter { it.stage != SleepStage.AWAKE }.sumOf { it.minutes } else 410 + (ago % 4).toInt() * 20
+        val bed = if (tonight) lastNight.first().startMs else d.minusDays(1).atTime(23, 10 + (ago % 5).toInt() * 9).atZone(zone).toInstant().toEpochMilli()
+        d to DeviceDay(
+            d, steps, steps * 0.74, steps * 0.045, restingHr = if (ago == 0L) 57 else 59 + (ago % 3).toInt(),
+            avgHr = 74, sleepMinutes = sleep, hrMin = 52 + (ago % 3).toInt(), hrMax = 128 + (ago % 6).toInt() * 9,
+            floors = 6 + (ago % 4).toInt() * 3, vo2max = if (ago % 6 == 0L) 43.5 - ago * 0.05 else null,
+            sleepStages = if (tonight) sleepStagesOf(lastNight)
+            else SleepStages(deep = sleep * 18 / 100, rem = sleep * 22 / 100, light = sleep - sleep * 40 / 100, awake = 24),
+            bedMs = bed, wakeMs = if (tonight) lastNight.last().endMs else bed + (sleep + 24) * 60_000L,
+            night = NightSignals(hrvMs = if (ago == 0L) 68.0 else 58.0 + (ago % 5) * 2.5, spo2Avg = 96.5 - (ago % 3) * 0.4,
+                spo2Min = 92.0 + (ago % 3), respiratoryRate = 14.2, skinTempDelta = listOf(0.1, -0.2, 0.3, 0.0, -0.1)[(ago % 5).toInt()]),
+            stepsSource = "com.noisefit", sleepSource = "com.noisefit",
+        )
+    }
+
+    private val hourly: List<Long> = listOf(0, 0, 0, 0, 0, 0, 120, 640, 980, 310, 220, 450, 610, 380, 290, 260, 420, 540, 760, 0, 0, 0, 0, 0)
+        .map { it.toLong() }
+
+    private val heartToday: List<HrBucket> = run {
+        val start = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        (0 until 6 * 18).map { i ->
+            val hour = i / 6
+            val base = when (hour) { in 0..6 -> 54; 7 -> 112; 8 -> 96; in 17..17 -> 138; else -> 78 }
+            val bpm = base + (i * 7 % 11) - 5
+            HrBucket(start + i * 600_000L, bpm - 6, bpm, bpm + 9)
+        }
     }
 
     private val home: HomeState by lazy {
@@ -131,7 +183,24 @@ class ScreenshotTest {
             workouts = workouts,
             weekWorkouts = workoutsThisWeek(workouts, today, zone),
             achievements = computeAchievements(all, workouts, streak, zone),
+            history = all,
+            readinessHistory = (29 downTo 0).map { ago ->
+                val d = today.minusDays(ago.toLong())
+                d to computeReadiness(all.filter { !it.date.isAfter(d) }, workouts, d, zone)
+            },
+            lastWatchSync = clock.millis() - 4 * 60_000,
         )
+    }
+
+    private val sources = listOf(
+        DataSource("com.noisefit", "NoiseFit", "Noise ColorFit Pro 5", clock.millis() - 4 * 60_000, 18_432,
+            listOf("Heart rate", "Sleep", "Steps", "Blood oxygen")),
+        DataSource("phone_sensor", "This phone's step sensor", null, clock.millis() - 20 * 60_000, 214, listOf("Steps")),
+    )
+
+    private val syncLog: List<SyncEvent> = (0 until 40).map { i ->
+        SyncEvent(clock.millis() - i * 35 * 60_000L, if (i % 6 == 0) "cloud" else "watch", ok = i != 9, records = 20 + i % 7 * 15,
+            message = if (i == 9) "Health Connect is busy or rate-limited — will retry" else null)
     }
 
     private val cloud = CloudState(

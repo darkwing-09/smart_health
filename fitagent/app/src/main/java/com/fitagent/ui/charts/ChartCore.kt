@@ -40,7 +40,9 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fitagent.ui.theme.Fit
@@ -153,18 +155,35 @@ fun PeriodChips(selected: ChartPeriod, onSelect: (ChartPeriod) -> Unit, options:
     }
 }
 
-/** Axis label row under a chart: labels spread over equal slots. */
+/**
+ * Axis labels under a chart, each centred on its slot. Labels are measured at full width (never clipped) and
+ * clamped inside the chart, so dense axes with blanks (see [sparseLabels]) stay readable.
+ */
 @Composable
 fun AxisLabels(labels: List<String>, modifier: Modifier = Modifier) {
     if (labels.isEmpty()) return
-    Row(modifier.fillMaxWidth().padding(top = 6.dp)) {
-        labels.forEach {
-            Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = Fit.colors.muted,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1)
+    val style = MaterialTheme.typography.labelSmall
+    val color = Fit.colors.muted
+    Layout(
+        content = { labels.forEach { Text(it, style = style, color = color, maxLines = 1, softWrap = false) } },
+        modifier = modifier.fillMaxWidth().padding(top = 6.dp),
+    ) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity)) }
+        val width = constraints.maxWidth
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        layout(width, height) {
+            placeables.forEachIndexed { i, p ->
+                val center = width * (i + 0.5f) / labels.size
+                p.placeRelative((center - p.width / 2f).toInt().coerceIn(0, (width - p.width).coerceAtLeast(0)), 0)
+            }
         }
     }
 }
 
 /** Shows every [step]-th label (others blank) so dense axes stay readable. */
 fun sparseLabels(labels: List<String>, step: Int): List<String> =
-    labels.mapIndexed { i, l -> if (i % step == 0 || i == labels.lastIndex) l else "" }
+    labels.mapIndexed { i, l ->
+        // The last label is always useful ("today"), unless it would collide with the previous one.
+        val lastFits = i == labels.lastIndex && i % step >= (step + 1) / 2
+        if (i % step == 0 || lastFits) l else ""
+    }

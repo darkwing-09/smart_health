@@ -83,6 +83,7 @@ fun YouScreen(
     onDeleteAccount: () -> Unit,
     onServerUrl: (String) -> Unit,
     onPrivacy: () -> Unit,
+    onOpenDevices: () -> Unit = {},
 ) {
     var range by rememberSaveable { mutableStateOf(7) }
     LazyColumn(
@@ -109,7 +110,7 @@ fun YouScreen(
         item { BodyCard(state.profile, onUpdateProfile) }
         item { SectionTitle("Settings") }
         item { RemindersCard(state.profile, onUpdateProfile) }
-        item { HealthCard(state, onManageHealth) }
+        item { HealthCard(state, onManageHealth, onOpenDevices) }
         item { AccountCard(cloud, onSignIn, onSignOut, onDeleteAccount, onServerUrl) }
         item {
             Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -287,7 +288,7 @@ private fun RemindersCard(p: Profile, onUpdate: ((Profile) -> Profile) -> Unit) 
 }
 
 @Composable
-private fun HealthCard(state: HomeState, onManage: () -> Unit) {
+private fun HealthCard(state: HomeState, onManage: () -> Unit, onOpenDevices: () -> Unit) {
     val h = state.health
     AppCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -309,8 +310,11 @@ private fun HealthCard(state: HomeState, onManage: () -> Unit) {
             if (h.connected && h.missing == 0) Icon(Icons.Rounded.CheckCircle, null, tint = Fit.colors.push)
         }
         Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth()) {
-            Text(if (h.connected) "Manage permissions" else "Connect")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onManage, modifier = Modifier.weight(1f)) {
+                Text(if (h.connected) "Permissions" else "Connect")
+            }
+            Button(onClick = onOpenDevices, modifier = Modifier.weight(1f)) { Text("Data health") }
         }
         Text("Works with Google Fit, Samsung Health, Fitbit, Noise, boAt and any app that writes to Health Connect.",
             style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted, modifier = Modifier.padding(top = 8.dp))

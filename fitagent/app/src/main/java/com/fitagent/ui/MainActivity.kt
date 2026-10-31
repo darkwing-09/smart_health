@@ -13,6 +13,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
@@ -56,6 +58,11 @@ import com.fitagent.ui.screens.MiniSessionBar
 import com.fitagent.ui.screens.OnboardingScreen
 import com.fitagent.ui.screens.SignInScreen
 import com.fitagent.ui.screens.SquadScreen
+import com.fitagent.ui.screens.Detail
+import com.fitagent.ui.screens.DevicesScreen
+import com.fitagent.ui.screens.HeartScreen
+import com.fitagent.ui.screens.ReadinessScreen
+import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.WorkoutSummaryDialog
@@ -144,6 +151,12 @@ class MainActivity : ComponentActivity() {
         val cloudState by cloud.state.collectAsStateWithLifecycle()
         var tab by rememberSaveable { mutableStateOf(Tab.TODAY) }
         var showSignIn by rememberSaveable { mutableStateOf(false) }
+        var detail by rememberSaveable { mutableStateOf<Detail?>(null) }
+        // Keeps the closing screen rendered while it slides out.
+        val shownDetail = remember { mutableStateOf<Detail?>(null) }
+        if (detail != null) shownDetail.value = detail
+        val hourly by main.hourlySteps.collectAsStateWithLifecycle()
+        val lastNight by main.lastNight.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
 
@@ -184,7 +197,8 @@ class MainActivity : ComponentActivity() {
                 },
             ) { padding ->
                 when (tab) {
-                    Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start)
+                    Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
+                        onOpen = { detail = it })
                     Tab.TRAIN -> TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
                         onDelete = { main.deleteWorkout(it) })
                     Tab.COACH -> CoachScreen(state, cloudState, padding, onSignIn = { showSignIn = true },
@@ -198,10 +212,34 @@ class MainActivity : ComponentActivity() {
                     Tab.YOU -> YouScreen(state, cloudState, padding, onUpdateProfile = main::updateProfile,
                         onManageHealth = ::connectHealth, onSignIn = { showSignIn = true }, onSignOut = cloud::signOut,
                         onDeleteAccount = { cloud.deleteAccount() }, onServerUrl = cloud::setServerUrl,
-                        onPrivacy = { startActivity(Intent(this@MainActivity, PrivacyPolicyActivity::class.java)) })
+                        onPrivacy = { startActivity(Intent(this@MainActivity, PrivacyPolicyActivity::class.java)) },
+                        onOpenDevices = { detail = Detail.DEVICES })
                 }
             }
 
+            AnimatedVisibility(detail != null, enter = slideInHorizontally { it }, exit = slideOutHorizontally { it }) {
+                when (shownDetail.value) {
+                    Detail.READINESS -> ReadinessScreen(state) { detail = null }
+                    Detail.SLEEP -> SleepScreen(state, lastNight) { detail = null }
+                    Detail.HEART -> {
+                        val heartToday by main.heartToday.collectAsStateWithLifecycle()
+                        val heartWeek by main.heartWeek.collectAsStateWithLifecycle()
+                        HeartScreen(state, heartToday, heartWeek) { detail = null }
+                    }
+                    Detail.DEVICES -> {
+                        val sources by main.sources.collectAsStateWithLifecycle()
+                        val log by main.syncLog.collectAsStateWithLifecycle()
+                        val compat by main.compatibility.collectAsStateWithLifecycle()
+                        DevicesScreen(
+                            health = state.health, lastWatchSync = state.lastWatchSync, lastCloudSync = main.lastCloudSync,
+                            signedIn = cloudState.account != null, sources = sources, log = log, compatibility = compat,
+                            refreshing = state.refreshing, onSyncNow = main::syncNow, onRunCheck = main::runCompatibilityCheck,
+                            onConnect = ::connectHealth, onBack = { detail = null },
+                        )
+                    }
+                    null -> Unit
+                }
+            }
             AnimatedVisibility(session != null && playerOpen, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
                 session?.let { s ->
                     ActiveWorkoutScreen(s, profile.weightKg, onTogglePause = main::togglePause, onFinish = main::finishWorkout,

@@ -108,6 +108,12 @@ class FitnessRepository(
         return healthDao.observeHr(from, to).map { rows -> rows.map { HrBucket(it.startMs, it.min, it.avg, it.max) } }
     }
 
+    fun heartRateRange(from: LocalDate, to: LocalDate, zone: ZoneId): Flow<List<HrBucket>> {
+        val start = from.atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = to.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        return healthDao.observeHr(start, end).map { rows -> rows.map { HrBucket(it.startMs, it.min, it.avg, it.max) } }
+    }
+
     /** Hypnogram for the night ending on [date]. */
     fun sleepSegments(date: LocalDate): Flow<List<SleepSegment>> =
         healthDao.observeSleep(date.toEpochDay()).map { rows ->

@@ -4,7 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitagent.container
+import com.fitagent.data.DataSource
 import com.fitagent.data.HealthStatus
+import com.fitagent.data.SyncEvent
+import com.fitagent.data.health.CompatibilityRow
 import com.fitagent.data.prefs.Account
 import com.fitagent.data.remote.dto.ChallengeRes
 import com.fitagent.data.remote.dto.PlanRes
@@ -12,6 +15,8 @@ import com.fitagent.data.remote.userMessage
 import com.fitagent.domain.Achievement
 import com.fitagent.domain.ActiveSession
 import com.fitagent.domain.DayActivity
+import com.fitagent.domain.HrBucket
+import com.fitagent.domain.SleepSegment
 import com.fitagent.domain.IntervalConfig
 import com.fitagent.domain.Profile
 import com.fitagent.domain.Readiness
@@ -26,7 +31,9 @@ import com.fitagent.domain.computeStreak
 import com.fitagent.domain.suggestToday
 import com.fitagent.domain.workoutsThisWeek
 import com.fitagent.service.Scheduler
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -54,7 +61,21 @@ data class HomeState(
     val workouts: List<Workout>,
     val weekWorkouts: Int,
     val achievements: List<Achievement>,
+    /** Up to 90 days, oldest first, today last — for trend charts. */
+    val history: List<DayActivity> = days,
+    /** Readiness as it was on each of the last 30 days (oldest first). */
+    val readinessHistory: List<Pair<LocalDate, Readiness>> = emptyList(),
+    /** When watch data was last read successfully (0 = never). */
+    val lastWatchSync: Long = 0,
 )
+
+sealed interface CompatibilityState {
+    data object Idle : CompatibilityState
+    data object Running : CompatibilityState
+    /** Each row: a data type, with record counts per app and the apps' display names. */
+    data class Done(val rows: List<Pair<CompatibilityRow, Map<String, String>>>) : CompatibilityState
+    data class Failed(val message: String) : CompatibilityState
+}
 
 /** On-device fitness: Health Connect data, goals, streaks, workout tracking. Works fully offline. */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -69,14 +90,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
-    private val meta = combine(c.fitness.status, refreshing, today) { s, r, t -> Triple(s, r, t) }
+    private val meta = combine(c.fitness.status, refreshing, today, c.fitness.lastHealthSync) { s, r, t, sync ->
+        Meta(s, r, t, sync)
+    }
+
+    private data class Meta(val health: HealthStatus, val refreshing: Boolean, val today: LocalDate, val lastSync: Long)
 
     val state: StateFlow<HomeState?> = combine(
         c.profiles.profile, c.fitness.deviceDays, c.fitness.workouts, meta,
-    ) { profile, device, workouts, (health, isRefreshing, day) ->
+    ) { profile, device, workouts, (health, isRefreshing, day, lastSync) ->
         val zone = zone
         val first = listOfNotNull(device.keys.minOrNull(), day.minusDays(29)).min()
         val all = buildDays(first, day, device, workouts, profile.weightKg, zone)
+        val history = all.takeLast(90)
         val todayActivity = all.last()
         val readiness = computeReadiness(all, workouts, day, zone)
         val streak = computeStreak(all, profile.goals, day)
@@ -93,11 +119,70 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             workouts = workouts,
             weekWorkouts = workoutsThisWeek(workouts, day, zone),
             achievements = computeAchievements(all, workouts, streak, zone),
+            history = history,
+            readinessHistory = (29 downTo 0).map { ago ->
+                val d = day.minusDays(ago.toLong())
+                d to computeReadiness(all.filter { !it.date.isAfter(d) }, workouts, d, zone)
+            },
+            lastWatchSync = lastSync,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val profile: StateFlow<Profile> = c.profiles.profile
     val healthSource get() = c.health
+
+    // ── Detail data for charts (watch data stays on the phone) ───────────────
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val hourlySteps: StateFlow<List<Long>> = today.flatMapLatest { c.fitness.hourlySteps(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), List(24) { 0L })
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val heartToday: StateFlow<List<HrBucket>> = today.flatMapLatest { c.fitness.heartRate(it, zone) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Heart-rate buckets for the last 7 days, for weekly zone minutes. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val heartWeek: StateFlow<List<HrBucket>> = today.flatMapLatest { d ->
+        c.fitness.heartRateRange(d.minusDays(6), d, zone)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val lastNight: StateFlow<List<SleepSegment>> = today.flatMapLatest { c.fitness.sleepSegments(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val sources: StateFlow<List<DataSource>> = c.fitness.sources
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val syncLog: StateFlow<List<SyncEvent>> = c.fitness.syncLog()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _compatibility = MutableStateFlow<CompatibilityState>(CompatibilityState.Idle)
+    val compatibility: StateFlow<CompatibilityState> = _compatibility.asStateFlow()
+
+    fun runCompatibilityCheck() {
+        if (_compatibility.value is CompatibilityState.Running) return
+        viewModelScope.launch {
+            _compatibility.value = CompatibilityState.Running
+            _compatibility.value = runCatching { c.fitness.compatibility() }.fold(
+                onSuccess = { CompatibilityState.Done(it) },
+                onFailure = { CompatibilityState.Failed(it.message ?: "Couldn't read Health Connect") },
+            )
+        }
+    }
+
+    val lastCloudSync: Long get() = c.auth.lastSyncMs
+
+    /** Full re-read of the last 30 days from the watch app, plus a cloud sync when signed in. */
+    fun syncNow() {
+        if (refreshing.value) return
+        today.value = LocalDate.now()
+        viewModelScope.launch {
+            refreshing.value = true
+            c.fitness.refresh(full = true).onFailure { _events.tryEmit("Couldn't read watch data: ${it.message}") }
+            refreshing.value = false
+            if (c.auth.account.value != null) Scheduler.syncSoon(getApplication())
+        }
+    }
 
     fun refresh() {
         if (refreshing.value) return

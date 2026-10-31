@@ -1,6 +1,5 @@
 package com.fitagent.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import com.fitagent.ui.LocalClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +16,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.MonitorHeart
+import androidx.compose.material.icons.rounded.Stairs
 import androidx.compose.material.icons.rounded.Bedtime
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -46,7 +46,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fitagent.data.health.HealthAvailability
-import com.fitagent.domain.Band
+import com.fitagent.domain.SleepSegment
+import com.fitagent.domain.activeHourHeadline
+import com.fitagent.domain.bandFor
+import com.fitagent.domain.readinessHeadline
+import com.fitagent.domain.sleepHeadline
+import com.fitagent.ui.charts.Bars
+import com.fitagent.ui.charts.HorizontalStackBar
+import com.fitagent.ui.charts.Legend
 import com.fitagent.domain.DayActivity
 import com.fitagent.domain.WorkoutType
 import com.fitagent.domain.formatCount
@@ -59,7 +66,6 @@ import com.fitagent.ui.components.Pill
 import com.fitagent.ui.components.ReadinessGauge
 import com.fitagent.ui.components.Ring
 import com.fitagent.ui.components.SectionTitle
-import com.fitagent.ui.components.StatTile
 import com.fitagent.ui.components.WorkoutBadge
 import com.fitagent.ui.theme.Fit
 import java.time.LocalTime
@@ -74,6 +80,9 @@ fun TodayScreen(
     onRefresh: () -> Unit,
     onConnectHealth: () -> Unit,
     onStart: (WorkoutType) -> Unit,
+    hourly: List<Long> = List(24) { 0L },
+    lastNight: List<SleepSegment> = emptyList(),
+    onOpen: (Detail) -> Unit = {},
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -82,21 +91,13 @@ fun TodayScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item { Header(state, onRefresh) }
+        item { Header(state, onRefresh, onOpen) }
         if (!state.health.connected) item { ConnectHealthCard(state, onConnectHealth) }
-        item { ReadinessCard(state) }
-        item { RingsCard(state) }
+        item { ReadinessCard(state) { onOpen(Detail.READINESS) } }
+        item { RingsCard(state, hourly) }
         item { CoachCard(state, onStart) }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                val t = state.todayActivity
-                StatTile(Icons.Rounded.Straighten, "Distance", formatKm(t.distanceMeters), "km", Fit.colors.steps, Modifier.weight(1f))
-                StatTile(Icons.Rounded.Favorite, "Resting HR", t.restingHr?.toString() ?: "—", if (t.restingHr != null) "bpm" else "",
-                    Fit.colors.heart, Modifier.weight(1f))
-                StatTile(Icons.Rounded.Bedtime, "Sleep", t.sleepMinutes?.let { formatHours(it) } ?: "—", "",
-                    Fit.colors.sleep, Modifier.weight(1f))
-            }
-        }
+        item { Tiles(state, onOpen) }
+        item { SleepCard(state, lastNight) { onOpen(Detail.SLEEP) } }
         item { WeekStrip(state) }
         val todays = state.workouts.filter {
             java.time.Instant.ofEpochMilli(it.startMs).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == state.today
@@ -109,7 +110,7 @@ fun TodayScreen(
 }
 
 @Composable
-private fun Header(state: HomeState, onRefresh: () -> Unit) {
+private fun Header(state: HomeState, onRefresh: () -> Unit, onOpen: (Detail) -> Unit) {
     val clock = LocalClock.current
     val hour = remember(clock) { LocalTime.now(clock).hour }
     val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; else -> "Good evening" }
@@ -119,6 +120,11 @@ private fun Header(state: HomeState, onRefresh: () -> Unit) {
                 style = MaterialTheme.typography.labelSmall, color = Fit.colors.muted)
             Text(if (state.profile.name.isBlank()) greeting else "$greeting, ${state.profile.name.substringBefore(' ')}",
                 style = MaterialTheme.typography.headlineMedium)
+            if (state.health.connected) {
+                val now = clock.millis()
+                StatusDot(freshnessColor(state.lastWatchSync, now), "Watch data ${agoText(state.lastWatchSync, now)}",
+                    Modifier.padding(top = 2.dp).clickable { onOpen(Detail.DEVICES) })
+            }
         }
         if (state.streak.current > 0) {
             Pill("${state.streak.current}", if (state.streak.todayDone) Fit.colors.move else Fit.colors.muted,
@@ -158,11 +164,10 @@ private fun ConnectHealthCard(state: HomeState, onConnect: () -> Unit) {
 }
 
 @Composable
-private fun ReadinessCard(state: HomeState) {
+private fun ReadinessCard(state: HomeState, onOpen: () -> Unit) {
     val r = state.readiness
     val color = Fit.colors.band(r.band)
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    AppCard(Modifier.clickable { expanded = !expanded }) {
+    AppCard(Modifier.clickable(onClick = onOpen)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ReadinessGauge(r.score, color, Modifier.size(116.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -174,36 +179,23 @@ private fun ReadinessCard(state: HomeState) {
             Column(Modifier.weight(1f)) {
                 Pill(r.band.label, color)
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    when (r.band) {
-                        Band.PUSH -> "Your body is recovered. Today is a good day for a harder session."
-                        Band.STEADY -> "Moderate effort today. Keep moving, but don't go all-out."
-                        Band.RECOVER -> "Recovery is low. Prioritise sleep, hydration and gentle movement."
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                Text(readinessHeadline(r), style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (expanded) "Hide details" else "Why?", style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary)
-                    Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Text("See why", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp))
                 }
             }
         }
-        AnimatedVisibility(expanded) {
-            Column(Modifier.padding(top = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                val names = mapOf("sleep" to "Sleep", "resting_hr" to "Resting heart rate", "load" to "Training load")
-                r.components.forEach { (k, v) ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(names[k] ?: k, style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(130.dp))
-                        com.fitagent.ui.components.LinearMeter(v / 100f, color, Modifier.weight(1f), 6.dp)
-                        Text("$v", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(36.dp).padding(start = 8.dp))
+        if (r.components.size > 1) {
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                r.components.entries.take(4).forEach { (k, v) ->
+                    Column(Modifier.weight(1f)) {
+                        com.fitagent.ui.components.LinearMeter(v / 100f, Fit.colors.band(bandFor(v)), height = 6.dp)
+                        Text(COMPONENT_SHORT_NAMES[k] ?: k, style = MaterialTheme.typography.labelSmall,
+                            color = Fit.colors.muted, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
                     }
-                }
-                r.reasons.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted) }
-                if (r.components.size == 1) {
-                    Text("Wear a watch to bed to add sleep and resting heart rate to your score.",
-                        style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
                 }
             }
         }
@@ -211,7 +203,56 @@ private fun ReadinessCard(state: HomeState) {
 }
 
 @Composable
-private fun RingsCard(state: HomeState) {
+private fun Tiles(state: HomeState, onOpen: (Detail) -> Unit) {
+    val t = state.todayActivity
+    val last14 = state.history.takeLast(14)
+    val fc = Fit.colors
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SparkTile(Icons.Rounded.Straighten, "Distance", formatKm(t.distanceMeters), "km", fc.steps,
+                last14.map { (it.distanceMeters / 1000).toFloat() }, Modifier.weight(1f))
+            SparkTile(Icons.Rounded.Favorite, "Resting HR", t.restingHr?.toString() ?: "—", if (t.restingHr != null) "bpm" else "",
+                fc.heart, last14.map { it.restingHr?.toFloat() }, Modifier.weight(1f)) { onOpen(Detail.HEART) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val hrv = t.night.hrvMs
+            SparkTile(Icons.Rounded.MonitorHeart, "HRV", hrv?.toInt()?.toString() ?: "—", if (hrv != null) "ms" else "",
+                fc.hrv, last14.map { it.night.hrvMs?.toFloat() }, Modifier.weight(1f)) { onOpen(Detail.HEART) }
+            SparkTile(Icons.Rounded.Stairs, "Floors", t.floors?.toString() ?: "—", "", fc.move,
+                last14.map { it.floors?.toFloat() }, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun SleepCard(state: HomeState, segments: List<SleepSegment>, onOpen: () -> Unit) {
+    val t = state.todayActivity
+    val fc = Fit.colors
+    val previous = state.history.dropLast(1).takeLast(14).mapNotNull { it.sleepMinutes }
+    AppCard(Modifier.clickable(onClick = onOpen)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.Bedtime, null, tint = fc.sleep, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Sleep", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(t.sleepMinutes?.let { formatHours(it) } ?: "—", style = MaterialTheme.typography.titleLarge)
+        }
+        Text(sleepHeadline(t.sleepMinutes, previous), style = MaterialTheme.typography.bodySmall, color = fc.muted)
+        val stages = t.sleepStages
+        if (stages != null) {
+            Spacer(Modifier.height(12.dp))
+            HorizontalStackBar(listOf(stages.deep.toFloat() to fc.stageDeep, stages.light.toFloat() to fc.stageLight,
+                stages.rem.toFloat() to fc.stageRem, stages.awake.toFloat() to fc.stageAwake))
+            Legend(listOf("Deep ${stages.deep}m" to fc.stageDeep, "Light ${stages.light}m" to fc.stageLight,
+                "REM ${stages.rem}m" to fc.stageRem, "Awake ${stages.awake}m" to fc.stageAwake))
+        } else if (segments.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text("Your watch reports sleep time but not stages.", style = MaterialTheme.typography.bodySmall, color = fc.muted)
+        }
+    }
+}
+
+@Composable
+private fun RingsCard(state: HomeState, hourly: List<Long>) {
     val t = state.todayActivity
     val g = state.profile.goals
     val fc = Fit.colors
@@ -231,6 +272,17 @@ private fun RingsCard(state: HomeState) {
                 RingLegend("Move" + if (t.kcalEstimated) " (est.)" else "", formatCount(t.activeKcal), "/ ${g.dailyActiveKcal} kcal", fc.move)
                 RingLegend("Workout", "${t.workoutMinutes}", "/ ${g.dailyWorkoutMinutes} min", fc.workout)
             }
+        }
+        if (hourly.any { it > 0 }) {
+            Spacer(Modifier.height(16.dp))
+            Text(activeHourHeadline(hourly), style = MaterialTheme.typography.bodySmall, color = fc.muted)
+            Spacer(Modifier.height(8.dp))
+            val clock = LocalClock.current
+            val now = remember(clock) { LocalTime.now(clock).hour }
+            Bars(hourly.map { it.toFloat() }, fc.steps, height = 64.dp, highlight = setOf(now), maxBarWidth = 8.dp,
+                labels = (0 until 24).map { if (it % 6 == 0) "%02d".format(it) else "" },
+                scrubLabel = { "%02d:00 · %s steps".format(it, formatCount(hourly[it])) },
+                description = "Steps per hour today")
         }
     }
 }
