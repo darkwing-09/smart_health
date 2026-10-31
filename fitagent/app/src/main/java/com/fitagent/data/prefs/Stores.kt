@@ -157,3 +157,39 @@ class AuthStore(context: Context) {
         return Account(email, prefs.getString("name", "").orEmpty())
     }
 }
+
+/** Bookkeeping for watch → phone sync: Changes API token, last full read, phone step-counter baseline. */
+class SyncStateStore(context: Context) {
+    private val prefs = context.getSharedPreferences("sync_state", Context.MODE_PRIVATE)
+    private val _lastHealthSync = MutableStateFlow(prefs.getLong("last_health_sync", 0))
+    /** When Health Connect was last read successfully (0 = never). */
+    val lastHealthSync: StateFlow<Long> = _lastHealthSync.asStateFlow()
+
+    var changesToken: String?
+        get() = prefs.getString("changes_token", null)
+        set(value) { prefs.edit().putString("changes_token", value).apply() }
+
+    var lastFullReadMs: Long
+        get() = prefs.getLong("last_full_read", 0)
+        set(value) { prefs.edit().putLong("last_full_read", value).apply() }
+
+    var historyImported: Boolean
+        get() = prefs.getBoolean("history_imported", false)
+        set(value) { prefs.edit().putBoolean("history_imported", value).apply() }
+
+    /** Last raw TYPE_STEP_COUNTER value (counts since boot) and when it was read. */
+    var phoneCounter: Pair<Float, Long>?
+        get() = if (!prefs.contains("phone_counter")) null
+        else prefs.getFloat("phone_counter", 0f) to prefs.getLong("phone_counter_at", 0)
+        set(value) {
+            val e = prefs.edit()
+            if (value == null) e.remove("phone_counter").remove("phone_counter_at")
+            else e.putFloat("phone_counter", value.first).putLong("phone_counter_at", value.second)
+            e.apply()
+        }
+
+    fun markHealthSync(timeMs: Long) {
+        prefs.edit().putLong("last_health_sync", timeMs).apply()
+        _lastHealthSync.value = timeMs
+    }
+}

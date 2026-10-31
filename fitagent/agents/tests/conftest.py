@@ -34,7 +34,8 @@ def make_ctx(
         workouts = [
             WorkoutRecord(type=t, start=datetime.combine(today - timedelta(days=i), datetime.min.time()).replace(hour=18),
                           active_minutes=30, kcal=250)
-            for i, t in [(2, "STRENGTH"), (4, "RUN"), (6, "YOGA"), (9, "WALK"), (12, "STRENGTH"), (15, "CYCLE")]
+            for i, t in [(2, "STRENGTH"), (4, "RUN"), (6, "YOGA"), (9, "WALK"), (12, "STRENGTH"), (15, "CYCLE"),
+                         (18, "RUN"), (20, "STRENGTH")]
         ]
     return UserContext(today=today, profile=Profile(display_name="Asha", age=20, height_cm=165, weight_kg=58,
                                                     goals=goals or Goals()), days=days, workouts=workouts)

@@ -69,6 +69,7 @@ object Scheduler {
     private const val REMINDER = "daily_reminder"
     private const val SYNC_PERIODIC = "sync_periodic"
     private const val SYNC_NOW = "sync_now"
+    private const val WATCH_SYNC = "watch_sync"
 
     fun scheduleReminder(context: Context, profile: Profile) {
         val wm = WorkManager.getInstance(context)
@@ -92,6 +93,16 @@ object Scheduler {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(SYNC_PERIODIC, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
+    /**
+     * Pulls watch data every 15 minutes (WorkManager's minimum) without the app being open. Health Connect only
+     * allows this with the background-read permission; without it the phone step sensor is still sampled and
+     * watch data is read whenever the app is opened.
+     */
+    fun scheduleWatchSync(context: Context) {
+        val request = PeriodicWorkRequestBuilder<WatchSyncWorker>(15, TimeUnit.MINUTES).build()
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(WATCH_SYNC, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
     fun syncSoon(context: Context) {
         val request = OneTimeWorkRequestBuilder<SyncWorker>().setConstraints(online)
             .setInitialDelay(5, TimeUnit.SECONDS).build()
@@ -105,7 +116,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val c = applicationContext.container
         val profile = c.profiles.profile.value
         if (!profile.remindersEnabled || !profile.onboarded) return Result.success()
-        c.fitness.refresh(daysBack = 7)
+        c.fitness.refresh()
         val (days, _) = c.fitness.snapshot()
         val today = LocalDate.now()
         val day = days.lastOrNull { it.date == today } ?: return Result.success()
@@ -126,11 +137,27 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 }
 
+/** Watch → phone: reads Health Connect (when background reads are allowed) and the phone's step sensor. */
+class WatchSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val c = applicationContext.container
+        val status = c.fitness.refreshStatus()
+        if (status.connected && !status.backgroundRead) {
+            // Reading Health Connect from the background would throw; still count phone steps.
+            c.fitness.samplePhoneOnly()
+            return Result.success()
+        }
+        c.fitness.refresh()
+        return Result.success()
+    }
+}
+
+/** Phone → cloud. */
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val c = applicationContext.container
         if (c.auth.account.value == null) return Result.success()
-        c.fitness.refresh()
+        if (c.fitness.refreshStatus().backgroundRead) c.fitness.refresh()
         return c.cloud.sync().fold(
             onSuccess = { Result.success() },
             onFailure = { if (it is IOException && runAttemptCount < 5) Result.retry() else Result.failure() },

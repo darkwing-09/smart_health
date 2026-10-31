@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fitagent.domain.Band
+import com.fitagent.domain.SleepStage
 import com.fitagent.domain.WorkoutType
 
 /*
@@ -38,11 +39,30 @@ data class FitColors(
     val track: Color,
     val cardHigh: Color,
     val muted: Color,
+    /** Heart-rate zones 1–5 (warm-up → max). */
+    val zones: List<Color>,
+    val stageAwake: Color,
+    val stageRem: Color,
+    val stageLight: Color,
+    val stageDeep: Color,
+    val hrv: Color,
+    val spo2: Color,
+    /** Shading for "your normal range" bands behind trend lines. */
+    val baselineBand: Color,
+    /** Mood 1 (low) → 5 (great). */
+    val mood: List<Color>,
 ) {
     fun band(b: Band): Color = when (b) {
         Band.PUSH -> push
         Band.STEADY -> steady
         Band.RECOVER -> recover
+    }
+
+    fun stage(s: SleepStage): Color = when (s) {
+        SleepStage.AWAKE -> stageAwake
+        SleepStage.REM -> stageRem
+        SleepStage.LIGHT, SleepStage.ASLEEP -> stageLight
+        SleepStage.DEEP -> stageDeep
     }
 }
 
@@ -58,6 +78,15 @@ private val DarkFit = FitColors(
     track = Color(0x1FFFFFFF),
     cardHigh = Color(0xFF1B222C),
     muted = Color(0xFF8A94A3),
+    zones = listOf(Color(0xFF8FA3BF), Color(0xFF3DA5FF), Color(0xFF2EE59D), Color(0xFFFFC93C), Color(0xFFFF5C5C)),
+    stageAwake = Color(0xFFFF9F7A),
+    stageRem = Color(0xFF5EC8FF),
+    stageLight = Color(0xFF8C8CFF),
+    stageDeep = Color(0xFF4B3FD9),
+    hrv = Color(0xFF7CF2D0),
+    spo2 = Color(0xFF7FB4FF),
+    baselineBand = Color(0x14FFFFFF),
+    mood = listOf(Color(0xFFFF5C5C), Color(0xFFFF9F43), Color(0xFF8A94A3), Color(0xFF3DD9EB), Color(0xFFC6F432)),
 )
 
 private val LightFit = FitColors(
@@ -72,6 +101,15 @@ private val LightFit = FitColors(
     track = Color(0x14000000),
     cardHigh = Color(0xFFEFF2EA),
     muted = Color(0xFF5E6672),
+    zones = listOf(Color(0xFF6B7F99), Color(0xFF1E7FD6), Color(0xFF0E9F6E), Color(0xFFC98A00), Color(0xFFD63B3B)),
+    stageAwake = Color(0xFFE5743F),
+    stageRem = Color(0xFF1D93CC),
+    stageLight = Color(0xFF6A58E0),
+    stageDeep = Color(0xFF3326B0),
+    hrv = Color(0xFF139C78),
+    spo2 = Color(0xFF2F6FD6),
+    baselineBand = Color(0x0F000000),
+    mood = listOf(Color(0xFFD63B3B), Color(0xFFE5743F), Color(0xFF5E6672), Color(0xFF0A9EB0), Color(0xFF5E9E00)),
 )
 
 val LocalFitColors = staticCompositionLocalOf { DarkFit }

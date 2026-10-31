@@ -41,6 +41,22 @@ class ActivityDay:
     resting_hr: int | None = None
     avg_hr: int | None = None
     sleep_minutes: int | None = None
+    # Watch extras (Phase 2). Any may be missing: most budget watches report only some of them.
+    sleep_deep_min: int | None = None
+    sleep_rem_min: int | None = None
+    sleep_light_min: int | None = None
+    sleep_awake_min: int | None = None
+    hrv_ms: float | None = None
+    spo2_avg: float | None = None
+    resp_rate: float | None = None
+    skin_temp_delta: float | None = None
+    vo2max: float | None = None
+    hr_min: int | None = None
+    hr_max: int | None = None
+
+    @property
+    def has_stages(self) -> bool:
+        return any(v for v in (self.sleep_deep_min, self.sleep_rem_min, self.sleep_light_min))
 
 
 @dataclass(frozen=True)

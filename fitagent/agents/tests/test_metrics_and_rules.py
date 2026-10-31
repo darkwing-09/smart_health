@@ -20,7 +20,9 @@ def test_band_thresholds():
 def test_well_rested_athlete_is_ready(ctx):
     r = compute_readiness(ctx)
     assert r.band is Band.PUSH
-    assert set(r.components) == {"sleep", "resting_hr", "load"}
+    # A normal training load is not extra evidence of recovery, so it isn't scored when body data exists.
+    assert set(r.components) == {"sleep", "resting_hr"}
+    assert r.acwr is not None and r.acwr <= 1.3
 
 
 def test_short_sleep_and_high_rhr_means_recover():

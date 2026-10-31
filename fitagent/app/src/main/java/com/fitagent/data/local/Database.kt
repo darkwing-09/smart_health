@@ -1,6 +1,7 @@
 package com.fitagent.data.local
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -15,13 +16,15 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.fitagent.domain.DeviceDay
+import com.fitagent.domain.NightSignals
+import com.fitagent.domain.SleepStages
 import com.fitagent.domain.Workout
 import com.fitagent.domain.WorkoutSource
 import com.fitagent.domain.WorkoutType
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
-/** Health Connect aggregates for one local calendar day. Kept indefinitely as history. */
+/** Watch/phone readings for one local calendar day (see [DeviceDay]). Kept indefinitely as history. */
 @Entity(tableName = "daily_device")
 data class DailyDeviceEntity(
     @PrimaryKey @ColumnInfo(name = "epoch_day") val epochDay: Long,
@@ -32,17 +35,133 @@ data class DailyDeviceEntity(
     @ColumnInfo(name = "avg_hr") val avgHr: Int?,
     @ColumnInfo(name = "sleep_min") val sleepMinutes: Int?,
     @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "hr_min") val hrMin: Int? = null,
+    @ColumnInfo(name = "hr_max") val hrMax: Int? = null,
+    @ColumnInfo(name = "floors") val floors: Int? = null,
+    @ColumnInfo(name = "vo2max") val vo2max: Double? = null,
+    @ColumnInfo(name = "sleep_deep_min") val sleepDeep: Int? = null,
+    @ColumnInfo(name = "sleep_rem_min") val sleepRem: Int? = null,
+    @ColumnInfo(name = "sleep_light_min") val sleepLight: Int? = null,
+    @ColumnInfo(name = "sleep_awake_min") val sleepAwake: Int? = null,
+    @ColumnInfo(name = "bed_ms") val bedMs: Long? = null,
+    @ColumnInfo(name = "wake_ms") val wakeMs: Long? = null,
+    @ColumnInfo(name = "hrv_ms") val hrvMs: Double? = null,
+    @ColumnInfo(name = "spo2_avg") val spo2Avg: Double? = null,
+    @ColumnInfo(name = "spo2_min") val spo2Min: Double? = null,
+    @ColumnInfo(name = "resp_rate") val respiratoryRate: Double? = null,
+    @ColumnInfo(name = "skin_temp_delta") val skinTempDelta: Double? = null,
+    @ColumnInfo(name = "steps_source") val stepsSource: String? = null,
+    @ColumnInfo(name = "sleep_source") val sleepSource: String? = null,
 ) {
     fun toDomain() = DeviceDay(
-        LocalDate.ofEpochDay(epochDay), steps, distanceMeters, activeKcal, restingHr, avgHr, sleepMinutes,
+        date = LocalDate.ofEpochDay(epochDay),
+        steps = steps,
+        distanceMeters = distanceMeters,
+        activeKcal = activeKcal,
+        restingHr = restingHr,
+        avgHr = avgHr,
+        sleepMinutes = sleepMinutes,
+        hrMin = hrMin,
+        hrMax = hrMax,
+        floors = floors,
+        vo2max = vo2max,
+        sleepStages = if (listOf(sleepDeep, sleepRem, sleepLight, sleepAwake).all { it == null }) null
+        else SleepStages(sleepDeep ?: 0, sleepRem ?: 0, sleepLight ?: 0, sleepAwake ?: 0),
+        bedMs = bedMs,
+        wakeMs = wakeMs,
+        night = NightSignals(hrvMs, spo2Avg, spo2Min, respiratoryRate, skinTempDelta),
+        stepsSource = stepsSource,
+        sleepSource = sleepSource,
     )
 
     companion object {
         fun from(d: DeviceDay) = DailyDeviceEntity(
-            d.date.toEpochDay(), d.steps, d.distanceMeters, d.activeKcal, d.restingHr, d.avgHr, d.sleepMinutes,
+            epochDay = d.date.toEpochDay(),
+            steps = d.steps,
+            distanceMeters = d.distanceMeters,
+            activeKcal = d.activeKcal,
+            restingHr = d.restingHr,
+            avgHr = d.avgHr,
+            sleepMinutes = d.sleepMinutes,
+            hrMin = d.hrMin,
+            hrMax = d.hrMax,
+            floors = d.floors,
+            vo2max = d.vo2max,
+            sleepDeep = d.sleepStages?.deep,
+            sleepRem = d.sleepStages?.rem,
+            sleepLight = d.sleepStages?.light,
+            sleepAwake = d.sleepStages?.awake,
+            bedMs = d.bedMs,
+            wakeMs = d.wakeMs,
+            hrvMs = d.night.hrvMs,
+            spo2Avg = d.night.spo2Avg,
+            spo2Min = d.night.spo2Min,
+            respiratoryRate = d.night.respiratoryRate,
+            skinTempDelta = d.night.skinTempDelta,
+            stepsSource = d.stepsSource,
+            sleepSource = d.sleepSource,
         )
     }
 }
+
+/** Steps and active kcal per local hour (for the hourly bar chart). */
+@Entity(tableName = "hourly", primaryKeys = ["epoch_day", "hour"])
+data class HourlyEntity(
+    @ColumnInfo(name = "epoch_day") val epochDay: Long,
+    @ColumnInfo(name = "hour") val hour: Int,
+    @ColumnInfo(name = "steps") val steps: Long,
+    @ColumnInfo(name = "active_kcal") val activeKcal: Double?,
+)
+
+/** Heart rate summarised per 10-minute window. Intraday detail stays on the phone. */
+@Entity(tableName = "hr_buckets")
+data class HrBucketEntity(
+    @PrimaryKey @ColumnInfo(name = "start_ms") val startMs: Long,
+    @ColumnInfo(name = "bpm_min") val min: Int,
+    @ColumnInfo(name = "bpm_avg") val avg: Int,
+    @ColumnInfo(name = "bpm_max") val max: Int,
+)
+
+/** One stage segment of a night's sleep (hypnogram). [stage] is a [SleepStage] name. */
+@Entity(tableName = "sleep_segments", indices = [Index(value = ["night_epoch_day"])])
+data class SleepSegmentEntity(
+    @PrimaryKey @ColumnInfo(name = "start_ms") val startMs: Long,
+    @ColumnInfo(name = "end_ms") val endMs: Long,
+    @ColumnInfo(name = "stage") val stage: String,
+    @ColumnInfo(name = "night_epoch_day") val nightEpochDay: Long,
+)
+
+/** Steps counted by the phone's own sensor, per local hour (fallback when no watch app shares steps). */
+@Entity(tableName = "phone_steps", primaryKeys = ["epoch_day", "hour"])
+data class PhoneStepsEntity(
+    @ColumnInfo(name = "epoch_day") val epochDay: Long,
+    @ColumnInfo(name = "hour") val hour: Int,
+    @ColumnInfo(name = "steps") val steps: Long,
+)
+
+/** An app (or the phone sensor) that has supplied health data, for the Devices & data health screen. */
+@Entity(tableName = "sources")
+data class SourceEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: String,
+    @ColumnInfo(name = "label") val label: String,
+    @ColumnInfo(name = "first_seen_ms") val firstSeenMs: Long,
+    @ColumnInfo(name = "last_data_ms") val lastDataMs: Long,
+    @ColumnInfo(name = "records_received") val recordsReceived: Long,
+    @ColumnInfo(name = "data_types") val dataTypes: String,
+)
+
+/** One run of a sync job (watch→phone or phone→cloud). Powers the sync timeline; trimmed to the latest 300. */
+@Entity(tableName = "sync_log", indices = [Index(value = ["time_ms"])])
+data class SyncLogEntity(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
+    @ColumnInfo(name = "time_ms") val timeMs: Long,
+    @ColumnInfo(name = "kind") val kind: String,
+    @ColumnInfo(name = "ok") val ok: Boolean,
+    @ColumnInfo(name = "records") val records: Int,
+    @ColumnInfo(name = "duration_ms") val durationMs: Long,
+    @ColumnInfo(name = "message") val message: String?,
+)
+
 
 /**
  * Workouts tracked in-app (APP) or imported from other apps via Health Connect (HEALTH_CONNECT).
@@ -113,9 +232,82 @@ interface FitnessDao {
     }
 }
 
-@Database(entities = [DailyDeviceEntity::class, WorkoutEntity::class], version = 1, exportSchema = true)
+@Dao
+interface HealthDao {
+    @Upsert suspend fun upsertHourly(rows: List<HourlyEntity>)
+
+    @Query("SELECT * FROM hourly WHERE epoch_day = :epochDay ORDER BY hour")
+    fun observeHourly(epochDay: Long): Flow<List<HourlyEntity>>
+
+    @Upsert suspend fun upsertHr(rows: List<HrBucketEntity>)
+
+    @Query("SELECT * FROM hr_buckets WHERE start_ms >= :fromMs AND start_ms < :toMs ORDER BY start_ms")
+    fun observeHr(fromMs: Long, toMs: Long): Flow<List<HrBucketEntity>>
+
+    @Query("DELETE FROM hr_buckets WHERE start_ms < :beforeMs")
+    suspend fun pruneHr(beforeMs: Long)
+
+    @Query("DELETE FROM sleep_segments WHERE night_epoch_day = :nightEpochDay")
+    suspend fun deleteSleepNight(nightEpochDay: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSleep(rows: List<SleepSegmentEntity>)
+
+    @Transaction
+    suspend fun replaceSleepNight(nightEpochDay: Long, rows: List<SleepSegmentEntity>) {
+        deleteSleepNight(nightEpochDay)
+        insertSleep(rows)
+    }
+
+    @Query("SELECT * FROM sleep_segments WHERE night_epoch_day = :nightEpochDay ORDER BY start_ms")
+    fun observeSleep(nightEpochDay: Long): Flow<List<SleepSegmentEntity>>
+
+    @Query("SELECT * FROM phone_steps WHERE epoch_day = :epochDay AND hour = :hour")
+    suspend fun phoneSteps(epochDay: Long, hour: Int): PhoneStepsEntity?
+
+    @Upsert suspend fun upsertPhoneSteps(row: PhoneStepsEntity)
+
+    @Query("SELECT epoch_day AS epochDay, SUM(steps) AS steps FROM phone_steps GROUP BY epoch_day")
+    fun observePhoneDaily(): Flow<List<DaySteps>>
+
+    @Query("SELECT epoch_day AS epochDay, SUM(steps) AS steps FROM phone_steps GROUP BY epoch_day")
+    suspend fun phoneDaily(): List<DaySteps>
+
+    @Query("SELECT * FROM phone_steps WHERE epoch_day = :epochDay ORDER BY hour")
+    fun observePhoneHourly(epochDay: Long): Flow<List<PhoneStepsEntity>>
+
+    @Query("SELECT * FROM sources ORDER BY last_data_ms DESC")
+    fun observeSources(): Flow<List<SourceEntity>>
+
+    @Query("SELECT * FROM sources WHERE id = :id")
+    suspend fun source(id: String): SourceEntity?
+
+    @Upsert suspend fun upsertSource(row: SourceEntity)
+
+    @Insert suspend fun insertLog(row: SyncLogEntity)
+
+    @Query("DELETE FROM sync_log WHERE id NOT IN (SELECT id FROM sync_log ORDER BY time_ms DESC LIMIT 300)")
+    suspend fun trimLog()
+
+    @Query("SELECT * FROM sync_log ORDER BY time_ms DESC LIMIT :limit")
+    fun observeLog(limit: Int): Flow<List<SyncLogEntity>>
+}
+
+data class DaySteps(val epochDay: Long, val steps: Long)
+
+@Database(
+    entities = [
+        DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
+        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class,
+    ],
+    version = 2,
+    exportSchema = true,
+    // v2: watch metrics. Additive only, so Room generates the migration from the exported schemas.
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): FitnessDao
+    abstract fun health(): HealthDao
 
     companion object {
         // Future schema changes must ship Room migrations: logged workouts are user data.

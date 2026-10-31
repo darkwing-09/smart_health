@@ -34,6 +34,7 @@ data class ProfileUpdateReq(
     val goals: GoalsDto?,
 )
 
+/** One day's summary for the cloud. Intraday heart rate, sleep segments and routes never leave the phone. */
 data class DayDto(
     val date: String,
     val steps: Long,
@@ -43,6 +44,22 @@ data class DayDto(
     val restingHr: Int?,
     val avgHr: Int?,
     val sleepMinutes: Int?,
+    val hrMin: Int? = null,
+    val hrMax: Int? = null,
+    val floors: Int? = null,
+    val vo2max: Double? = null,
+    val sleepDeepMin: Int? = null,
+    val sleepRemMin: Int? = null,
+    val sleepLightMin: Int? = null,
+    val sleepAwakeMin: Int? = null,
+    val bedTime: String? = null,
+    val wakeTime: String? = null,
+    val hrvMs: Double? = null,
+    val spo2Avg: Double? = null,
+    val spo2Min: Double? = null,
+    val respRate: Double? = null,
+    val skinTempDelta: Double? = null,
+    val stepsSource: String? = null,
 )
 
 data class WorkoutDto(

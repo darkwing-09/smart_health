@@ -1,7 +1,12 @@
-"""Deterministic fitness metrics. Mirrors app/.../domain/Readiness.kt — keep the two in sync."""
+"""Deterministic fitness metrics. Mirrors app/.../domain/Readiness.kt — keep the two in sync.
+
+Both implementations are checked against the shared fixtures in fitagent/fixtures/readiness_v2.json.
+Rounding is always half-up (``_round``), matching Kotlin's ``roundToInt``.
+"""
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import Enum
@@ -13,8 +18,19 @@ from .data import ActivityDay, Goals, UserContext, WorkoutRecord
 SLEEP_TARGET_MIN = 8 * 60
 BASELINE_WINDOW_DAYS = 14
 MIN_BASELINE_DAYS = 3
+MIN_HRV_NIGHTS = 7
+HRV_MIN_SD = 0.05  # floor on the log-HRV spread so a very stable baseline doesn't turn noise into huge swings
 NEUTRAL_SCORE = 60  # no data at all: a steady day, never "push" by default
-WEIGHTS = {"sleep": 0.40, "resting_hr": 0.35, "load": 0.25}
+# Readiness v2 weights (docs/phase2/05-agents-and-algorithms.md §1). Missing components are dropped and the rest
+# re-normalised, so a watch that only reports sleep + heart rate still gets a sensible score.
+WEIGHTS = {  # percent; integers so Kotlin and Python compute the weighted average exactly
+    "sleep": 25,
+    "sleep_quality": 10,
+    "hrv": 25,
+    "resting_hr": 20,
+    "load": 15,
+    "nightly": 5,
+}
 
 
 class Band(str, Enum):
@@ -34,6 +50,11 @@ class Readiness:
 
 def _clamp(v: float, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo, min(hi, v))
+
+
+def _round(v: float) -> int:
+    """Half-up rounding, identical to Kotlin's roundToInt (Python's round() is banker's rounding)."""
+    return math.floor(v + 0.5)
 
 
 def band_for(score: int) -> Band:
@@ -64,13 +85,36 @@ def acute_chronic_ratio(workouts: list[WorkoutRecord], today: date, history_days
     chronic = minutes_between(workouts, today - timedelta(days=span - 1), today) / span
     if chronic <= 0:
         return None
-    return round(acute / chronic, 2)
+    return _round(acute / chronic * 100) / 100
 
 
 def history_span_days(ctx: UserContext) -> int:
     first_day = min((d.day for d in ctx.days), default=ctx.today)
     first_workout = min((w.start.date() for w in ctx.workouts), default=ctx.today)
     return (ctx.today - min(first_day, first_workout)).days + 1
+
+
+def sleep_quality(deep: int, rem: int, light: int, awake: int) -> int:
+    """0–100 from stage shares: rewards deep ≥ 15 % and REM ≥ 20 %, penalises awake > 5 %."""
+    total = deep + rem + light + awake
+    if total <= 0:
+        return 50
+    pct = lambda m: m * 100 / total  # noqa: E731
+    return _round(_clamp(50 + 2.5 * (pct(deep) - 15) + 2.5 * (pct(rem) - 20) - 3 * (pct(awake) - 5)))
+
+
+def _baseline(ctx: UserContext, attr: str) -> list[float]:
+    start = ctx.today - timedelta(days=BASELINE_WINDOW_DAYS)
+    return [getattr(d, attr) for d in ctx.days if start <= d.day < ctx.today and getattr(d, attr) is not None]
+
+
+def hrv_score(today_ms: float, baseline: list[float]) -> int:
+    """75 + 25 × z, where z compares tonight's ln(HRV) with the personal baseline. Higher HRV = better recovered."""
+    logs = [math.log(v) for v in baseline if v > 0]
+    mean = sum(logs) / len(logs)
+    sd = max(math.sqrt(sum((x - mean) ** 2 for x in logs) / len(logs)), HRV_MIN_SD)
+    z = (math.log(today_ms) - mean) / sd
+    return _round(_clamp(75 + 25 * z))
 
 
 @traceable(name="compute_readiness", run_type="chain")
@@ -80,26 +124,61 @@ def compute_readiness(ctx: UserContext) -> Readiness:
     reasons: list[str] = []
 
     if today and today.sleep_minutes is not None:
-        components["sleep"] = round(_clamp(today.sleep_minutes / SLEEP_TARGET_MIN * 100))
+        components["sleep"] = _round(_clamp(today.sleep_minutes / SLEEP_TARGET_MIN * 100))
         h, m = divmod(today.sleep_minutes, 60)
         reasons.append(f"Slept {h}h {m}m last night")
+        if today.has_stages:
+            components["sleep_quality"] = sleep_quality(
+                today.sleep_deep_min or 0, today.sleep_rem_min or 0, today.sleep_light_min or 0,
+                today.sleep_awake_min or 0,
+            )
 
-    window_start = ctx.today - timedelta(days=BASELINE_WINDOW_DAYS)
-    baseline = [d.resting_hr for d in ctx.days if window_start <= d.day < ctx.today and d.resting_hr]
-    if today and today.resting_hr and len(baseline) >= MIN_BASELINE_DAYS:
-        mean = sum(baseline) / len(baseline)
-        delta = today.resting_hr - mean
-        components["resting_hr"] = round(_clamp(85 - 10 * delta))
-        direction = "above" if delta > 0 else "below"
-        reasons.append(f"Resting HR {today.resting_hr} bpm, {abs(delta):.0f} bpm {direction} your 14-day average")
+    hrv_base = _baseline(ctx, "hrv_ms")
+    if today and today.hrv_ms and len(hrv_base) >= MIN_HRV_NIGHTS:
+        components["hrv"] = hrv_score(today.hrv_ms, hrv_base)
+        avg = sum(hrv_base) / len(hrv_base)
+        direction = "above" if today.hrv_ms >= avg else "below"
+        reasons.append(f"HRV {today.hrv_ms:.0f} ms, {direction} your normal {avg:.0f} ms")
+
+    rhr_base = _baseline(ctx, "resting_hr")
+    rhr_delta: float | None = None
+    if today and today.resting_hr and len(rhr_base) >= MIN_BASELINE_DAYS:
+        rhr_delta = today.resting_hr - sum(rhr_base) / len(rhr_base)
+        components["resting_hr"] = _round(_clamp(85 - 10 * rhr_delta))
+        direction = "above" if rhr_delta > 0 else "below"
+        reasons.append(f"Resting HR {today.resting_hr} bpm, {abs(rhr_delta):.0f} bpm {direction} your 14-day average")
+
+    if today:
+        nightly = 100
+        signals = 0
+        resp_base = _baseline(ctx, "resp_rate")
+        if today.resp_rate is not None:
+            signals += 1
+            if len(resp_base) >= MIN_BASELINE_DAYS and today.resp_rate > sum(resp_base) / len(resp_base) + 2:
+                nightly -= 20
+                reasons.append(f"Breathing rate {today.resp_rate:.1f}/min is higher than usual")
+        if today.skin_temp_delta is not None:
+            signals += 1
+            if today.skin_temp_delta > 0.5:
+                nightly -= 20
+                reasons.append(f"Skin temperature {today.skin_temp_delta:+.1f} °C vs your baseline")
+        if today.spo2_avg is not None:
+            signals += 1
+            if today.spo2_avg < 94:
+                nightly -= 20
+                reasons.append(f"Blood oxygen averaged {today.spo2_avg:.0f}% overnight")
+        if signals:
+            components["nightly"] = nightly
 
     acwr = acute_chronic_ratio(ctx.workouts, ctx.today, history_span_days(ctx))
+    # Training load is evidence of *risk*, not of recovery: a normal load (or an unknown one) only counts when
+    # there is nothing else to go on, so it can't prop up a night of bad sleep.
     if acwr is None:
-        # Unknown load says nothing about recovery: leave it out, unless it's all we have.
         if not components:
             components["load"] = NEUTRAL_SCORE
     elif acwr <= 1.3:
-        components["load"] = 90
+        if not components:
+            components["load"] = 90
     elif acwr <= 1.5:
         components["load"] = 60
         reasons.append(f"Training load rising fast (ratio {acwr})")
@@ -108,7 +187,17 @@ def compute_readiness(ctx: UserContext) -> Readiness:
         reasons.append(f"Training load spiked (ratio {acwr}) — injury risk is higher")
 
     total_weight = sum(WEIGHTS[k] for k in components)
-    score = round(sum(WEIGHTS[k] * v for k, v in components.items()) / total_weight)
+    weighted = sum(WEIGHTS[k] * v for k, v in components.items())
+    score = (2 * weighted + total_weight) // (2 * total_weight)  # exact half-up rounding of weighted / total
+
+    # Safety caps: never suggest a hard day when the body shows strain, whatever the other numbers say.
+    if today and today.skin_temp_delta is not None and today.skin_temp_delta > 1.0 and rhr_delta is not None and rhr_delta > 5:
+        score = min(score, 45)
+        reasons.insert(0, "Your body may be fighting something — take it easy today")
+    if today and today.sleep_minutes is not None and today.sleep_minutes < 240:
+        score = min(score, 55)
+    if acwr is not None and acwr > 1.5:
+        score = min(score, 66)  # a load spike is never a "push" day
     return Readiness(score=score, band=band_for(score), components=components, reasons=reasons, acwr=acwr)
 
 
@@ -152,7 +241,7 @@ def last_7_days(ctx: UserContext) -> WeekSummary:
     return WeekSummary(
         workouts=len(ws),
         workout_minutes=sum(w.active_minutes for w in ws),
-        avg_steps=round(sum(d.steps for d in days) / len(days)) if days else 0,
+        avg_steps=_round(sum(d.steps for d in days) / len(days)) if days else 0,
         hard_sessions=sum(1 for w in ws if w.is_hard),
         types=sorted({w.type for w in ws}),
     )
