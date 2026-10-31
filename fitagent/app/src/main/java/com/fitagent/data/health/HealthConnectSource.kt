@@ -9,6 +9,8 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.metadata.Device
+import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RestingHeartRateRecord
@@ -148,6 +150,8 @@ class HealthConnectSource(private val context: Context) {
             startZoneOffset = zone.rules.getOffset(start),
             endTime = end,
             endZoneOffset = zone.rules.getOffset(end),
+            // Recorded live by the in-app workout player on this phone.
+            metadata = Metadata.activelyRecorded(Device(type = Device.TYPE_PHONE)),
             exerciseType = toHealthConnect(WorkoutType.fromName(w.type)),
             title = w.title ?: WorkoutType.fromName(w.type).label,
         )

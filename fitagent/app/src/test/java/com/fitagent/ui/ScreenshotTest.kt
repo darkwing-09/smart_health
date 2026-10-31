@@ -42,6 +42,8 @@ import com.fitagent.ui.screens.YouScreen
 import com.fitagent.ui.theme.FitAgentTheme
 import org.junit.Rule
 import org.junit.Test
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -67,12 +69,12 @@ class ScreenshotTest {
     @Test fun you() = snap { YouScreen(home, cloud, pad, {}, {}, {}, {}, {}, {}, {}) }
     @Test fun workout_player_intervals() = snap {
         ActiveWorkoutScreen(
-            ActiveSession(WorkoutType.HIIT, System.currentTimeMillis() - 75_000, interval = IntervalConfig.CLASSIC),
+            ActiveSession(WorkoutType.HIIT, clock.millis() - 75_000, interval = IntervalConfig.CLASSIC),
             62.0, {}, {}, {}, {},
         )
     }
     @Test fun workout_player_run() = snap {
-        ActiveWorkoutScreen(ActiveSession(WorkoutType.RUN, System.currentTimeMillis() - 1_523_000), 62.0, {}, {}, {}, {})
+        ActiveWorkoutScreen(ActiveSession(WorkoutType.RUN, clock.millis() - 1_523_000), 62.0, {}, {}, {}, {})
     }
     @Test fun onboarding() = snap { OnboardingScreen(Profile(), {}, {}) }
 
@@ -80,7 +82,7 @@ class ScreenshotTest {
         paparazzi.snapshot {
             FitAgentTheme(dark = dark) {
                 // Mirrors the Scaffold in MainActivity, which supplies background and content colour.
-                CompositionLocalProvider(LocalInspectionMode provides true) {
+                CompositionLocalProvider(LocalInspectionMode provides true, LocalClock provides clock) {
                     Surface(color = MaterialTheme.colorScheme.background) { content() }
                 }
             }
@@ -88,8 +90,10 @@ class ScreenshotTest {
 
     // ── Sample data ──────────────────────────────────────────────────────────
 
-    private val zone = ZoneId.systemDefault()
-    private val today = LocalDate.now(zone)
+    private val zone = ZoneId.of("Asia/Kolkata")
+    // Fixed "now" (Friday evening) so snapshots never change with the calendar.
+    private val clock = Clock.fixed(Instant.parse("2026-10-30T13:00:00Z"), zone)
+    private val today = LocalDate.now(clock)
     private val profile = Profile(name = "Asha Verma", ageYears = 20, heightCm = 165, weightKg = 58.0, onboarded = true)
 
     private val workouts: List<Workout> = listOf(
