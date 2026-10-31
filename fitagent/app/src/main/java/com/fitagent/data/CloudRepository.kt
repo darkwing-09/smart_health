@@ -84,13 +84,24 @@ class CloudRepository(
     }
 
     /** Uploads the last 30 days and recent workouts. Idempotent on the server. */
-    suspend fun sync(): Result<Unit> = runCatching {
-        if (auth.account.value == null) return@runCatching
+    suspend fun sync(): Result<Unit> {
+        if (auth.account.value == null) return Result.success(Unit)
+        val started = System.currentTimeMillis()
+        val result = upload()
+        fitness.log(
+            FitnessRepository.KIND_CLOUD, started, result.isSuccess, result.getOrDefault(0),
+            result.exceptionOrNull()?.let { it.message?.take(160) ?: it::class.java.simpleName },
+        )
+        return result.map { }
+    }
+
+    /** Returns the number of days + workouts sent. */
+    private suspend fun upload(): Result<Int> = runCatching {
         val (days, workouts) = fitness.snapshot()
         val zone = ZoneId.systemDefault()
         val iso = DateTimeFormatter.ISO_OFFSET_DATE_TIME
         val deletions = auth.pendingDeletions()
-        api.sync(
+        val res = api.sync(
             SyncReq(
                 timezone = zone.id,
                 days = days.takeLast(30).filter { it.hasData }.map {
@@ -103,6 +114,22 @@ class CloudRepository(
                         restingHr = it.restingHr?.takeIf { hr -> hr in 25..220 },
                         avgHr = it.avgHr?.takeIf { hr -> hr in 25..230 },
                         sleepMinutes = it.sleepMinutes?.coerceAtMost(1440),
+                        hrMin = it.hrMin?.takeIf { hr -> hr in 25..230 },
+                        hrMax = it.hrMax?.takeIf { hr -> hr in 25..250 },
+                        floors = it.floors?.coerceIn(0, 1000),
+                        vo2max = it.vo2max?.takeIf { v -> v in 10.0..95.0 },
+                        sleepDeepMin = it.sleepStages?.deep,
+                        sleepRemMin = it.sleepStages?.rem,
+                        sleepLightMin = it.sleepStages?.light,
+                        sleepAwakeMin = it.sleepStages?.awake,
+                        bedTime = it.bedMs?.let { ms -> iso.format(Instant.ofEpochMilli(ms).atZone(zone)) },
+                        wakeTime = it.wakeMs?.let { ms -> iso.format(Instant.ofEpochMilli(ms).atZone(zone)) },
+                        hrvMs = it.night.hrvMs?.takeIf { v -> v in 1.0..300.0 },
+                        spo2Avg = it.night.spo2Avg?.takeIf { v -> v in 50.0..100.0 },
+                        spo2Min = it.night.spo2Min?.takeIf { v -> v in 50.0..100.0 },
+                        respRate = it.night.respiratoryRate?.takeIf { v -> v in 4.0..60.0 },
+                        skinTempDelta = it.night.skinTempDelta?.takeIf { v -> v in -5.0..5.0 },
+                        stepsSource = it.stepsSource?.take(120),
                     )
                 },
                 workouts = workouts.take(500).map {
@@ -122,6 +149,7 @@ class CloudRepository(
         )
         auth.clearDeletions(deletions)
         auth.setLastSync(System.currentTimeMillis())
+        res.daysUpserted + res.workoutsUpserted
     }
 
     suspend fun chat(message: String): Result<ChatRes> = runCatching { api.chat(ChatReq(message)) }

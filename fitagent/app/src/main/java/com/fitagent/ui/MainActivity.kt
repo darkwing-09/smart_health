@@ -3,6 +3,7 @@ package com.fitagent.ui
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,6 +77,11 @@ class MainActivity : ComponentActivity() {
     private val healthPermissions =
         registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { main.refresh() }
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    /** Phone step sensor permission; asked right before Health Connect so both come from one "Connect" tap. */
+    private val activityPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        main.refresh()
+        connectHealth(askActivity = false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -87,7 +94,15 @@ class MainActivity : ComponentActivity() {
         main.refresh() // picks up new steps and permission changes made in system settings
     }
 
-    private fun connectHealth() {
+    private fun connectHealth() = connectHealth(askActivity = true)
+
+    private fun connectHealth(askActivity: Boolean) {
+        if (askActivity && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            activityPermission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+            return
+        }
         val source = main.healthSource
         when (source.availability()) {
             HealthAvailability.AVAILABLE ->

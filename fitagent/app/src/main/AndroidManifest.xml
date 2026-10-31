@@ -5,8 +5,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Phone step counter: the fallback when a watch app (e.g. some Noise / boAt apps) doesn't share steps. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
 
-    <!-- Health Connect: read activity, workouts, heart rate and sleep; write workouts tracked in-app -->
+    <!-- Health Connect: everything the watch app shares; write workouts tracked in-app -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
@@ -15,10 +18,33 @@
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
+    <uses-permission android:name="android.permission.health.READ_VO2_MAX" />
+    <uses-permission android:name="android.permission.health.READ_SKIN_TEMPERATURE" />
+    <!-- Keep the watch data fresh every 15 min without opening the app, and import more than 30 days of history. -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <!-- Android 11–13: lets the SDK see the Health Connect app; without it the SDK reports "unavailable". -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- Watch companion apps, so Devices & data health can show their names (see AppLabels.KNOWN). -->
+        <package android:name="com.noisefit" />
+        <package android:name="com.noisefit.prime" />
+        <package android:name="com.crrepa.band.noise" />
+        <package android:name="com.zjw.noisefitsync" />
+        <package android:name="com.coveiot.android.boat" />
+        <package android:name="com.sec.android.app.shealth" />
+        <package android:name="com.fitbit.FitbitMobile" />
+        <package android:name="com.google.android.apps.fitness" />
+        <package android:name="com.garmin.android.apps.connectmobile" />
+        <package android:name="com.huami.watch.hmwatchmanager" />
+        <package android:name="com.xiaomi.wearable" />
+        <package android:name="com.xiaomi.hm.health" />
+        <package android:name="com.mi.health" />
     </queries>
 
     <application

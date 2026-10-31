@@ -9,6 +9,8 @@ import com.fitagent.data.local.AppDatabase
 import com.fitagent.data.prefs.AuthStore
 import com.fitagent.data.prefs.ProfileStore
 import com.fitagent.data.prefs.SessionStore
+import com.fitagent.data.prefs.SyncStateStore
+import com.fitagent.data.sensors.PhoneStepCounter
 import com.fitagent.data.remote.ApiClient
 import com.fitagent.service.Notifications
 import com.fitagent.service.Scheduler
@@ -19,8 +21,10 @@ class AppContainer(context: Context) {
     val sessions = SessionStore(context)
     val auth = AuthStore(context)
     val health = HealthConnectSource(context)
+    val syncState = SyncStateStore(context)
+    val phoneSteps = PhoneStepCounter(context)
     val db = AppDatabase.create(context)
-    val fitness = FitnessRepository(db, health, profiles, auth)
+    val fitness = FitnessRepository(context.applicationContext, db, health, phoneSteps, profiles, auth, syncState)
     val cloud = CloudRepository(ApiClient(auth), auth, profiles, fitness)
 }
 
@@ -34,6 +38,7 @@ class FitAgentApp : Application() {
         Notifications.createChannels(this)
         Scheduler.scheduleReminder(this, container.profiles.profile.value)
         Scheduler.schedulePeriodicSync(this)
+        Scheduler.scheduleWatchSync(this)
     }
 }
 
