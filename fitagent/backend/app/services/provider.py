@@ -64,7 +64,11 @@ class DbDataProvider:
                 ),
                 days=[ActivityDay(day=d.day, steps=d.steps, distance_m=d.distance_m, active_kcal=d.active_kcal,
                                   workout_minutes=d.workout_minutes, resting_hr=d.resting_hr, avg_hr=d.avg_hr,
-                                  sleep_minutes=d.sleep_minutes) for d in days],
+                                  sleep_minutes=d.sleep_minutes, sleep_deep_min=d.sleep_deep_min,
+                                  sleep_rem_min=d.sleep_rem_min, sleep_light_min=d.sleep_light_min,
+                                  sleep_awake_min=d.sleep_awake_min, hrv_ms=d.hrv_ms, spo2_avg=d.spo2_avg,
+                                  resp_rate=d.resp_rate, skin_temp_delta=d.skin_temp_delta, vo2max=d.vo2max,
+                                  hr_min=d.hr_min, hr_max=d.hr_max) for d in days],
                 workouts=[WorkoutRecord(type=w.type, start=_local(w.start, tz),
                                         active_minutes=w.active_seconds // 60, kcal=w.kcal, title=w.title)
                           for w in workouts],

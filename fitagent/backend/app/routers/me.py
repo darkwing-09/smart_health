@@ -3,11 +3,20 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Query, status
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from ..deps import CurrentUser, SessionDep
 from ..models import DailyActivity, User, Workout
-from ..schemas import DayOut, GoalsModel, ProfileOut, ProfileUpdate, SyncIn, SyncOut, WorkoutOut
+from ..schemas import (
+    DayOut,
+    GoalsModel,
+    ProfileOut,
+    ProfileUpdate,
+    SyncIn,
+    SyncOut,
+    SyncStatusOut,
+    WorkoutOut,
+)
 from ..services.leaderboard import user_today
 
 router = APIRouter(prefix="/v1/me", tags=["me"])
@@ -62,6 +71,9 @@ async def sync(body: SyncIn, user: CurrentUser, session: SessionDep) -> SyncOut:
         existing_days = {r.day: r for r in rows}
     for d in body.days:
         values = d.model_dump(exclude={"date"})
+        for key in ("bed_time", "wake_time"):
+            if values[key] is not None:
+                values[key] = values[key].astimezone(UTC)
         row = existing_days.get(d.date)
         if row is None:
             session.add(DailyActivity(user_id=user.id, day=d.date, **values))
@@ -101,7 +113,26 @@ async def activity(user: CurrentUser, session: SessionDep, days: int = Query(30,
     since = user_today(user) - timedelta(days=days - 1)
     rows = await session.scalars(select(DailyActivity).where(
         DailyActivity.user_id == user.id, DailyActivity.day >= since).order_by(DailyActivity.day))
-    return [DayOut(date=r.day, **{k: getattr(r, k) for k in DayOut.model_fields if k != "date"}) for r in rows]
+    return [DayOut(date=r.day, **{k: _utc(getattr(r, k)) for k in DayOut.model_fields if k != "date"}) for r in rows]
+
+
+def _utc(value):
+    """SQLite hands back naive datetimes (stored as UTC); make them aware so they serialise with an offset."""
+    if isinstance(value, datetime) and value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value
+
+
+@router.get("/sync/status", response_model=SyncStatusOut)
+async def sync_status(user: CurrentUser, session: SessionDep) -> SyncStatusOut:
+    """What the server holds for this user, so the app can show whether the cloud copy is up to date."""
+    latest, days, updated = (await session.execute(
+        select(func.max(DailyActivity.day), func.count(), func.max(DailyActivity.updated_at))
+        .where(DailyActivity.user_id == user.id)
+    )).one()
+    workouts = await session.scalar(select(func.count()).select_from(Workout).where(Workout.user_id == user.id))
+    return SyncStatusOut(latest_day=latest, days_stored=days, workouts_stored=workouts or 0,
+                         last_synced_at=_utc(updated))
 
 
 @router.get("/workouts", response_model=list[WorkoutOut])

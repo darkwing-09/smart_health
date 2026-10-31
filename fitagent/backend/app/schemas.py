@@ -88,6 +88,31 @@ class DayIn(BaseModel):
     resting_hr: int | None = Field(None, ge=25, le=220)
     avg_hr: int | None = Field(None, ge=25, le=230)
     sleep_minutes: int | None = Field(None, ge=0, le=1440)
+    # Watch extras (Phase 2). Intraday HR, sleep segments and routes stay on the phone; only nightly/daily
+    # summaries are accepted here.
+    hr_min: int | None = Field(None, ge=25, le=230)
+    hr_max: int | None = Field(None, ge=25, le=250)
+    floors: int | None = Field(None, ge=0, le=1000)
+    vo2max: float | None = Field(None, ge=10, le=95)
+    sleep_deep_min: int | None = Field(None, ge=0, le=1440)
+    sleep_rem_min: int | None = Field(None, ge=0, le=1440)
+    sleep_light_min: int | None = Field(None, ge=0, le=1440)
+    sleep_awake_min: int | None = Field(None, ge=0, le=1440)
+    bed_time: datetime | None = None
+    wake_time: datetime | None = None
+    hrv_ms: float | None = Field(None, ge=1, le=300)
+    spo2_avg: float | None = Field(None, ge=50, le=100)
+    spo2_min: float | None = Field(None, ge=50, le=100)
+    resp_rate: float | None = Field(None, ge=4, le=60)
+    skin_temp_delta: float | None = Field(None, ge=-5, le=5)
+    steps_source: str | None = Field(None, max_length=120)
+
+    @field_validator("bed_time", "wake_time")
+    @classmethod
+    def _aware(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v.tzinfo is None:
+            raise ValueError("bed_time/wake_time must include a timezone offset")
+        return v
 
 
 class WorkoutIn(BaseModel):
@@ -123,6 +148,15 @@ class SyncOut(BaseModel):
     workouts_upserted: int
     workouts_deleted: int
     server_time: datetime
+
+
+class SyncStatusOut(BaseModel):
+    """What the server holds for this user — lets the app show "cloud backup up to date"."""
+
+    latest_day: date | None
+    days_stored: int
+    workouts_stored: int
+    last_synced_at: datetime | None
 
 
 class DayOut(DayIn):
