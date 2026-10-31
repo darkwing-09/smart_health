@@ -24,6 +24,8 @@ services:
         condition: service_healthy
     env_file: ${ENV_FILE:-.env}
     environment:
+      FITAGENT_ENV: production
+      DB_AUTO_CREATE: "false"
       DATABASE_URL: postgresql+asyncpg://fitagent:${POSTGRES_PASSWORD}@db:5432/fitagent
     ports:
       - "${API_PORT:-8000}:8000"

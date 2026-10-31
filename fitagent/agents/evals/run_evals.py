@@ -19,6 +19,7 @@ from fitagent_agents import (
     build_planner_graph,
     configure_tracing,
     get_chat_model,
+    load_env,
     run_coach,
     run_planner,
 )
@@ -93,6 +94,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--offline", action="store_true", help="evaluate locally without LangSmith")
     args = parser.parse_args()
+    load_env()  # API keys from fitagent/.env
     sys.exit(asyncio.run(run_offline() if args.offline else run_langsmith()))
 
 

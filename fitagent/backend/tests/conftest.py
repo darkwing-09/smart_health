@@ -8,6 +8,7 @@ _db_dir = tempfile.mkdtemp(prefix="fitagent-test-")
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_db_dir}/test.db"
 os.environ["SECRET_KEY"] = "test-secret-key-that-is-long-enough-1234567890"
 os.environ["DB_AUTO_CREATE"] = "false"
+os.environ["FITAGENT_SKIP_DOTENV"] = "1"  # never pick up the developer's real .env / API keys
 for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "LANGSMITH_API_KEY"):
     os.environ.pop(key, None)
 
