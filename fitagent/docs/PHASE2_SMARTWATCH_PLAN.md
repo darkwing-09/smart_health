@@ -4,6 +4,9 @@
 transmission from watch → phone → cloud is reliable and verifiable, and the new features use that data to make
 the app clearly better than a generic step counter.
 
+> Detailed specs (design & 76 charts, screens, sync protocol, 32 features, algorithms, tests, build plan) are in
+> [phase2/](phase2/README.md).
+
 ---
 
 ## 1. Where we are today
@@ -101,6 +104,14 @@ Already idempotent (`POST /v1/me/sync` upserts). Additions:
 ## 4. All features we can add
 
 Effort: **S** ≈ 1–3 days, **M** ≈ 1–2 weeks, **L** ≈ 2–4 weeks. ⌚ = needs or is improved by watch data.
+Full specs with acceptance criteria: [phase2/04-features.md](phase2/04-features.md).
+
+### 4.0 Data reliability
+| # | Feature | What it does | Effort |
+|---|---|---|---|
+| R1 | **Devices & data health** ⌚ | Per-source last sync, records today, errors, "Sync now"; freshness dot on Today | S |
+| R2 | **Compatibility check** ⌚ | Shows which data types each watch app actually writes to Health Connect, with fixes | S |
+| R3 | **Live HR from watch/strap** ⌚ | BLE Heart Rate Profile + Wear OS live HR in the phone workout player | M |
 
 ### 4.1 Smartwatch app (Wear OS)
 | # | Feature | What it does | Effort |
@@ -159,8 +170,8 @@ Effort: **S** ≈ 1–3 days, **M** ≈ 1–2 weeks, **L** ≈ 2–4 weeks. ⌚ 
 
 | Milestone | Scope | Exit criteria |
 |---|---|---|
-| **M1 — Reliable watch data** | §3 entirely: HC upgrade, changes API, background read, new record types, data-origin labels, outbox, Data health screen, sync tests | Data from a real watch appears within one worker cycle; all fault-injection tests pass; device test matrix filled for available watches |
-| **M2 — Wear OS app** | New `:wear` Gradle module; W1, W2, W3, W5; Data Layer transport with ack | Workout recorded on the watch with phone off arrives on the phone and server exactly once |
+| **M1 — Reliable watch data** | §3 entirely + R1, R2: HC upgrade, changes API, background read, new record types, data-origin labels, outbox, Data health screen, sync tests | Data from a real watch appears within one worker cycle; all fault-injection tests pass; device test matrix filled for available watches |
+| **M2 — Wear OS app** | New `:wear` Gradle module; W1, W2, W3, W5, R3; Data Layer transport with ack | Workout recorded on the watch with phone off arrives on the phone and server exactly once |
 | **M3 — Watch insights** | D1, D2, D3, D6 + BLE HR (path C) in the phone workout player | Readiness v2 identical in Kotlin & Python tests; coach tools expose the new metrics |
 | **M4 — Student features** | S1, S2, S3, S5, X1, X2 | Planner evals cover exam weeks |
 | **M5 — Social growth** | G1, G2, G3, X4, D7 | |

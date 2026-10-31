@@ -4,6 +4,7 @@ import logging
 import secrets
 from functools import lru_cache
 
+from fitagent_agents.env import load_env
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file_encoding="utf-8", extra="ignore")
 
     env: str = Field("development", alias="FITAGENT_ENV")
     database_url: str = Field("sqlite+aiosqlite:///./fitagent.db", alias="DATABASE_URL")
@@ -42,4 +43,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    # Export fitagent/.env so LangChain/LangSmith (which read os.environ) see the API keys too.
+    load_env()
     return Settings()
