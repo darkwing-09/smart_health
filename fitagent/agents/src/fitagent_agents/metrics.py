@@ -99,11 +99,12 @@ def sleep_quality(deep: int, rem: int, light: int, awake: int) -> int:
     total = deep + rem + light + awake
     if total <= 0:
         return 50
-    pct = lambda m: m * 100 / total  # noqa: E731
-    return _round(_clamp(50 + 2.5 * (pct(deep) - 15) + 2.5 * (pct(rem) - 20) - 3 * (pct(awake) - 5)))
+    deep_pct, rem_pct, awake_pct = (m * 100 / total for m in (deep, rem, awake))
+    return _round(_clamp(50 + 2.5 * (deep_pct - 15) + 2.5 * (rem_pct - 20) - 3 * (awake_pct - 5)))
 
 
-def _baseline(ctx: UserContext, attr: str) -> list[float]:
+def personal_baseline(ctx: UserContext, attr: str) -> list[float]:
+    """The last 14 days of `attr` before today (missing days skipped) — "your normal"."""
     start = ctx.today - timedelta(days=BASELINE_WINDOW_DAYS)
     return [getattr(d, attr) for d in ctx.days if start <= d.day < ctx.today and getattr(d, attr) is not None]
 
@@ -133,14 +134,14 @@ def compute_readiness(ctx: UserContext) -> Readiness:
                 today.sleep_awake_min or 0,
             )
 
-    hrv_base = _baseline(ctx, "hrv_ms")
+    hrv_base = personal_baseline(ctx, "hrv_ms")
     if today and today.hrv_ms and len(hrv_base) >= MIN_HRV_NIGHTS:
         components["hrv"] = hrv_score(today.hrv_ms, hrv_base)
         avg = sum(hrv_base) / len(hrv_base)
         direction = "above" if today.hrv_ms >= avg else "below"
         reasons.append(f"HRV {today.hrv_ms:.0f} ms, {direction} your normal {avg:.0f} ms")
 
-    rhr_base = _baseline(ctx, "resting_hr")
+    rhr_base = personal_baseline(ctx, "resting_hr")
     rhr_delta: float | None = None
     if today and today.resting_hr and len(rhr_base) >= MIN_BASELINE_DAYS:
         rhr_delta = today.resting_hr - sum(rhr_base) / len(rhr_base)
@@ -151,7 +152,7 @@ def compute_readiness(ctx: UserContext) -> Readiness:
     if today:
         nightly = 100
         signals = 0
-        resp_base = _baseline(ctx, "resp_rate")
+        resp_base = personal_baseline(ctx, "resp_rate")
         if today.resp_rate is not None:
             signals += 1
             if len(resp_base) >= MIN_BASELINE_DAYS and today.resp_rate > sum(resp_base) / len(resp_base) + 2:

@@ -233,3 +233,37 @@ async def test_llm_outage_degrades_to_rules(client, monkeypatch):
     r = await client.post("/v1/coach/chat", headers=auth(h), json={"message": "plan my day"})
     assert r.status_code == 200
     assert r.json()["ai_powered"] is False and "Readiness today" in r.json()["reply"]
+
+
+async def test_watch_metrics_round_trip(client):
+    h = await register(client)
+    night = datetime.now(IST).replace(hour=23, minute=40, second=0, microsecond=0) - timedelta(days=1)
+    day = {**days_payload(1, 7000)[0], "sleep_minutes": 452, "sleep_deep_min": 80, "sleep_rem_min": 100,
+           "sleep_light_min": 272, "sleep_awake_min": 18, "hrv_ms": 61.5, "spo2_avg": 96.8, "spo2_min": 92.0,
+           "resp_rate": 14.2, "skin_temp_delta": 0.12, "vo2max": 44.0, "hr_min": 51, "hr_max": 148, "floors": 6,
+           "bed_time": night.isoformat(), "wake_time": (night + timedelta(hours=8)).isoformat(),
+           "steps_source": "com.noisefit"}
+    assert (await client.post("/v1/me/sync", headers=auth(h), json={"days": [day]})).status_code == 200
+
+    stored = (await client.get("/v1/me/activity?days=3", headers=auth(h))).json()[-1]
+    assert stored["hrv_ms"] == 61.5 and stored["sleep_deep_min"] == 80 and stored["steps_source"] == "com.noisefit"
+    assert datetime.fromisoformat(stored["bed_time"]) == night  # timezone preserved through storage
+
+    status = (await client.get("/v1/me/sync/status", headers=auth(h))).json()
+    assert status["days_stored"] == 1 and status["latest_day"] == day["date"] and status["last_synced_at"]
+
+
+async def test_watch_metrics_are_validated(client):
+    h = await register(client)
+    base = days_payload(1, 7000)[0]
+    for bad in ({"hrv_ms": 0}, {"spo2_avg": 120}, {"bed_time": "2026-10-28T23:00:00"}, {"skin_temp_delta": 9}):
+        r = await client.post("/v1/me/sync", headers=auth(h), json={"days": [{**base, **bad}]})
+        assert r.status_code == 422, bad
+
+
+async def test_old_clients_without_watch_fields_still_sync(client):
+    h = await register(client)
+    r = await client.post("/v1/me/sync", headers=auth(h), json={"days": days_payload(2, 5000)})
+    assert r.status_code == 200
+    stored = (await client.get("/v1/me/activity?days=3", headers=auth(h))).json()
+    assert all(d["hrv_ms"] is None for d in stored)
