@@ -1,6 +1,7 @@
 package com.fitagent.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import com.fitagent.ui.LocalClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -109,7 +110,8 @@ fun TodayScreen(
 
 @Composable
 private fun Header(state: HomeState, onRefresh: () -> Unit) {
-    val hour = remember { LocalTime.now().hour }
+    val clock = LocalClock.current
+    val hour = remember(clock) { LocalTime.now(clock).hour }
     val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; else -> "Good evening" }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {

@@ -1,6 +1,7 @@
 package com.fitagent.ui.screens
 
 import android.content.Intent
+import com.fitagent.ui.LocalClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -147,7 +148,7 @@ private fun ChallengeCard(c: ChallengeRes, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(c.name, style = MaterialTheme.typography.titleLarge)
-                    Text("${METRICS.first { it.first == c.metric }.second} · ${c.participants} people · ${statusText(c)}",
+                    Text("${METRICS.first { it.first == c.metric }.second} · ${c.participants} people · ${statusText(c, LocalDate.now(LocalClock.current))}",
                         style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
                 }
                 c.myRank?.let { RankBadge(it) }
@@ -158,8 +159,7 @@ private fun ChallengeCard(c: ChallengeRes, onClick: () -> Unit) {
     }
 }
 
-private fun statusText(c: ChallengeRes): String {
-    val today = LocalDate.now()
+private fun statusText(c: ChallengeRes, today: LocalDate): String {
     return when (c.status) {
         "upcoming" -> "starts ${LocalDate.parse(c.startDate)}"
         "finished" -> "ended ${LocalDate.parse(c.endDate)}"
@@ -208,7 +208,7 @@ private fun ChallengeDetail(c: ChallengeRes, onDismiss: () -> Unit, onLeave: () 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Pill("Code ${c.code}", MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text(statusText(c), style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+                        Text(statusText(c, LocalDate.now(LocalClock.current)), style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
                     }
                     Spacer(Modifier.height(12.dp))
                 }

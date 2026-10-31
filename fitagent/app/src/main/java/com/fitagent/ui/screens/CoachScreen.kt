@@ -1,6 +1,7 @@
 package com.fitagent.ui.screens
 
 import androidx.compose.animation.core.RepeatMode
+import com.fitagent.ui.LocalClock
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -270,7 +271,7 @@ private fun bandColor(p: PlanRes) = when (p.readiness.band) {
 
 @Composable
 private fun SessionRow(s: SessionDto, date: LocalDate, onStart: (WorkoutType) -> Unit) {
-    val isToday = date == LocalDate.now()
+    val isToday = date == LocalDate.now(LocalClock.current)
     val rest = s.type == "REST"
     val type = WorkoutType.fromName(s.type)
     AppCard(padding = 14.dp, color = if (isToday) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer) {

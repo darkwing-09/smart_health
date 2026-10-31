@@ -1,5 +1,6 @@
 package com.fitagent.ui.screens
 
+import com.fitagent.ui.LocalClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.activity.compose.BackHandler
@@ -74,9 +75,10 @@ fun ActiveWorkoutScreen(
     onDiscard: () -> Unit,
     onMinimize: () -> Unit,
 ) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val clock = LocalClock.current
+    var now by remember { mutableLongStateOf(clock.millis()) }
     LaunchedEffect(session) {
-        while (true) { now = System.currentTimeMillis(); delay(250) }
+        while (true) { now = clock.millis(); delay(250) }
     }
     val view = LocalView.current
     DisposableEffect(Unit) {
@@ -219,8 +221,9 @@ fun WorkoutSummaryDialog(workout: Workout, onDismiss: () -> Unit) {
 
 @Composable
 fun MiniSessionBar(session: ActiveSession, onOpen: () -> Unit) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(session) { while (true) { now = System.currentTimeMillis(); delay(1000) } }
+    val clock = LocalClock.current
+    var now by remember { mutableLongStateOf(clock.millis()) }
+    LaunchedEffect(session) { while (true) { now = clock.millis(); delay(1000) } }
     androidx.compose.material3.Surface(
         onClick = onOpen, color = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
