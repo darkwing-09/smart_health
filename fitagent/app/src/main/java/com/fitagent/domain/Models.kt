@@ -37,6 +37,10 @@ data class Workout(
     val activeSeconds: Long,
     val kcal: Double,
     val source: WorkoutSource,
+    val avgHr: Int? = null,
+    val maxHr: Int? = null,
+    /** Seconds in heart-rate zones 1–5, when recorded with a sensor. */
+    val zoneSeconds: List<Int>? = null,
 ) {
     val minutes: Int get() = (activeSeconds / 60).toInt()
 }

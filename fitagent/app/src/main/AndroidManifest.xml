@@ -8,6 +8,13 @@
     <!-- Phone step counter: the fallback when a watch app (e.g. some Noise / boAt apps) doesn't share steps. -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <!-- Live heart rate from Bluetooth sensors (R3). Location is never used: neverForLocation on 12+. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
 
     <!-- Health Connect: everything the watch app shares; write workouts tracked in-app -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />

@@ -111,6 +111,16 @@ class MainActivity : ComponentActivity() {
             .onFailure { pendingPhoto = null }
     }
 
+    private val blePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { main.scanHeartRate() }
+
+    private fun scanHeartRate() {
+        val needed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+        else arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (needed.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }) main.scanHeartRate()
+        else blePermissions.launch(needed)
+    }
+
     private val icsPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri ?: return@registerForActivityResult
         runCatching { contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }
@@ -212,6 +222,8 @@ class MainActivity : ComponentActivity() {
         val lastNight by main.lastNight.collectAsStateWithLifecycle()
         val moods by main.moods.collectAsStateWithLifecycle()
         val foods by main.foods.collectAsStateWithLifecycle()
+        val heartRate by main.heartRate.collectAsStateWithLifecycle()
+        val liveHr by main.liveHr.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
 
@@ -325,7 +337,9 @@ class MainActivity : ComponentActivity() {
                 session?.let { s ->
                     ActiveWorkoutScreen(s, profile.weightKg, onTogglePause = main::togglePause, onFinish = main::finishWorkout,
                         onDiscard = main::discardWorkout, onMinimize = { playerOpen = false },
-                        voiceEnabled = profile.voiceCues, onToggleVoice = { main.updateProfile { it.copy(voiceCues = !it.voiceCues) } })
+                        voiceEnabled = profile.voiceCues, onToggleVoice = { main.updateProfile { it.copy(voiceCues = !it.voiceCues) } },
+                        heartRate = heartRate, liveHr = liveHr, hrMax = com.fitagent.domain.hrMax(profile.ageYears),
+                        onScanHr = ::scanHeartRate, onConnectHr = main::connectHeartRate, onDisconnectHr = main::disconnectHeartRate)
                 }
             }
             routineId?.let { id ->

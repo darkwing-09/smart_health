@@ -81,6 +81,9 @@ data class WorkoutDto(
     val activeSeconds: Long,
     val kcal: Double,
     val source: String,
+    val avgHr: Int? = null,
+    val maxHr: Int? = null,
+    val zoneSeconds: List<Int>? = null,
 )
 
 data class SyncReq(

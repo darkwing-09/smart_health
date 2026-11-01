@@ -112,6 +112,9 @@ class Workout(Base):
     active_seconds: Mapped[int] = mapped_column(Integer)
     kcal: Mapped[float] = mapped_column(Float, default=0)
     source: Mapped[str] = mapped_column(String(20), default="APP")
+    avg_hr: Mapped[int | None] = mapped_column(Integer)
+    max_hr: Mapped[int | None] = mapped_column(Integer)
+    zone_seconds: Mapped[list | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

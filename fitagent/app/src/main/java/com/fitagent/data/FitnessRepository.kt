@@ -22,6 +22,7 @@ import com.fitagent.data.sensors.PhoneStepCounter
 import com.fitagent.domain.DayActivity
 import com.fitagent.domain.DeviceDay
 import com.fitagent.domain.HrBucket
+import com.fitagent.domain.HrSummary
 import com.fitagent.domain.PHONE_SENSOR_SOURCE
 import com.fitagent.domain.SleepSegment
 import com.fitagent.domain.SleepStage
@@ -265,7 +266,7 @@ class FitnessRepository(
     }
 
     /** Saves a workout tracked or logged in the app and mirrors it to Health Connect. */
-    suspend fun saveWorkout(type: WorkoutType, startMs: Long, endMs: Long, activeSeconds: Long): Workout {
+    suspend fun saveWorkout(type: WorkoutType, startMs: Long, endMs: Long, activeSeconds: Long, hr: HrSummary? = null): Workout {
         val entity = WorkoutEntity(
             uid = "app:${UUID.randomUUID()}",
             type = type.name,
@@ -276,6 +277,9 @@ class FitnessRepository(
             kcal = workoutKcal(type, profiles.profile.value.weightKg, activeSeconds),
             source = WorkoutSource.APP.name,
             healthConnectId = null,
+            avgHr = hr?.avg,
+            maxHr = hr?.max,
+            zoneSeconds = hr?.zoneSeconds?.joinToString(","),
         )
         val id = dao.insertWorkout(entity)
         health.writeWorkout(entity, ZoneId.systemDefault())?.let { dao.setHealthConnectId(id, it) }

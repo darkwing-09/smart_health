@@ -161,5 +161,6 @@ async def workouts(user: CurrentUser, session: SessionDep, limit: int = Query(50
     for r in rows:
         start, end = (t if t.tzinfo else t.replace(tzinfo=UTC) for t in (r.start, r.end))
         out.append(WorkoutOut(client_id=r.client_id, type=r.type, title=r.title, start=start, end=end,
-                              active_seconds=r.active_seconds, kcal=r.kcal, source=r.source))
+                              active_seconds=r.active_seconds, kcal=r.kcal, source=r.source, avg_hr=r.avg_hr,
+                              max_hr=r.max_hr, zone_seconds=r.zone_seconds))
     return out
