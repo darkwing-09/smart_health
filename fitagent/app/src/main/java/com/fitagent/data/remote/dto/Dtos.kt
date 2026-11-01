@@ -27,6 +27,7 @@ data class ProfileRes(
     val hostel: String? = null,
     val batch: String? = null,
     val showOnCampus: Boolean? = null,
+    val language: String? = null,
 )
 
 data class ProfileUpdateReq(
@@ -40,6 +41,7 @@ data class ProfileUpdateReq(
     val hostel: String? = null,
     val batch: String? = null,
     val showOnCampus: Boolean? = null,
+    val language: String? = null,
 )
 
 /** One day's summary for the cloud. Intraday heart rate, sleep segments and routes never leave the phone. */

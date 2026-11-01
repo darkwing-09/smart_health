@@ -63,6 +63,8 @@ data class Profile(
     val hostel: String = "",
     val batch: String = "",
     val showOnCampus: Boolean = true,
+    /** Coach reply language (ISO 639-1). Defaults to the phone's language when supported. */
+    val language: String = defaultLanguage(),
 ) {
     val bmi: Double
         get() = if (heightCm > 0) weightKg / ((heightCm / 100.0) * (heightCm / 100.0)) else 0.0
@@ -157,3 +159,7 @@ data class HealthReadout(
     /** App package → the data types it supplied in this window. */
     val origins: Map<String, Set<String>>,
 )
+
+val COACH_LANGUAGES = listOf("en" to "English", "hi" to "हिन्दी", "ta" to "தமிழ்", "te" to "తెలుగు", "bn" to "বাংলা", "mr" to "मराठी")
+
+fun defaultLanguage(): String = java.util.Locale.getDefault().language.takeIf { code -> COACH_LANGUAGES.any { it.first == code } } ?: "en"

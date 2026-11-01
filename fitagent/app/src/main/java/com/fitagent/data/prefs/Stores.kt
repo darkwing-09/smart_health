@@ -39,6 +39,7 @@ class ProfileStore(context: Context) {
             .putString("hostel", next.hostel)
             .putString("batch", next.batch)
             .putBoolean("show_on_campus", next.showOnCampus)
+            .putString("language", next.language)
             .apply()
         _profile.value = next
     }
@@ -64,6 +65,7 @@ class ProfileStore(context: Context) {
             hostel = prefs.getString("hostel", "").orEmpty(),
             batch = prefs.getString("batch", "").orEmpty(),
             showOnCampus = prefs.getBoolean("show_on_campus", true),
+            language = prefs.getString("language", null) ?: d.language,
         )
     }
 }

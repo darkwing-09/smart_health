@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">रेडीनेस, लक्ष्य रिंग और आज का कोच सुझाव</string>
+    <string name="tab_today">आज</string>
+    <string name="tab_train">ट्रेनिंग</string>
+    <string name="tab_coach">कोच</string>
+    <string name="tab_squad">स्क्वॉड</string>
+    <string name="tab_you">आप</string>
+    <string name="greeting_morning">सुप्रभात</string>
+    <string name="greeting_afternoon">नमस्ते</string>
+    <string name="greeting_evening">शुभ संध्या</string>
+    <string name="channel_reminders">लक्ष्य रिमाइंडर</string>
+    <string name="channel_morning">सुबह की रेडीनेस</string>
+    <string name="channel_study">पढ़ाई के बीच ब्रेक</string>
+    <string name="study_break_title">पढ़ाई से एक छोटा ब्रेक लें</string>
+    <string name="study_break_text">आप काफ़ी देर से बैठे हैं। 3 मिनट की स्ट्रेचिंग करें — ध्यान बेहतर होगा।</string>
+    <string name="coach_language">कोच की भाषा</string>
+</resources>
