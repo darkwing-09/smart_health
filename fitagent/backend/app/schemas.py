@@ -64,6 +64,10 @@ class ProfileOut(BaseModel):
     height_cm: int | None
     weight_kg: float | None
     goals: GoalsModel
+    college: str | None = None
+    hostel: str | None = None
+    batch: str | None = None
+    show_on_campus: bool = True
 
 
 HHMM = r"^([01]\d|2[0-3]):[0-5]\d$"
@@ -91,6 +95,10 @@ class ScheduleModel(BaseModel):
 
 class ProfileUpdate(BaseModel):
     display_name: str | None = Field(None, min_length=1, max_length=60)
+    college: str | None = Field(None, max_length=80)
+    hostel: str | None = Field(None, max_length=80)
+    batch: str | None = Field(None, max_length=40)
+    show_on_campus: bool | None = None
     timezone: str | None = None
     age: int | None = Field(None, ge=10, le=100)
     height_cm: int | None = Field(None, ge=100, le=250)
@@ -203,12 +211,38 @@ class JoinIn(BaseModel):
     code: str = Field(min_length=4, max_length=8)
 
 
+Emoji = Literal["👏", "🔥", "💪"]
+
+
 class LeaderboardRow(BaseModel):
     rank: int
     user_id: str
     display_name: str
     value: float
     is_me: bool
+    kudos: dict[str, int] = Field(default_factory=dict, description="Today's reactions received, by emoji")
+    my_kudos: list[str] = Field(default_factory=list, description="Emoji I sent this member today")
+
+
+class KudosIn(BaseModel):
+    to_user_id: str = Field(min_length=1, max_length=36)
+    emoji: Emoji
+
+
+class CampusRow(BaseModel):
+    rank: int
+    name: str
+    members: int
+    value: float = Field(description="Goal days per member over the period")
+    is_mine: bool
+
+
+class CampusOut(BaseModel):
+    scope: Literal["college", "hostel", "batch"]
+    days: int
+    my_group: str | None
+    rows: list[CampusRow]
+    min_group_size: int
 
 
 class ChallengeOut(BaseModel):

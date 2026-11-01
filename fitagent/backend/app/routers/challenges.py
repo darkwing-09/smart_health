@@ -4,18 +4,19 @@ import secrets
 from datetime import timedelta
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-from ..deps import CurrentUser, SessionDep
-from ..models import Challenge, ChallengeMember
-from ..schemas import ChallengeCreate, ChallengeOut, JoinIn
+from ..deps import CurrentUser, SessionDep, limiter
+from ..models import Challenge, ChallengeMember, Kudos
+from ..schemas import ChallengeCreate, ChallengeOut, JoinIn, KudosIn
 from ..services.leaderboard import challenge_out, load_challenge_query, user_today
 
 router = APIRouter(prefix="/v1/challenges", tags=["challenges"])
 
 _ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I — easy to read aloud in a lecture hall
 MAX_ACTIVE_MEMBERSHIPS = 20
+KUDOS_PER_HOUR = 60
 
 
 def _new_code() -> str:
@@ -90,3 +91,34 @@ async def leave(challenge_id: str, user: CurrentUser, session: SessionDep) -> No
         member = next(m for m in c.members if m.user_id == user.id)
         await session.delete(member)
     await session.commit()
+
+
+@router.post("/{challenge_id}/kudos", response_model=ChallengeOut)
+async def give_kudos(challenge_id: str, body: KudosIn, user: CurrentUser, session: SessionDep) -> ChallengeOut:
+    """React to a fellow member's day. One of each emoji per member per day; never to yourself."""
+    limiter.check(f"kudos:{user.id}", KUDOS_PER_HOUR, 3600)
+    c = await _get_for_member(session, challenge_id, user.id)
+    if body.to_user_id == user.id:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "You can't send kudos to yourself")
+    if all(m.user_id != body.to_user_id for m in c.members):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "That person isn't in this challenge")
+    session.add(Kudos(challenge_id=c.id, from_user_id=user.id, to_user_id=body.to_user_id, day=user_today(user),
+                      emoji=body.emoji))
+    try:
+        await session.commit()
+    except IntegrityError:  # already sent today — idempotent
+        await session.rollback()
+    # Commit/rollback expire loaded objects; reload before serialising (no lazy IO under asyncio).
+    await session.refresh(user)
+    return await challenge_out(session, await _get_for_member(session, challenge_id, user.id), user)
+
+
+@router.delete("/{challenge_id}/kudos", response_model=ChallengeOut)
+async def remove_kudos(challenge_id: str, to_user_id: str, emoji: str, user: CurrentUser, session: SessionDep) -> ChallengeOut:
+    c = await _get_for_member(session, challenge_id, user.id)
+    await session.execute(delete(Kudos).where(
+        Kudos.challenge_id == c.id, Kudos.from_user_id == user.id, Kudos.to_user_id == to_user_id,
+        Kudos.day == user_today(user), Kudos.emoji == emoji))
+    await session.commit()
+    await session.refresh(user)
+    return await challenge_out(session, await _get_for_member(session, challenge_id, user.id), user)

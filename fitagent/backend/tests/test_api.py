@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from app.deps import limiter
+
 from .conftest import auth, register
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -299,3 +301,69 @@ async def test_schedule_validation_and_clearing(client):
     await client.put("/v1/me/schedule", headers=auth(h), json=bad[3])
     assert "course" not in (await client.get("/v1/me/schedule", headers=auth(h))).json()
     assert (await client.put("/v1/me/schedule", headers=auth(h), json={})).json() == {"free_slots": [], "exam_dates": [], "bedtime": None}
+
+
+async def _challenge_with(client, n: int):
+    owner = await register(client, "owner@uni.edu", "Owner")
+    c = (await client.post("/v1/challenges", headers=auth(owner), json={"name": "Hostel Step-Off", "metric": "steps", "days": 7})).json()
+    others = []
+    for i in range(n):
+        limiter.reset()
+        h = await register(client, f"m{i}@uni.edu", f"M{i}")
+        await client.post("/v1/challenges/join", headers=auth(h), json={"code": c["code"]})
+        others.append(h)
+    return owner, c, others
+
+
+async def test_kudos_are_member_only_daily_and_idempotent(client):
+    _owner, c, (a, b) = await _challenge_with(client, 2)
+    board = (await client.get(f"/v1/challenges/{c['id']}", headers=auth(a))).json()["leaderboard"]
+    owner_id = next(r["user_id"] for r in board if r["display_name"] == "Owner")
+    me_id = next(r["user_id"] for r in board if r["is_me"])
+
+    for _ in range(2):  # sending twice counts once
+        r = await client.post(f"/v1/challenges/{c['id']}/kudos", headers=auth(a), json={"to_user_id": owner_id, "emoji": "🔥"})
+        assert r.status_code == 200
+    await client.post(f"/v1/challenges/{c['id']}/kudos", headers=auth(b), json={"to_user_id": owner_id, "emoji": "🔥"})
+    rows = (await client.get(f"/v1/challenges/{c['id']}", headers=auth(a))).json()["leaderboard"]
+    owner_row = next(r for r in rows if r["user_id"] == owner_id)
+    assert owner_row["kudos"] == {"🔥": 2} and owner_row["my_kudos"] == ["🔥"]
+
+    assert (await client.post(f"/v1/challenges/{c['id']}/kudos", headers=auth(a), json={"to_user_id": me_id, "emoji": "👏"})).status_code == 422
+    assert (await client.post(f"/v1/challenges/{c['id']}/kudos", headers=auth(a), json={"to_user_id": owner_id, "emoji": "😡"})).status_code == 422
+    outsider = await register(client, "out@uni.edu", "Out")
+    assert (await client.post(f"/v1/challenges/{c['id']}/kudos", headers=auth(outsider), json={"to_user_id": owner_id, "emoji": "👏"})).status_code == 404
+
+    r = await client.delete(f"/v1/challenges/{c['id']}/kudos", headers=auth(a), params={"to_user_id": owner_id, "emoji": "🔥"})
+    assert next(x for x in r.json()["leaderboard"] if x["user_id"] == owner_id)["kudos"] == {"🔥": 1}
+
+
+async def test_campus_leaderboard_is_per_capita_and_hides_small_groups(client):
+    async def student(i: int, hostel: str, goal_days: int):
+        limiter.reset()  # many sign-ups from one test IP
+        h = await register(client, f"s{i}@uni.edu", f"S{i}")
+        await client.patch("/v1/me", headers=auth(h), json={"hostel": hostel})
+        days = days_payload(goal_days, 9000)
+        await client.post("/v1/me/sync", headers=auth(h), json={"days": days})
+        return h
+
+    hs = [await student(i, "Hostel 4", 5) for i in range(5)]           # 5 members × 5 goal days
+    [await student(10 + i, " hostel  9 ", 7) for i in range(6)]        # 6 members × 7 goal days (name normalised)
+    [await student(20 + i, "Tiny Hostel", 7) for i in range(2)]        # under 5 members → hidden
+    out = (await client.get("/v1/campus/leaderboard", headers=auth(hs[0]), params={"scope": "hostel"})).json()
+    names = [r["name"] for r in out["rows"]]
+    assert names == ["hostel 9", "Hostel 4"]
+    assert out["rows"][0]["value"] == 7 and out["rows"][1]["is_mine"] is True
+    assert "Tiny Hostel" not in names
+
+    await client.patch("/v1/me", headers=auth(hs[1]), json={"show_on_campus": False})
+    out = (await client.get("/v1/campus/leaderboard", headers=auth(hs[0]), params={"scope": "hostel"})).json()
+    assert [r["name"] for r in out["rows"]] == ["hostel 9"]  # Hostel 4 drops to 4 visible members
+
+
+async def test_invite_page_and_assetlinks(client):
+    _owner, c, _ = await _challenge_with(client, 0)
+    page = await client.get(f"/j/{c['code'].lower()}")
+    assert page.status_code == 200 and c["code"] in page.text and "Hostel Step-Off" in page.text
+    assert (await client.get("/j/ZZZZZZ")).status_code == 404
+    assert (await client.get("/.well-known/assetlinks.json")).json() == []

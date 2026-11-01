@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     rate_limit_auth_per_min: int = Field(10, alias="RATE_LIMIT_AUTH_PER_MIN")
     rate_limit_coach_per_min: int = Field(15, alias="RATE_LIMIT_COACH_PER_MIN")
     rate_limit_plan_per_hour: int = Field(10, alias="RATE_LIMIT_PLAN_PER_HOUR")
+    android_package: str = Field("com.fitagent.app", alias="ANDROID_PACKAGE")
+    # Release signing certificate fingerprint(s) for App Links (keytool -list -v), comma-separated.
+    android_cert_sha256: str = Field("", alias="ANDROID_CERT_SHA256")
 
     @property
     def is_production(self) -> bool:

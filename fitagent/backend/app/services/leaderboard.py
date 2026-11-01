@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models import Challenge, ChallengeMember, DailyActivity, User
+from ..models import Challenge, ChallengeMember, DailyActivity, Kudos, User
 from ..schemas import ChallengeOut, LeaderboardRow
 
 
@@ -56,8 +56,22 @@ async def standings(session: AsyncSession, challenge: Challenge) -> list[tuple[U
     return [(users[uid], totals[uid]) for uid in ranked]
 
 
+async def todays_kudos(session: AsyncSession, challenge: Challenge, me: User) -> tuple[dict[str, dict[str, int]], dict[str, list[str]]]:
+    """Reactions given today in this challenge: received counts per member, and what I sent to whom."""
+    rows = (await session.scalars(select(Kudos).where(Kudos.challenge_id == challenge.id, Kudos.day == user_today(me)))).all()
+    received: dict[str, dict[str, int]] = {}
+    mine: dict[str, list[str]] = {}
+    for k in rows:
+        received.setdefault(k.to_user_id, {}).setdefault(k.emoji, 0)
+        received[k.to_user_id][k.emoji] += 1
+        if k.from_user_id == me.id:
+            mine.setdefault(k.to_user_id, []).append(k.emoji)
+    return received, mine
+
+
 async def challenge_out(session: AsyncSession, challenge: Challenge, me: User, limit: int = 50) -> ChallengeOut:
     table = await standings(session, challenge)
+    received, mine = await todays_kudos(session, challenge, me)
     rows: list[LeaderboardRow] = []
     my_rank = None
     rank = 0
@@ -69,7 +83,8 @@ async def challenge_out(session: AsyncSession, challenge: Challenge, me: User, l
             my_rank = rank
         if i <= limit or u.id == me.id:
             rows.append(LeaderboardRow(rank=rank, user_id=u.id, display_name=u.display_name, value=value,
-                                       is_me=u.id == me.id))
+                                       is_me=u.id == me.id, kudos=received.get(u.id, {}),
+                                       my_kudos=sorted(mine.get(u.id, []))))
     return ChallengeOut(
         id=challenge.id, code=challenge.code, name=challenge.name, metric=challenge.metric,
         start_date=challenge.start_date, end_date=challenge.end_date, is_owner=challenge.owner_id == me.id,
