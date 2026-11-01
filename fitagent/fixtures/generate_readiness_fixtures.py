@@ -50,7 +50,7 @@ def history(n: int, rng: random.Random, *, hrv=True, rhr=True, resp=False, stage
 def cases() -> list[tuple[str, list[ActivityDay], list[tuple[int, int]]]]:
     rng = random.Random(7)
     steady = [(o, 35) for o in range(1, 28, 2)]
-    spike = [(o, 35) for o in range(8, 28, 3)] + [(o, 70) for o in range(0, 7)]
+    spike = [(o, 35) for o in range(8, 28, 3)] + [(o, 70) for o in range(7)]
     out: list[tuple[str, list[ActivityDay], list[tuple[int, int]]]] = [
         ("no data", [], []),
         ("sleep only, 8h", [day(0, sleep_minutes=480)], []),
@@ -70,7 +70,7 @@ def cases() -> list[tuple[str, list[ActivityDay], list[tuple[int, int]]]]:
         ("normal nightly signals", history(14, rng, resp=True) +
          [day(0, sleep_minutes=450, resting_hr=58, hrv_ms=60, spo2_avg=97, resp_rate=14.2, skin_temp_delta=0.1)], steady),
         ("load spike", history(20, rng) + [day(0, sleep_minutes=450, resting_hr=58, hrv_ms=60)], spike),
-        ("load only, history < 14 days", [], [(o, 30) for o in range(0, 5)]),
+        ("load only, history < 14 days", [], [(o, 30) for o in range(5)]),
         ("load only, steady month", [], steady),
         ("stages + all signals, good night", history(14, rng, resp=True, stages=True) +
          [day(0, sleep_minutes=490, resting_hr=54, hrv_ms=78, spo2_avg=97.5, resp_rate=13.8, skin_temp_delta=-0.2,
@@ -82,18 +82,18 @@ def cases() -> list[tuple[str, list[ActivityDay], list[tuple[int, int]]]]:
         hist = history(rng.randint(3, 20), rng, hrv=rng.random() < 0.7, rhr=rng.random() < 0.8,
                        resp=rng.random() < 0.4, stages=rng.random() < 0.5)
         stages = rng.random() < 0.5
-        today_kw = dict(
-            sleep_minutes=rng.choice([None, rng.randint(180, 560)]),
-            resting_hr=rng.choice([None, rng.randint(50, 72)]),
-            hrv_ms=rng.choice([None, round(rng.uniform(25, 95), 1)]),
-            spo2_avg=rng.choice([None, round(rng.uniform(90, 99), 1)]),
-            resp_rate=rng.choice([None, round(rng.uniform(12, 20), 1)]),
-            skin_temp_delta=rng.choice([None, round(rng.uniform(-0.5, 1.6), 2)]),
-            sleep_deep_min=rng.randint(10, 110) if stages else None,
-            sleep_rem_min=rng.randint(20, 130) if stages else None,
-            sleep_light_min=rng.randint(150, 320) if stages else None,
-            sleep_awake_min=rng.randint(5, 80) if stages else None,
-        )
+        today_kw = {
+            "sleep_minutes": rng.choice([None, rng.randint(180, 560)]),
+            "resting_hr": rng.choice([None, rng.randint(50, 72)]),
+            "hrv_ms": rng.choice([None, round(rng.uniform(25, 95), 1)]),
+            "spo2_avg": rng.choice([None, round(rng.uniform(90, 99), 1)]),
+            "resp_rate": rng.choice([None, round(rng.uniform(12, 20), 1)]),
+            "skin_temp_delta": rng.choice([None, round(rng.uniform(-0.5, 1.6), 2)]),
+            "sleep_deep_min": rng.randint(10, 110) if stages else None,
+            "sleep_rem_min": rng.randint(20, 130) if stages else None,
+            "sleep_light_min": rng.randint(150, 320) if stages else None,
+            "sleep_awake_min": rng.randint(5, 80) if stages else None,
+        }
         w = rng.choice([[], steady, spike, [(o, rng.randint(10, 80)) for o in range(0, 27, rng.randint(1, 4))]])
         out.append((f"random mix {i + 1}", hist + [day(0, **today_kw)], w))
     return out
