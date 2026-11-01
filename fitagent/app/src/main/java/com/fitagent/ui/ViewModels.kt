@@ -23,6 +23,7 @@ import com.fitagent.domain.Profile
 import com.fitagent.domain.Readiness
 import com.fitagent.domain.StreakInfo
 import com.fitagent.domain.MoodEntry
+import com.fitagent.domain.Routine
 import com.fitagent.domain.Suggestion
 import com.fitagent.domain.Timetable
 import com.fitagent.domain.parseIcs
@@ -271,6 +272,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun discardWorkout() = c.sessions.set(null)
+
+    /** Saves a guided library routine as a workout of the routine's type. */
+    fun saveRoutine(routine: Routine, activeSeconds: Long) {
+        if (activeSeconds < 60) return
+        val now = System.currentTimeMillis()
+        viewModelScope.launch {
+            _finished.value = c.fitness.saveWorkout(routine.type, now - activeSeconds * 1000, now, activeSeconds)
+            if (c.auth.account.value != null) Scheduler.syncSoon(getApplication())
+        }
+    }
 
     fun dismissSummary() { _finished.value = null }
 

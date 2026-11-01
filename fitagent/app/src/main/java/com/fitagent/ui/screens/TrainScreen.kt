@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fitagent.domain.IntervalConfig
 import com.fitagent.domain.Workout
+import com.fitagent.domain.Routine
 import com.fitagent.domain.Timetable
 import com.fitagent.domain.WorkoutType
 import com.fitagent.domain.daysLeftInWeek
@@ -70,6 +71,8 @@ fun TrainScreen(
     onDelete: (Long) -> Unit,
     timetable: Timetable = Timetable(),
     onOpenTimetable: () -> Unit = {},
+    onOpenLibrary: () -> Unit = {},
+    onStartRoutine: (Routine) -> Unit = {},
 ) {
     var showLog by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<Workout?>(null) }
@@ -84,6 +87,7 @@ fun TrainScreen(
         item { Text("Train", style = MaterialTheme.typography.headlineLarge) }
         item { WeeklyGoalCard(state) }
         item { ExamModeCard(timetable, state.today, onOpenTimetable) }
+        item { LibraryCard(onOpenLibrary, onStartRoutine) }
         item { SectionTitle("Interval training") }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
