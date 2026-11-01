@@ -17,6 +17,8 @@ import com.fitagent.data.remote.dto.ProfileUpdateReq
 import com.fitagent.data.remote.dto.RegisterReq
 import com.fitagent.data.remote.dto.SyncReq
 import com.fitagent.data.remote.dto.FreeSlotDto
+import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.KudosReq
 import com.fitagent.data.remote.dto.ScheduleDto
 import com.fitagent.data.prefs.TimetableStore
 import com.fitagent.domain.code
@@ -80,6 +82,10 @@ class CloudRepository(
         heightCm = p.heightCm.takeIf { it in 100..250 },
         weightKg = p.weightKg.takeIf { it in 25.0..300.0 },
         goals = GoalsDto(p.goals.dailySteps, p.goals.dailyActiveKcal, p.goals.dailyWorkoutMinutes, p.goals.weeklyWorkouts),
+        college = p.college.trim(),
+        hostel = p.hostel.trim(),
+        batch = p.batch.trim(),
+        showOnCampus = p.showOnCampus,
     )
 
     fun signOut() = auth.signOut()
@@ -189,6 +195,15 @@ class CloudRepository(
     suspend fun createChallenge(name: String, metric: String, days: Int): Result<ChallengeRes> =
         runCatching { api.createChallenge(ChallengeCreateReq(name.trim(), metric, days)) }
     suspend fun joinChallenge(code: String): Result<ChallengeRes> = runCatching { api.join(JoinReq(code.trim())) }
+    suspend fun kudos(challengeId: String, toUserId: String, emoji: String, remove: Boolean): Result<ChallengeRes> = runCatching {
+        if (remove) api.removeKudos(challengeId, toUserId, emoji) else api.giveKudos(challengeId, KudosReq(toUserId, emoji))
+    }
+
+    suspend fun campus(scope: String): Result<CampusRes> = runCatching { api.campus(scope) }
+
+    /** Public invite link for a challenge (opens the app via App Links, or a web page with the code). */
+    fun inviteLink(code: String): String = auth.serverUrl.value.trimEnd('/') + "/j/" + code
+
     suspend fun leaveChallenge(id: String): Result<Unit> = runCatching {
         val r = api.leave(id)
         if (!r.isSuccessful) throw retrofit2.HttpException(r)

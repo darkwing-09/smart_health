@@ -43,7 +43,7 @@ import com.fitagent.ui.theme.Fit
 import java.time.Duration
 
 /** Screens opened from cards on Today / You. Shown over the tabs; back returns. */
-enum class Detail { READINESS, SLEEP, HEART, DEVICES, TIMETABLE, MOOD, BREATHE, LIBRARY }
+enum class Detail { READINESS, SLEEP, HEART, DEVICES, TIMETABLE, MOOD, BREATHE, LIBRARY, RECAP }
 
 /** Full-screen detail page: back arrow, title, scrolling cards. */
 @Composable

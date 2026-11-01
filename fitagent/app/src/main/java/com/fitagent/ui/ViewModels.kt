@@ -10,6 +10,7 @@ import com.fitagent.data.HealthStatus
 import com.fitagent.data.SyncEvent
 import com.fitagent.data.health.CompatibilityRow
 import com.fitagent.data.prefs.Account
+import com.fitagent.data.remote.dto.CampusRes
 import com.fitagent.data.remote.dto.ChallengeRes
 import com.fitagent.data.remote.dto.PlanRes
 import com.fitagent.data.remote.userMessage
@@ -317,6 +318,11 @@ data class CloudState(
     val challenges: List<ChallengeRes> = emptyList(),
     val challengesLoading: Boolean = false,
     val challengesError: String? = null,
+    val campus: CampusRes? = null,
+    val campusScope: String = "hostel",
+    val campusLoading: Boolean = false,
+    /** Join code from an invite link, waiting to be confirmed on the Squad tab. */
+    val pendingJoinCode: String? = null,
 )
 
 /** Features that need the backend: account, AI coach and challenges. */
@@ -458,6 +464,27 @@ class CloudViewModel(app: Application) : AndroidViewModel(app) {
             onFailure = { _events.tryEmit(it.userMessage()) },
         )
     }
+
+    fun toggleKudos(challengeId: String, toUserId: String, emoji: String, remove: Boolean) = viewModelScope.launch {
+        c.cloud.kudos(challengeId, toUserId, emoji, remove).fold(
+            onSuccess = { updated -> _state.update { st -> st.copy(challenges = st.challenges.map { if (it.id == updated.id) updated else it }) } },
+            onFailure = { _events.tryEmit(it.userMessage()) },
+        )
+    }
+
+    fun loadCampus(scope: String = _state.value.campusScope) {
+        if (_state.value.account == null) return
+        _state.update { it.copy(campusScope = scope, campusLoading = true) }
+        viewModelScope.launch {
+            val r = c.cloud.campus(scope)
+            _state.update { it.copy(campus = r.getOrNull() ?: it.campus.takeIf { c -> c?.scope == scope }, campusLoading = false) }
+        }
+    }
+
+    fun inviteLink(code: String): String = c.cloud.inviteLink(code)
+
+    fun openInvite(code: String) = _state.update { it.copy(pendingJoinCode = code.uppercase().filter(Char::isLetterOrDigit).take(8)) }
+    fun clearInvite() = _state.update { it.copy(pendingJoinCode = null) }
 
     fun leaveChallenge(id: String) = viewModelScope.launch {
         c.cloud.leaveChallenge(id).fold(

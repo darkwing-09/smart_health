@@ -138,6 +138,10 @@ class ScreenshotTest {
             }
         }
     }
+    @Test fun challenge_detail() = snap {
+        com.fitagent.ui.screens.ChallengeDetail(cloud.challenges.first(), "https://api.fitagent.app/j/K7QM2P", {}, {}, { _, _, _ -> })
+    }
+    @Test fun recap() = snap { com.fitagent.ui.screens.RecapScreen(home) {} }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }
@@ -291,12 +295,20 @@ class ScreenshotTest {
                 SessionDto("TUE", "YOGA", 25, "easy", "Hips and hamstrings flow"),
             )),
         ),
+        campus = com.fitagent.data.remote.dto.CampusRes("hostel", 7, "Hostel 4", listOf(
+            com.fitagent.data.remote.dto.CampusRowDto(1, "Hostel 9", 42, 5.6, false),
+            com.fitagent.data.remote.dto.CampusRowDto(2, "Hostel 4", 37, 5.1, true),
+            com.fitagent.data.remote.dto.CampusRowDto(3, "Girls' Hostel 2", 55, 4.8, false),
+            com.fitagent.data.remote.dto.CampusRowDto(4, "Hostel 1", 18, 3.9, false),
+        ), 5),
         challenges = listOf(
             ChallengeRes("c1", "K7QM2P", "Hostel Step-Off", "steps", today.minusDays(3).toString(),
                 today.plusDays(3).toString(), true, "active", 18, 3, listOf(
-                    LeaderboardRowDto(1, "u1", "Rohan", 74_820.0, false),
-                    LeaderboardRowDto(2, "u2", "Meera", 66_100.0, false),
-                    LeaderboardRowDto(3, "me", "Asha", 61_240.0, true),
+                    LeaderboardRowDto(1, "u1", "Rohan", 74_820.0, false, mapOf("🔥" to 3, "👏" to 1), listOf("🔥")),
+                    LeaderboardRowDto(2, "u2", "Meera", 66_100.0, false, mapOf("💪" to 2)),
+                    LeaderboardRowDto(3, "me", "Asha", 61_240.0, true, mapOf("👏" to 4)),
+                    LeaderboardRowDto(4, "u4", "Kabir", 52_900.0, false),
+                    LeaderboardRowDto(5, "u5", "Zoya", 41_300.0, false),
                 )),
             ChallengeRes("c2", "TX4W9A", "CSE Batch '27 — Consistency", "active_days", today.minusDays(10).toString(),
                 today.plusDays(20).toString(), false, "active", 64, 1, listOf(

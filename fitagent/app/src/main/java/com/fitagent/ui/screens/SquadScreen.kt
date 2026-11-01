@@ -50,8 +50,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.fitagent.data.remote.dto.ChallengeRes
 import com.fitagent.data.remote.dto.LeaderboardRowDto
-import com.fitagent.domain.formatCount
 import com.fitagent.ui.CloudState
+import com.fitagent.ui.charts.RaceBars
+import com.fitagent.ui.charts.RaceEntry
+import com.fitagent.domain.formatCount
 import com.fitagent.ui.components.AppCard
 import com.fitagent.ui.components.Pill
 import com.fitagent.ui.components.SectionTitle
@@ -74,11 +76,16 @@ fun SquadScreen(
     onCreate: (String, String, Int, (ChallengeRes) -> Unit) -> Unit,
     onJoin: (String, () -> Unit) -> Unit,
     onLeave: (String) -> Unit,
+    onKudos: (challengeId: String, toUserId: String, emoji: String, remove: Boolean) -> Unit = { _, _, _, _ -> },
+    onLoadCampus: (String) -> Unit = {},
+    inviteLink: (String) -> String = { it },
+    onClearInvite: () -> Unit = {},
 ) {
     var showCreate by remember { mutableStateOf(false) }
     var showJoin by remember { mutableStateOf(false) }
     var detail by remember { mutableStateOf<ChallengeRes?>(null) }
-    LaunchedEffect(cloud.account) { if (cloud.account != null) onLoad() }
+    LaunchedEffect(cloud.account) { if (cloud.account != null) { onLoad(); onLoadCampus(cloud.campusScope) } }
+    LaunchedEffect(cloud.pendingJoinCode, cloud.account) { if (cloud.pendingJoinCode != null && cloud.account != null) showJoin = true }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp, contentPadding.calculateTopPadding() + 8.dp, 16.dp,
@@ -127,6 +134,7 @@ fun SquadScreen(
         val finished = cloud.challenges.filter { it.status == "finished" }
         if (active.isNotEmpty()) item { SectionTitle("Active") }
         items(active, key = { it.id }) { ChallengeCard(it) { detail = it } }
+        item { CampusCard(cloud, onLoadCampus) }
         if (finished.isNotEmpty()) item { SectionTitle("Finished") }
         items(finished, key = { it.id }) { ChallengeCard(it) { detail = it } }
     }
@@ -134,10 +142,13 @@ fun SquadScreen(
     if (showCreate) CreateDialog(onDismiss = { showCreate = false }) { name, metric, days ->
         onCreate(name, metric, days) { created -> showCreate = false; detail = created }
     }
-    if (showJoin) JoinDialog(onDismiss = { showJoin = false }) { code -> onJoin(code) { showJoin = false } }
+    if (showJoin) JoinDialog(cloud.pendingJoinCode.orEmpty(), onDismiss = { showJoin = false; onClearInvite() }) { code ->
+        onJoin(code) { showJoin = false; onClearInvite() }
+    }
     detail?.let { c ->
         val fresh = cloud.challenges.firstOrNull { it.id == c.id } ?: c
-        ChallengeDetail(fresh, onDismiss = { detail = null }, onLeave = { onLeave(fresh.id); detail = null })
+        ChallengeDetail(fresh, inviteLink(fresh.code), onDismiss = { detail = null }, onLeave = { onLeave(fresh.id); detail = null },
+            onKudos = { to, emoji, remove -> onKudos(fresh.id, to, emoji, remove) })
     }
 }
 
@@ -195,37 +206,61 @@ private fun LeaderRow(r: LeaderboardRowDto, metric: String, compact: Boolean = f
     }
 }
 
+/** Full-screen challenge: race-bar leaderboard, today's kudos and an invite link. */
 @Composable
-private fun ChallengeDetail(c: ChallengeRes, onDismiss: () -> Unit, onLeave: () -> Unit) {
+fun ChallengeDetail(
+    c: ChallengeRes,
+    inviteUrl: String,
+    onDismiss: () -> Unit,
+    onLeave: () -> Unit,
+    onKudos: (toUserId: String, emoji: String, remove: Boolean) -> Unit,
+) {
     val context = LocalContext.current
+    val fc = Fit.colors
     var confirmLeave by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(c.name) },
-        text = {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Pill("Code ${c.code}", MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(8.dp))
-                        Text(statusText(c, LocalDate.now(LocalClock.current)), style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+    val unit = metricUnit(c.metric)
+    DetailScaffold(c.name, "${METRICS.first { it.first == c.metric }.second} · ${c.participants} people · ${statusText(c, LocalDate.now(LocalClock.current))}", onDismiss) {
+        item {
+            AppCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(c.myRank?.let { "You're #$it of ${c.participants}" } ?: "Not ranked yet", style = MaterialTheme.typography.titleLarge)
+                        val me = c.leaderboard.firstOrNull { it.isMe }
+                        val ahead = c.leaderboard.filter { it.rank < (me?.rank ?: 0) }.maxByOrNull { it.rank }
+                        Text(
+                            when {
+                                me == null -> "Sync your activity to appear on the board."
+                                ahead == null -> "You're leading — keep it up!"
+                                else -> "${formatCount((ahead.value - me.value).toLong())} $unit behind ${ahead.displayName}"
+                            },
+                            style = MaterialTheme.typography.bodySmall, color = fc.muted,
+                        )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    c.myRank?.let { RankBadge(it) }
                 }
-                items(c.leaderboard, key = { it.userId }) { LeaderRow(it, c.metric) }
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        val text = "Join my FitAgent challenge “${c.name}”: $inviteUrl (or enter code ${c.code} in Squad → Join)"
+                        context.startActivity(Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Invite friends"))
+                    }, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text("Invite") }
+                    Pill("Code ${c.code}", MaterialTheme.colorScheme.primary, Modifier.align(Alignment.CenterVertically))
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val text = "Join my FitAgent challenge “${c.name}” — code ${c.code}"
-                context.startActivity(Intent.createChooser(
-                    Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Share code"))
-            }) { Icon(Icons.Rounded.Share, null); Text(" Share code") }
-        },
-        dismissButton = {
-            TextButton(onClick = { confirmLeave = true }) { Text(if (c.isOwner) "Delete" else "Leave") }
-        },
-    )
+        }
+        item {
+            ChartCard("Leaderboard", "Tap an emoji to cheer someone on — one of each per day") {
+                RaceBars(c.leaderboard.sortedBy { it.rank }.take(10).map {
+                    RaceEntry(if (it.isMe) "${it.displayName} (you)" else it.displayName, it.value.toFloat(), "${formatValue(it.value, c.metric)}", it.isMe)
+                }, if (c.metric == "steps") fc.steps else if (c.metric == "workout_minutes") fc.workout else fc.push)
+            }
+        }
+        items(c.leaderboard.sortedBy { it.rank }, key = { it.userId }) { row -> KudosRow(row, onKudos) }
+        item {
+            OutlinedButton(onClick = { confirmLeave = true }, modifier = Modifier.fillMaxWidth()) { Text(if (c.isOwner) "Delete challenge" else "Leave challenge") }
+        }
+    }
     if (confirmLeave) {
         AlertDialog(
             onDismissRequest = { confirmLeave = false },
@@ -234,6 +269,60 @@ private fun ChallengeDetail(c: ChallengeRes, onDismiss: () -> Unit, onLeave: () 
             confirmButton = { TextButton(onClick = { confirmLeave = false; onLeave() }) { Text("Confirm") } },
             dismissButton = { TextButton(onClick = { confirmLeave = false }) { Text("Cancel") } },
         )
+    }
+}
+
+private val KUDOS = listOf("👏", "🔥", "💪")
+
+@Composable
+private fun KudosRow(row: LeaderboardRowDto, onKudos: (String, String, Boolean) -> Unit) {
+    val fc = Fit.colors
+    AppCard(padding = 12.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("${row.rank}", style = MaterialTheme.typography.titleMedium, color = fc.muted, modifier = Modifier.width(28.dp))
+            Column(Modifier.weight(1f)) {
+                Text(if (row.isMe) "${row.displayName} (you)" else row.displayName, style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (row.isMe) FontWeight.Bold else FontWeight.Medium)
+                val got = row.kudos.orEmpty().entries.joinToString("  ") { "${it.key} ${it.value}" }
+                if (got.isNotEmpty()) Text(got, style = MaterialTheme.typography.labelSmall, color = fc.muted)
+            }
+            if (!row.isMe) {
+                KUDOS.forEach { e ->
+                    val sent = e in row.myKudos.orEmpty()
+                    FilterChip(sent, { onKudos(row.userId, e, sent) }, label = { Text(e) }, modifier = Modifier.padding(start = 4.dp))
+                }
+            }
+        }
+    }
+}
+
+private fun formatValue(v: Double, metric: String): String = when (metric) {
+    "steps" -> formatCount(v.toLong())
+    "workout_minutes" -> "${v.toLong()} min"
+    else -> "${v.toLong()} d"
+}
+
+/** Campus leaderboard (G4): hostels/colleges/batches by goal days per member. */
+@Composable
+private fun CampusCard(cloud: CloudState, onLoad: (String) -> Unit) {
+    val fc = Fit.colors
+    val campus = cloud.campus
+    ChartCard("Campus leaderboard", "Goal days per member, last 7 days — small groups can win") {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("hostel" to "Hostel", "college" to "College", "batch" to "Batch").forEach { (k, label) ->
+                FilterChip(cloud.campusScope == k, { onLoad(k) }, label = { Text(label) })
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        when {
+            cloud.campusLoading && campus == null -> CircularProgressIndicator(Modifier.size(24.dp))
+            campus == null || campus.scope != cloud.campusScope -> Text("Couldn't load the campus board.", color = fc.muted, style = MaterialTheme.typography.bodySmall)
+            campus.myGroup.isNullOrBlank() -> Text("Add your ${cloud.campusScope} in You → Campus to compete for it.",
+                style = MaterialTheme.typography.bodySmall, color = fc.muted)
+            campus.rows.isEmpty() -> Text("No group has ${campus.minGroupSize}+ members yet — invite your ${cloud.campusScope}mates!",
+                style = MaterialTheme.typography.bodySmall, color = fc.muted)
+            else -> RaceBars(campus.rows.take(8).map { RaceEntry("${it.name} · ${it.members}", it.value.toFloat(), "%.1f".format(it.value), it.isMine) }, fc.steps)
+        }
     }
 }
 
@@ -265,8 +354,8 @@ private fun CreateDialog(onDismiss: () -> Unit, onCreate: (String, String, Int) 
 }
 
 @Composable
-private fun JoinDialog(onDismiss: () -> Unit, onJoin: (String) -> Unit) {
-    var code by remember { mutableStateOf("") }
+private fun JoinDialog(initial: String, onDismiss: () -> Unit, onJoin: (String) -> Unit) {
+    var code by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Join a challenge") },
