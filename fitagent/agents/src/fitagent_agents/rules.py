@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from .data import UserContext
 from .metrics import Band, Readiness, current_streak, last_7_days
-from .safety import week_order, weekly_minutes_cap
+from .safety import is_devanagari, week_order, weekly_minutes_cap
 from .schedule import EXAM_WEEK_MAX_MIN
 from .schemas import WEEKDAYS, PlannedSession, Weekday, WeeklyPlan
 
@@ -156,7 +156,9 @@ def fallback_plan(ctx: UserContext, readiness: Readiness) -> WeeklyPlan:
 
 
 def fallback_reply(ctx: UserContext, readiness: Readiness, message: str) -> str:
-    """Offline coach answer built purely from the user's data."""
+    """Offline coach answer built purely from the user's data (Hindi when the student writes or prefers Hindi)."""
+    if ctx.profile.language == "hi" or is_devanagari(message):
+        return _fallback_reply_hi(ctx, readiness)
     s = suggest_today(ctx, readiness)
     week = last_7_days(ctx)
     streak = current_streak(ctx)
@@ -177,4 +179,25 @@ def fallback_reply(ctx: UserContext, readiness: Readiness, message: str) -> str:
     if any(k in message.lower() for k in ("plan", "schedule", "week")):
         lines.append("\nTap “Generate weekly plan” on the Coach tab for a full 7-day schedule.")
     lines.append("\n(The AI coach is offline, so this answer comes from your data and FitAgent's training rules.)")
+    return "\n".join(lines)
+
+
+_BAND_HI = {"PUSH": "पूरी तरह तैयार", "STEADY": "सामान्य दिन", "RECOVER": "आराम का दिन"}
+_TYPE_HI = {"WALK": "तेज़ चाल", "RUN": "दौड़", "CYCLE": "साइकिलिंग", "STRENGTH": "स्ट्रेंथ", "HIIT": "HIIT", "YOGA": "योग",
+            "SWIM": "तैराकी", "SPORTS": "खेल", "DANCE": "डांस", "OTHER": "वर्कआउट"}
+
+
+def _fallback_reply_hi(ctx: UserContext, readiness: Readiness) -> str:
+    s = suggest_today(ctx, readiness)
+    week = last_7_days(ctx)
+    today = ctx.day(ctx.today)
+    steps = today.steps if today else 0
+    goal = ctx.profile.goals.daily_steps
+    lines = [
+        f"आज की रेडीनेस: {readiness.score}/100 ({_BAND_HI[readiness.band.value]})।",
+        (f"सुझाव: {s.minutes} मिनट {_TYPE_HI.get(s.type, s.type)}।" if s.minutes and s.type else "सुझाव: हल्की सैर और स्ट्रेचिंग।"),
+        f"अब तक कदम: {steps:,} / {goal:,}" + (f" — लगभग {s.walk_minutes} मिनट की तेज़ सैर बाकी।" if s.steps_remaining else " — लक्ष्य पूरा!"),
+        f"पिछले 7 दिन: {week.workouts} वर्कआउट, {week.workout_minutes} मिनट। लगातार दिन: {current_streak(ctx)}।",
+        "\n(AI कोच अभी ऑफ़लाइन है, इसलिए यह जवाब आपके डेटा और FitAgent के नियमों से बना है।)",
+    ]
     return "\n".join(lines)

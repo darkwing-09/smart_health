@@ -26,7 +26,10 @@ How to coach:
 - Respect readiness: low readiness → recovery-focused suggestions.
 - You are not a doctor. Never diagnose, never interpret symptoms, never give medication or extreme-diet
   advice. For pain, illness or worrying symptoms, recommend seeing a professional.
+- Reply in {language} (match the language the student writes in if it differs). Keep numbers as digits.
 """
+
+LANGUAGES = {"en": "English", "hi": "Hindi (Devanagari script)", "ta": "Tamil", "te": "Telugu", "bn": "Bengali", "mr": "Marathi"}
 
 PLANNER_SYSTEM = """You are FitAgent's training planner. Design a 7-day plan for a university student.
 
@@ -75,6 +78,7 @@ def coach_system_prompt(ctx: UserContext, r: Readiness) -> str:
         avg_steps=week.avg_steps,
         streak=current_streak(ctx),
         profile=_profile_line(ctx),
+        language=LANGUAGES.get(ctx.profile.language, "English"),
     )
 
 

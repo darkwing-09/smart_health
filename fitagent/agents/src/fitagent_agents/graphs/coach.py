@@ -22,7 +22,7 @@ from ..data import DataProvider, UserContext
 from ..metrics import compute_readiness
 from ..prompts import coach_system_prompt
 from ..rules import fallback_reply
-from ..safety import DISCLAIMER, check_message
+from ..safety import DISCLAIMER, check_message, is_devanagari
 from ..tools import COACH_TOOLS
 from ..tracing import run_config
 
@@ -55,7 +55,8 @@ def build_coach_graph(provider: DataProvider, llm: BaseChatModel | None):
         last = next((m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), None)
         flag = check_message(str(last.content)) if last else None
         if flag:
-            return {"safety": flag.category, "messages": [AIMessage(flag.response, name="safety")]}
+            hindi = is_devanagari(str(last.content))
+            return {"safety": flag.category, "messages": [AIMessage(flag.for_language(hindi), name="safety")]}
         return {"safety": None}
 
     async def load_context(state: CoachState) -> dict[str, Any]:

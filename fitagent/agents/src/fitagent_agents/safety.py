@@ -20,6 +20,16 @@ DISCLAIMER = "FitAgent is a fitness coach, not a medical service."
 class SafetyFlag:
     category: str
     response: str
+    response_hi: str = ""
+
+    def for_language(self, hindi: bool) -> str:
+        return self.response_hi if hindi and self.response_hi else self.response
+
+
+def is_devanagari(text: str) -> bool:
+    """True when most letters are Devanagari (Hindi, Marathi)."""
+    letters = [c for c in text if c.isalpha()]
+    return bool(letters) and sum(1 for c in letters if "\u0900" <= c <= "\u097f") / len(letters) >= 0.3
 
 
 _EMERGENCY = (
@@ -44,6 +54,17 @@ _INJURY = (
     "looked at by a doctor or physiotherapist. I can suggest training that avoids the area once "
     "you've been cleared."
 )
+
+_HI = {
+    "self_harm": "मुझे सच में दुख है कि आप ऐसा महसूस कर रहे हैं। अभी किसी भरोसेमंद व्यक्ति से बात करें या हेल्पलाइन पर कॉल करें: "
+                 "Tele-MANAS 14416 या iCall +91 9152987821। तुरंत खतरा हो तो 112 पर कॉल करें।",
+    "emergency": "यह किसी ऐसी चीज़ का संकेत हो सकता है जिसे तुरंत डॉक्टर को दिखाना चाहिए। कृपया व्यायाम रोकें और डॉक्टर से संपर्क करें — "
+                 "लक्षण गंभीर या अचानक हों तो 112 पर कॉल करें।",
+    "eating_disorder": "लगता है खाना और शरीर की छवि आप पर भारी पड़ रही है — इसके लिए सही सहायता ज़रूरी है। डॉक्टर, कैंपस काउंसलर या "
+                       "Tele-MANAS 14416 से बात करें। मैं अत्यधिक डाइटिंग या ज़्यादा व्यायाम की सलाह नहीं दूँगा।",
+    "injury": "तेज़ दर्द, सूजन या बढ़ता दर्द रुकने का संकेत है — डॉक्टर या फ़िज़ियोथेरेपिस्ट को दिखाएँ। ठीक होने के बाद मैं उस हिस्से को बचाते "
+              "हुए ट्रेनिंग सुझा सकता हूँ।",
+}
 
 _RULES: list[tuple[str, re.Pattern[str], str]] = [
     ("self_harm", re.compile(r"\b(kill myself|suicid\w*|self[- ]harm|end my life|want to die)\b", re.IGNORECASE), _SELF_HARM),
@@ -74,11 +95,24 @@ _RULES: list[tuple[str, re.Pattern[str], str]] = [
 ]
 
 
+# Hindi phrases for the most urgent categories (Devanagari has no \b word boundaries, so plain substrings).
+_RULES_HI: list[tuple[str, re.Pattern[str]]] = [
+    ("self_harm", re.compile(r"आत्महत्या|खुद को (नुकसान|चोट)|मरना चाहता|मरना चाहती|जीना नहीं चाहता|जीना नहीं चाहती")),
+    ("emergency", re.compile(r"सीने में दर्द|छाती में दर्द|बेहोश|सांस नहीं|साँस नहीं|दिल की धड़कन")),
+    ("eating_disorder", re.compile(r"खाना नहीं खा(ऊँ|ऊं|ना)|भूखा रह|भूखी रह|उल्टी कर")),
+    ("injury", re.compile(r"सूजन|मोच|फ्रैक्चर|तेज़ दर्द|तेज दर्द")),
+]
+
+
 @traceable(name="safety_check", run_type="chain")
 def check_message(text: str) -> SafetyFlag | None:
+    responses = {category: response for category, _, response in _RULES}
     for category, pattern, response in _RULES:
         if pattern.search(text):
-            return SafetyFlag(category, response)
+            return SafetyFlag(category, response, _HI[category])
+    for category, pattern in _RULES_HI:
+        if pattern.search(text):
+            return SafetyFlag(category, responses[category], _HI[category])
     return None
 
 

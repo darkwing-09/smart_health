@@ -60,6 +60,7 @@ class DbDataProvider:
                 today=today,
                 profile=Profile(
                     display_name=user.display_name, age=user.age, height_cm=user.height_cm, weight_kg=user.weight_kg,
+                    language=user.language or "en",
                     goals=Goals(user.goal_steps, user.goal_active_kcal, user.goal_workout_minutes,
                                 user.goal_weekly_workouts),
                 ),

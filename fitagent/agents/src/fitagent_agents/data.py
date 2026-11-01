@@ -32,6 +32,7 @@ class Profile:
     height_cm: int | None = None
     weight_kg: float | None = None
     goals: Goals = field(default_factory=Goals)
+    language: str = "en"  # ISO 639-1: en, hi, ta, te, bn, mr
 
 
 @dataclass(frozen=True)
