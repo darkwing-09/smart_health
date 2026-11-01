@@ -295,3 +295,32 @@ class PlanOut(BaseModel):
     source: Literal["llm", "rules"]
     readiness: ReadinessOut
     plan: WeeklyPlan
+
+
+# ── Food ────────────────────────────────────────────────────────────────────
+
+class FoodPhotoIn(BaseModel):
+    """A meal photo as base64 (JPEG/PNG/WebP, ≤ 4 MB). Used for one estimate and never stored."""
+
+    image_base64: str = Field(min_length=100, max_length=5_600_000)
+    mime_type: Literal["image/jpeg", "image/png", "image/webp"] = "image/jpeg"
+    note: str = Field("", max_length=200)
+
+
+class FoodItemOut(BaseModel):
+    name: str
+    portion: str
+    kcal: int
+    protein_g: float
+    carbs_g: float
+    fat_g: float
+    confidence: Literal["low", "medium", "high"]
+
+
+class FoodEstimateOut(BaseModel):
+    items: list[FoodItemOut]
+    note: str
+    total_kcal: int
+    ai_powered: bool
+    safety: str | None = None
+    safety_message: str | None = None

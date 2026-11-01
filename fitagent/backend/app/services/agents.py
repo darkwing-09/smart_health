@@ -15,6 +15,7 @@ from fitagent_agents import (
     run_coach,
     run_planner,
 )
+from fitagent_agents.food import FoodResult, estimate_food
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 
 from ..db import SessionLocal
@@ -31,6 +32,7 @@ class AgentRuntime:
     planner_rules: object
     llm_enabled: bool
     tracing_enabled: bool
+    llm: object = None
 
     @classmethod
     def create(cls) -> AgentRuntime:
@@ -45,6 +47,7 @@ class AgentRuntime:
             planner_rules=rules_planner,
             llm_enabled=llm is not None,
             tracing_enabled=tracing,
+            llm=llm,
         )
 
     async def chat(self, user_id: str, history: list[tuple[str, str]], message: str) -> CoachReply:
@@ -72,3 +75,7 @@ def get_runtime() -> AgentRuntime:
     if _runtime is None:
         _runtime = AgentRuntime.create()
     return _runtime
+
+
+async def estimate_food_photo(runtime: AgentRuntime, image: bytes, mime_type: str, note: str) -> FoodResult:
+    return await estimate_food(runtime.llm, image, mime_type, note)
