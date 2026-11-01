@@ -69,6 +69,7 @@ import com.fitagent.domain.Routines
 import com.fitagent.ui.screens.FoodScreen
 import com.fitagent.ui.screens.LibraryScreen
 import com.fitagent.ui.screens.RecapScreen
+import com.fitagent.ui.screens.RewardsScreen
 import com.fitagent.ui.screens.RoutinePlayer
 import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
@@ -265,12 +266,13 @@ class MainActivity : ComponentActivity() {
                         onJoin = { code, done -> cloud.joinChallenge(code, done) },
                         onLeave = { cloud.leaveChallenge(it) },
                         onKudos = { id, to, e, remove -> cloud.toggleKudos(id, to, e, remove) },
-                        onLoadCampus = cloud::loadCampus, inviteLink = cloud::inviteLink, onClearInvite = cloud::clearInvite)
+                        onLoadCampus = { cloud.loadCampus(it); cloud.loadOfficial() }, inviteLink = cloud::inviteLink, onClearInvite = cloud::clearInvite)
                     Tab.YOU -> YouScreen(state, cloudState, padding, onUpdateProfile = main::updateProfile,
                         onManageHealth = ::connectHealth, onSignIn = { showSignIn = true }, onSignOut = cloud::signOut,
                         onDeleteAccount = { cloud.deleteAccount() }, onServerUrl = cloud::setServerUrl,
                         onPrivacy = { startActivity(Intent(this@MainActivity, PrivacyPolicyActivity::class.java)) },
-                        onOpenDevices = { detail = Detail.DEVICES }, onOpenRecap = { detail = Detail.RECAP })
+                        onOpenDevices = { detail = Detail.DEVICES }, onOpenRecap = { detail = Detail.RECAP },
+                        onOpenRewards = { detail = Detail.REWARDS })
                 }
             }
 
@@ -300,6 +302,7 @@ class MainActivity : ComponentActivity() {
                     }
                     Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
                     Detail.RECAP -> RecapScreen(state) { detail = null }
+                    Detail.REWARDS -> RewardsScreen(cloudState, onLoad = cloud::loadRewards, onRedeem = { cloud.redeem(it) }) { detail = null }
                     Detail.FOOD -> {
                         val photo by main.foodPhoto.collectAsStateWithLifecycle()
                         FoodScreen(state, foods, photo, onTakePhoto = ::launchFoodCamera, onAdd = { main.addFoods(it) },

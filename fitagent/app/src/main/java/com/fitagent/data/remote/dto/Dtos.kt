@@ -162,3 +162,19 @@ data class FoodEstimateRes(
     val safety: String?,
     val safetyMessage: String?,
 )
+
+data class WeekPointsDto(val weekStart: String, val points: Int)
+data class PerkDto(val id: String, val title: String, val description: String, val partner: String, val cost: Int, val stock: Int)
+data class RedemptionDto(val code: String, val perkTitle: String, val points: Int, val createdAt: String)
+data class RewardsRes(
+    val balance: Int,
+    val earnedTotal: Int,
+    val weeks: List<WeekPointsDto>,
+    val perks: List<PerkDto>,
+    val redemptions: List<RedemptionDto>,
+)
+data class RedeemReq(val perkId: String)
+data class OfficialChallengeDto(
+    val id: String, val code: String, val name: String, val metric: String, val startDate: String, val endDate: String,
+    val participants: Int, val joined: Boolean,
+)

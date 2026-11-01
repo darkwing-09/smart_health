@@ -12,6 +12,8 @@ import com.fitagent.data.SyncEvent
 import com.fitagent.data.health.CompatibilityRow
 import com.fitagent.data.prefs.Account
 import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.OfficialChallengeDto
+import com.fitagent.data.remote.dto.RewardsRes
 import com.fitagent.data.remote.dto.ChallengeRes
 import com.fitagent.data.remote.dto.PlanRes
 import com.fitagent.data.remote.userMessage
@@ -382,6 +384,9 @@ data class CloudState(
     val campusLoading: Boolean = false,
     /** Join code from an invite link, waiting to be confirmed on the Squad tab. */
     val pendingJoinCode: String? = null,
+    val rewards: RewardsRes? = null,
+    val rewardsLoading: Boolean = false,
+    val official: List<OfficialChallengeDto> = emptyList(),
 )
 
 /** Features that need the backend: account, AI coach and challenges. */
@@ -538,6 +543,27 @@ class CloudViewModel(app: Application) : AndroidViewModel(app) {
             val r = c.cloud.campus(scope)
             _state.update { it.copy(campus = r.getOrNull() ?: it.campus.takeIf { c -> c?.scope == scope }, campusLoading = false) }
         }
+    }
+
+    fun loadRewards() {
+        if (_state.value.account == null) return
+        _state.update { it.copy(rewardsLoading = true) }
+        viewModelScope.launch {
+            val r = c.cloud.rewards()
+            _state.update { it.copy(rewards = r.getOrNull() ?: it.rewards, rewardsLoading = false) }
+            r.exceptionOrNull()?.let { _events.tryEmit(it.userMessage()) }
+        }
+    }
+
+    fun redeem(perkId: String) = viewModelScope.launch {
+        c.cloud.redeem(perkId).fold(
+            onSuccess = { _events.tryEmit("Redeemed! Your code: ${it.code}"); loadRewards() },
+            onFailure = { _events.tryEmit(it.userMessage()) },
+        )
+    }
+
+    fun loadOfficial() = viewModelScope.launch {
+        c.cloud.officialChallenges().onSuccess { list -> _state.update { it.copy(official = list) } }
     }
 
     fun inviteLink(code: String): String = c.cloud.inviteLink(code)

@@ -18,6 +18,10 @@ import com.fitagent.data.remote.dto.RegisterReq
 import com.fitagent.data.remote.dto.SyncReq
 import com.fitagent.data.remote.dto.FreeSlotDto
 import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.OfficialChallengeDto
+import com.fitagent.data.remote.dto.RedeemReq
+import com.fitagent.data.remote.dto.RedemptionDto
+import com.fitagent.data.remote.dto.RewardsRes
 import com.fitagent.data.remote.dto.FoodEstimateRes
 import com.fitagent.data.remote.dto.FoodPhotoReq
 import com.fitagent.data.remote.dto.KudosReq
@@ -205,6 +209,10 @@ class CloudRepository(
     suspend fun estimateFood(jpeg: ByteArray, note: String): Result<FoodEstimateRes> = runCatching {
         api.estimateFood(FoodPhotoReq(android.util.Base64.encodeToString(jpeg, android.util.Base64.NO_WRAP), "image/jpeg", note))
     }
+
+    suspend fun rewards(): Result<RewardsRes> = runCatching { sync(); api.rewards() }
+    suspend fun redeem(perkId: String): Result<RedemptionDto> = runCatching { api.redeem(RedeemReq(perkId)) }
+    suspend fun officialChallenges(): Result<List<OfficialChallengeDto>> = runCatching { api.officialChallenges() }
 
     suspend fun campus(scope: String): Result<CampusRes> = runCatching { api.campus(scope) }
 
