@@ -23,6 +23,10 @@ data class ProfileRes(
     val heightCm: Int?,
     val weightKg: Double?,
     val goals: GoalsDto,
+    val college: String? = null,
+    val hostel: String? = null,
+    val batch: String? = null,
+    val showOnCampus: Boolean? = null,
 )
 
 data class ProfileUpdateReq(
@@ -32,6 +36,10 @@ data class ProfileUpdateReq(
     val heightCm: Int?,
     val weightKg: Double?,
     val goals: GoalsDto?,
+    val college: String? = null,
+    val hostel: String? = null,
+    val batch: String? = null,
+    val showOnCampus: Boolean? = null,
 )
 
 /** One day's summary for the cloud. Intraday heart rate, sleep segments and routes never leave the phone. */
@@ -108,7 +116,22 @@ data class PlanRes(
 
 data class ChallengeCreateReq(val name: String, val metric: String, val days: Int)
 data class JoinReq(val code: String)
-data class LeaderboardRowDto(val rank: Int, val userId: String, val displayName: String, val value: Double, val isMe: Boolean)
+data class LeaderboardRowDto(
+    val rank: Int,
+    val userId: String,
+    val displayName: String,
+    val value: Double,
+    val isMe: Boolean,
+    /** Today's reactions received, by emoji (null from older servers). */
+    val kudos: Map<String, Int>? = null,
+    /** Emoji I sent this member today. */
+    val myKudos: List<String>? = null,
+)
+
+data class KudosReq(val toUserId: String, val emoji: String)
+
+data class CampusRowDto(val rank: Int, val name: String, val members: Int, val value: Double, val isMine: Boolean)
+data class CampusRes(val scope: String, val days: Int, val myGroup: String?, val rows: List<CampusRowDto>, val minGroupSize: Int)
 data class ChallengeRes(
     val id: String,
     val code: String,

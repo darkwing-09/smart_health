@@ -58,6 +58,11 @@ data class Profile(
     val reminderHour: Int = 19,
     val onboarded: Boolean = false,
     val voiceCues: Boolean = true,
+    /** Campus leaderboard groups (optional; only group totals are ever shown). */
+    val college: String = "",
+    val hostel: String = "",
+    val batch: String = "",
+    val showOnCampus: Boolean = true,
 ) {
     val bmi: Double
         get() = if (heightCm > 0) weightKg / ((heightCm / 100.0) * (heightCm / 100.0)) else 0.0

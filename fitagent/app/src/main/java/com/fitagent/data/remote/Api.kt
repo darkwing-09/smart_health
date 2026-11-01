@@ -14,6 +14,8 @@ import com.fitagent.data.remote.dto.ProfileRes
 import com.fitagent.data.remote.dto.ProfileUpdateReq
 import com.fitagent.data.remote.dto.RefreshReq
 import com.fitagent.data.remote.dto.RegisterReq
+import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.KudosReq
 import com.fitagent.data.remote.dto.ScheduleDto
 import com.fitagent.data.remote.dto.SyncReq
 import com.fitagent.data.remote.dto.SyncRes
@@ -63,6 +65,11 @@ interface FitAgentApi {
     @POST("v1/challenges/join") suspend fun join(@Body body: JoinReq): ChallengeRes
     @GET("v1/challenges/{id}") suspend fun challenge(@Path("id") id: String): ChallengeRes
     @DELETE("v1/challenges/{id}/membership") suspend fun leave(@Path("id") id: String): retrofit2.Response<Unit>
+    @POST("v1/challenges/{id}/kudos") suspend fun giveKudos(@Path("id") id: String, @Body body: KudosReq): ChallengeRes
+    @DELETE("v1/challenges/{id}/kudos") suspend fun removeKudos(
+        @Path("id") id: String, @Query("to_user_id") toUserId: String, @Query("emoji") emoji: String,
+    ): ChallengeRes
+    @GET("v1/campus/leaderboard") suspend fun campus(@Query("scope") scope: String, @Query("days") days: Int = 7): CampusRes
 }
 
 val gson: Gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()

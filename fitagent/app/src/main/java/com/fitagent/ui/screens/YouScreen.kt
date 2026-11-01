@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.EmojiEvents
@@ -90,6 +91,7 @@ fun YouScreen(
     onServerUrl: (String) -> Unit,
     onPrivacy: () -> Unit,
     onOpenDevices: () -> Unit = {},
+    onOpenRecap: () -> Unit = {},
 ) {
     var range by rememberSaveable { mutableStateOf(ChartPeriod.WEEK) }
     LazyColumn(
@@ -100,6 +102,11 @@ fun YouScreen(
         item { ProfileHeader(state, cloud) }
         item { PeriodChips(range, { range = it }) }
         item { ProgressCharts(state, range) }
+        item {
+            OutlinedButton(onClick = onOpenRecap, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text("Share my weekly recap")
+            }
+        }
         item { SectionTitle("Achievements", trailing = {
             Text("${state.achievements.count { it.unlocked }}/${state.achievements.size}",
                 style = MaterialTheme.typography.labelMedium, color = Fit.colors.muted)
@@ -112,6 +119,7 @@ fun YouScreen(
         item { SectionTitle("Settings") }
         item { RemindersCard(state.profile, onUpdateProfile) }
         item { HealthCard(state, onManageHealth, onOpenDevices) }
+        if (cloud.account != null) item { CampusGroupsCard(state.profile, onUpdateProfile) }
         item { AccountCard(cloud, onSignIn, onSignOut, onDeleteAccount, onServerUrl) }
         item {
             Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -391,5 +399,32 @@ private fun AccountCard(
                 Text("Delete forever", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )
+    }
+}
+
+
+/** G4: optional college / hostel / batch for campus leaderboards. Only group totals are ever shown. */
+@Composable
+private fun CampusGroupsCard(profile: Profile, onUpdate: ((Profile) -> Profile) -> Unit) {
+    var college by remember(profile.college) { mutableStateOf(profile.college) }
+    var hostel by remember(profile.hostel) { mutableStateOf(profile.hostel) }
+    var batch by remember(profile.batch) { mutableStateOf(profile.batch) }
+    val changed = college != profile.college || hostel != profile.hostel || batch != profile.batch
+    AppCard {
+        Text("Campus", style = MaterialTheme.typography.titleMedium)
+        Text("Join your college, hostel and batch leaderboards. Only group averages are shown — never your own numbers.",
+            style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(college, { college = it.take(80) }, Modifier.fillMaxWidth(), label = { Text("College") }, singleLine = true)
+        OutlinedTextField(hostel, { hostel = it.take(80) }, Modifier.fillMaxWidth(), label = { Text("Hostel") }, singleLine = true)
+        OutlinedTextField(batch, { batch = it.take(40) }, Modifier.fillMaxWidth(), label = { Text("Batch, e.g. CSE '27") }, singleLine = true)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+            Text("Count me in campus leaderboards", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Switch(profile.showOnCampus, { on -> onUpdate { it.copy(showOnCampus = on) } })
+        }
+        if (changed) {
+            Button(onClick = { onUpdate { it.copy(college = college.trim(), hostel = hostel.trim(), batch = batch.trim()) } },
+                modifier = Modifier.fillMaxWidth()) { Text("Save") }
+        }
     }
 }

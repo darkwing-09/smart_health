@@ -1,3 +1,4 @@
+import java.net.URI
 import java.util.Properties
 
 plugins {
@@ -27,6 +28,9 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         buildConfigField("String", "DEFAULT_API_URL", "\"$apiUrl\"")
+        // Host for challenge invite App Links (https://<host>/j/CODE); the backend serves assetlinks.json.
+        manifestPlaceholders["inviteHost"] = (findProperty("fitagent.inviteHost") as String?)
+            ?: URI(apiUrl).host.takeUnless { it == "10.0.2.2" } ?: "fitagent.app"
         vectorDrawables { useSupportLibrary = true }
     }
 

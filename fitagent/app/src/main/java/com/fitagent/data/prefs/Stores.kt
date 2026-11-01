@@ -35,6 +35,10 @@ class ProfileStore(context: Context) {
             .putInt("reminder_hour", next.reminderHour)
             .putBoolean("onboarded", next.onboarded)
             .putBoolean("voice_cues", next.voiceCues)
+            .putString("college", next.college)
+            .putString("hostel", next.hostel)
+            .putString("batch", next.batch)
+            .putBoolean("show_on_campus", next.showOnCampus)
             .apply()
         _profile.value = next
     }
@@ -56,6 +60,10 @@ class ProfileStore(context: Context) {
             reminderHour = prefs.getInt("reminder_hour", d.reminderHour),
             onboarded = prefs.getBoolean("onboarded", d.onboarded),
             voiceCues = prefs.getBoolean("voice_cues", d.voiceCues),
+            college = prefs.getString("college", "").orEmpty(),
+            hostel = prefs.getString("hostel", "").orEmpty(),
+            batch = prefs.getString("batch", "").orEmpty(),
+            showOnCampus = prefs.getBoolean("show_on_campus", true),
         )
     }
 }

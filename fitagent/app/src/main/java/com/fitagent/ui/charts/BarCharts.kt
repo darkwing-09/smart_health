@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -300,19 +301,18 @@ fun RaceBars(entries: List<RaceEntry>, color: Color, modifier: Modifier = Modifi
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         entries.forEachIndexed { i, e ->
             val f = e.value / maxV * reveal
+            val barColor = if (e.highlight) color else color.copy(alpha = 0.35f)
+            // Dark text on light (e.g. lime) bars, light text otherwise.
+            val onBar = if (e.highlight && barColor.luminance() > 0.5f) Color(0xFF0A0D12) else MaterialTheme.colorScheme.onSurface
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("${i + 1}", Modifier.width(22.dp), style = MaterialTheme.typography.labelLarge, color = Fit.colors.muted)
                 Box(Modifier.weight(1f).height(30.dp)) {
-                    Box(
-                        Modifier.fillMaxHeight().fillMaxWidth(f.coerceIn(0.04f, 1f)).clip(RoundedCornerShape(8.dp))
-                            .background(if (e.highlight) color else color.copy(alpha = 0.35f))
-                    )
-                    Row(Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(e.label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (e.highlight) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(e.display, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                    }
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(f.coerceIn(0.04f, 1f)).clip(RoundedCornerShape(8.dp)).background(barColor))
+                    Text(e.label, Modifier.align(Alignment.CenterStart).padding(horizontal = 10.dp), style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (e.highlight) FontWeight.Bold else FontWeight.Medium, color = onBar, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+                Text(e.display, Modifier.width(72.dp).padding(start = 8.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End, maxLines = 1)
             }
         }
     }

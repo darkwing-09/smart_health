@@ -67,6 +67,7 @@ import com.fitagent.ui.screens.BreatheScreen
 import com.fitagent.ui.screens.MoodScreen
 import com.fitagent.domain.Routines
 import com.fitagent.ui.screens.LibraryScreen
+import com.fitagent.ui.screens.RecapScreen
 import com.fitagent.ui.screens.RoutinePlayer
 import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
@@ -104,6 +105,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) handleInvite(intent)
         setContent { FitAgentTheme { App() } }
     }
 
@@ -111,6 +113,23 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         main.refresh() // picks up new steps and permission changes made in system settings
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleInvite(intent)
+    }
+
+    /** https://<server>/j/CODE (App Link) → open Squad with the join dialog prefilled. */
+    private fun handleInvite(intent: Intent?) {
+        val data = intent?.data ?: return
+        val segments = data.pathSegments
+        if (segments.size == 2 && segments[0] == "j") {
+            cloud.openInvite(segments[1])
+            openSquad.value = true
+        }
+    }
+
+    private val openSquad = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     private fun connectHealth() = connectHealth(askActivity = true)
 
@@ -163,6 +182,8 @@ class MainActivity : ComponentActivity() {
         var tab by rememberSaveable { mutableStateOf(Tab.TODAY) }
         var showSignIn by rememberSaveable { mutableStateOf(false) }
         var detail by rememberSaveable { mutableStateOf<Detail?>(null) }
+        val squadRequested by openSquad.collectAsStateWithLifecycle()
+        LaunchedEffect(squadRequested) { if (squadRequested) { tab = Tab.SQUAD; detail = null; openSquad.value = false } }
         var routineId by rememberSaveable { mutableStateOf<String?>(null) }
         // Keeps the closing screen rendered while it slides out.
         val shownDetail = remember { mutableStateOf<Detail?>(null) }
@@ -225,12 +246,14 @@ class MainActivity : ComponentActivity() {
                         onLoad = cloud::loadChallenges,
                         onCreate = { n, m, d, done -> cloud.createChallenge(n, m, d, done) },
                         onJoin = { code, done -> cloud.joinChallenge(code, done) },
-                        onLeave = { cloud.leaveChallenge(it) })
+                        onLeave = { cloud.leaveChallenge(it) },
+                        onKudos = { id, to, e, remove -> cloud.toggleKudos(id, to, e, remove) },
+                        onLoadCampus = cloud::loadCampus, inviteLink = cloud::inviteLink, onClearInvite = cloud::clearInvite)
                     Tab.YOU -> YouScreen(state, cloudState, padding, onUpdateProfile = main::updateProfile,
                         onManageHealth = ::connectHealth, onSignIn = { showSignIn = true }, onSignOut = cloud::signOut,
                         onDeleteAccount = { cloud.deleteAccount() }, onServerUrl = cloud::setServerUrl,
                         onPrivacy = { startActivity(Intent(this@MainActivity, PrivacyPolicyActivity::class.java)) },
-                        onOpenDevices = { detail = Detail.DEVICES })
+                        onOpenDevices = { detail = Detail.DEVICES }, onOpenRecap = { detail = Detail.RECAP })
                 }
             }
 
@@ -259,6 +282,7 @@ class MainActivity : ComponentActivity() {
                         MoodScreen(state, moods, heartToday, hourly, onBreathe = { detail = Detail.BREATHE }) { detail = null }
                     }
                     Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
+                    Detail.RECAP -> RecapScreen(state) { detail = null }
                     Detail.LIBRARY -> LibraryScreen(onStartRoutine = { routineId = it.id }) { detail = null }
                     Detail.TIMETABLE -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
