@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from fitagent_agents import ActivityDay, ChallengeStanding, Goals, Profile, UserContext, WorkoutRecord
+from fitagent_agents.schedule import FreeSlot, Schedule
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -73,6 +74,7 @@ class DbDataProvider:
                                         active_minutes=w.active_seconds // 60, kcal=w.kcal, title=w.title)
                           for w in workouts],
                 challenges=challenges,
+                schedule=_schedule(user.schedule),
             )
 
 
@@ -81,3 +83,13 @@ def _local(dt, tz: ZoneInfo):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
     return dt.astimezone(tz)
+
+
+def _schedule(raw: dict | None) -> Schedule | None:
+    if not raw:
+        return None
+    return Schedule(
+        free_slots=[FreeSlot(s["day"], s["start"], s["end"]) for s in raw.get("free_slots", [])],
+        exam_dates=[date.fromisoformat(d) for d in raw.get("exam_dates", [])],
+        bedtime=raw.get("bedtime"),
+    )

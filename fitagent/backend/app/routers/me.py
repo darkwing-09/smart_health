@@ -12,6 +12,7 @@ from ..schemas import (
     GoalsModel,
     ProfileOut,
     ProfileUpdate,
+    ScheduleModel,
     SyncIn,
     SyncOut,
     SyncStatusOut,
@@ -56,6 +57,19 @@ async def delete_me(user: CurrentUser, session: SessionDep) -> None:
     """Permanently deletes the account and all associated data (right to erasure)."""
     await session.delete(user)
     await session.commit()
+
+
+@router.get("/schedule", response_model=ScheduleModel)
+async def get_schedule(user: CurrentUser) -> ScheduleModel:
+    return ScheduleModel.model_validate(user.schedule or {})
+
+
+@router.put("/schedule", response_model=ScheduleModel)
+async def put_schedule(body: ScheduleModel, user: CurrentUser, session: SessionDep) -> ScheduleModel:
+    """Replaces the Exam mode timetable (free time and exam dates only). Send an empty body to clear it."""
+    user.schedule = body.model_dump(mode="json") if (body.free_slots or body.exam_dates or body.bedtime) else None
+    await session.commit()
+    return body
 
 
 @router.post("/sync", response_model=SyncOut)

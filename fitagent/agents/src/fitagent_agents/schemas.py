@@ -18,6 +18,10 @@ class PlannedSession(BaseModel):
     minutes: int = Field(ge=0, le=120, description="Active minutes; 0 for REST")
     intensity: Intensity
     focus: str = Field(max_length=140, description="One-line instruction, e.g. '5×3 min brisk intervals'")
+    start_time: str | None = Field(
+        None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$",
+        description="HH:MM start inside one of the user's free slots for that day; null for REST or when no timetable",
+    )
 
 
 class WeeklyPlan(BaseModel):

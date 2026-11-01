@@ -74,7 +74,7 @@ def build_planner_graph(provider: DataProvider, llm: BaseChatModel | None):
         ctx = state["ctx"]
         return {"violations": validate_plan(
             plan, band=state["readiness"].band, last_week_minutes=last_7_days(ctx).workout_minutes,
-            start=weekday_of(ctx),
+            start=weekday_of(ctx), schedule=ctx.schedule, start_date=ctx.today,
         )}
 
     def fallback(state: PlannerState) -> dict[str, Any]:
