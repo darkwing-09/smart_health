@@ -49,6 +49,7 @@ import com.fitagent.ui.screens.DevicesScreen
 import com.fitagent.ui.screens.HeartScreen
 import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
+import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainingInsights
 import com.fitagent.ui.screens.TrainScreen
@@ -75,6 +76,22 @@ class ScreenshotTest {
     @Test fun today_light() = snap(dark = false) { TodayScreen(home, pad, {}, {}, {}, hourly, lastNight) }
     @Test fun training_insights() = snap {
         androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(16.dp, 28.dp)) { TrainingInsights(home) }
+    }
+    @Test fun exam_mode() = snap {
+        val classes = listOf(
+            java.time.DayOfWeek.MONDAY to (9 * 60 to 11 * 60), java.time.DayOfWeek.MONDAY to (14 * 60 to 16 * 60),
+            java.time.DayOfWeek.TUESDAY to (10 * 60 to 13 * 60), java.time.DayOfWeek.WEDNESDAY to (9 * 60 to 12 * 60),
+            java.time.DayOfWeek.WEDNESDAY to (15 * 60 to 17 * 60), java.time.DayOfWeek.THURSDAY to (11 * 60 to 13 * 60),
+            java.time.DayOfWeek.FRIDAY to (9 * 60 to 12 * 60 + 30),
+        ).map { (d, t) -> com.fitagent.domain.BusyBlock(d, t.first, t.second, "Lecture") }
+        val timetable = com.fitagent.domain.Timetable(classes, listOf(today.plusDays(3)), 23 * 60)
+        val examPlan = cloud.plan!!.copy(plan = WeeklyPlanDto("Exam week: short sessions in free slots.", listOf(
+            SessionDto("MON", "WALK", 20, "easy", "Brisk walk", "17:00"), SessionDto("TUE", "STRENGTH", 25, "moderate", "Circuit", "07:30"),
+            SessionDto("WED", "YOGA", 20, "easy", "Mobility", "18:00"), SessionDto("THU", "REST", 0, "rest", "Rest"),
+            SessionDto("FRI", "WALK", 15, "easy", "Exam-day walk", "17:30"), SessionDto("SAT", "RUN", 25, "moderate", "Easy run", "08:00"),
+            SessionDto("SUN", "REST", 0, "rest", "Rest"),
+        )))
+        TimetableScreen(timetable, today, examPlan, {}, {}, {})
     }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }

@@ -6,7 +6,9 @@ import com.fitagent.BuildConfig
 import com.fitagent.domain.ActiveSession
 import com.fitagent.domain.Goals
 import com.fitagent.domain.IntervalConfig
+import com.fitagent.domain.BusyBlock
 import com.fitagent.domain.Profile
+import com.fitagent.domain.Timetable
 import com.fitagent.domain.WorkoutType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -192,4 +194,40 @@ class SyncStateStore(context: Context) {
         prefs.edit().putLong("last_health_sync", timeMs).apply()
         _lastHealthSync.value = timeMs
     }
+}
+
+/** Exam mode timetable, kept on the phone (class names included). */
+class TimetableStore(context: Context) {
+    private val prefs = context.getSharedPreferences("timetable", Context.MODE_PRIVATE)
+    private val _timetable = MutableStateFlow(read())
+    val timetable: StateFlow<Timetable> = _timetable.asStateFlow()
+
+    @Synchronized
+    fun update(transform: (Timetable) -> Timetable) {
+        val next = transform(_timetable.value)
+        val json = com.google.gson.Gson().toJson(
+            StoredTimetable(
+                next.busy.map { StoredBlock(it.day.name, it.startMin, it.endMin, it.label) },
+                next.examDates.map { it.toString() },
+                next.bedtimeMin,
+            )
+        )
+        prefs.edit().putString("json", json).apply()
+        _timetable.value = next
+    }
+
+    private fun read(): Timetable {
+        val json = prefs.getString("json", null) ?: return Timetable()
+        return runCatching {
+            val s = com.google.gson.Gson().fromJson(json, StoredTimetable::class.java)
+            Timetable(
+                busy = s.busy.orEmpty().map { BusyBlock(java.time.DayOfWeek.valueOf(it.day), it.start, it.end, it.label.orEmpty()) },
+                examDates = s.exams.orEmpty().map { java.time.LocalDate.parse(it) },
+                bedtimeMin = s.bedtime,
+            )
+        }.getOrDefault(Timetable())
+    }
+
+    private data class StoredBlock(val day: String, val start: Int, val end: Int, val label: String?)
+    private data class StoredTimetable(val busy: List<StoredBlock>?, val exams: List<String>?, val bedtime: Int?)
 }

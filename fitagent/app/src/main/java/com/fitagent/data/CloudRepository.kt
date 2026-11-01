@@ -16,6 +16,12 @@ import com.fitagent.data.remote.dto.PlanRes
 import com.fitagent.data.remote.dto.ProfileUpdateReq
 import com.fitagent.data.remote.dto.RegisterReq
 import com.fitagent.data.remote.dto.SyncReq
+import com.fitagent.data.remote.dto.FreeSlotDto
+import com.fitagent.data.remote.dto.ScheduleDto
+import com.fitagent.data.prefs.TimetableStore
+import com.fitagent.domain.code
+import com.fitagent.domain.freeSlots
+import com.fitagent.domain.hhmm
 import com.fitagent.data.remote.dto.TokenRes
 import com.fitagent.data.remote.dto.WorkoutDto
 import com.fitagent.domain.Profile
@@ -30,6 +36,7 @@ class CloudRepository(
     private val auth: AuthStore,
     private val profiles: ProfileStore,
     private val fitness: FitnessRepository,
+    private val timetable: TimetableStore,
 ) {
     private val api get() = client.api
 
@@ -155,7 +162,20 @@ class CloudRepository(
     suspend fun chat(message: String): Result<ChatRes> = runCatching { api.chat(ChatReq(message)) }
     suspend fun messages(): Result<List<MessageRes>> = runCatching { api.messages() }
     suspend fun clearMessages(): Result<Unit> = runCatching { api.clearMessages(); Unit }
-    suspend fun generatePlan(): Result<PlanRes> = runCatching { sync(); api.generatePlan() }
+    suspend fun generatePlan(): Result<PlanRes> = runCatching { sync(); pushSchedule(); api.generatePlan() }
+
+    /** Sends Exam mode free slots, exam dates and bedtime — never class names. */
+    suspend fun pushSchedule(): Result<Unit> = runCatching {
+        if (auth.account.value == null) return@runCatching
+        val t = timetable.timetable.value
+        api.putSchedule(
+            ScheduleDto(
+                freeSlots = if (t.busy.isEmpty()) emptyList() else freeSlots(t).map { FreeSlotDto(it.day.code, hhmm(it.startMin), hhmm(it.endMin)) },
+                examDates = t.examDates.map { it.toString() },
+                bedtime = t.bedtimeMin?.let(::hhmm),
+            )
+        )
+    }
     suspend fun latestPlan(): Result<PlanRes?> = runCatching {
         val r = api.latestPlan()
         when {
