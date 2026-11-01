@@ -285,7 +285,8 @@ private fun SessionRow(s: SessionDto, date: LocalDate, onStart: (WorkoutType) ->
             if (!rest) WorkoutBadge(type, 40.dp)
             Spacer(Modifier.size(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(if (rest) "Rest day" else "${type.label} · ${s.minutes} min", style = MaterialTheme.typography.titleMedium)
+                Text(if (rest) "Rest day" else listOfNotNull(s.startTime, type.label, "${s.minutes} min").joinToString(" · "),
+                    style = MaterialTheme.typography.titleMedium)
                 Text(s.focus, style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
             }
             if (!rest) {

@@ -87,7 +87,15 @@ data class ChatRes(val reply: String, val safety: String?, val toolsUsed: List<S
 data class MessageRes(val id: Long, val role: String, val content: String, val safety: String?, val createdAt: String)
 
 data class ReadinessDto(val score: Int, val band: String, val components: Map<String, Int>, val reasons: List<String>)
-data class SessionDto(val day: String, val type: String, val minutes: Int, val intensity: String, val focus: String)
+data class SessionDto(
+    val day: String,
+    val type: String,
+    val minutes: Int,
+    val intensity: String,
+    val focus: String,
+    /** "HH:MM" inside a free slot when Exam mode has a timetable. */
+    val startTime: String? = null,
+)
 data class WeeklyPlanDto(val summary: String, val sessions: List<SessionDto>)
 data class PlanRes(
     val id: String,
@@ -116,3 +124,7 @@ data class ChallengeRes(
 )
 
 data class ErrorRes(val detail: Any?)
+
+/** Exam mode timetable as the server stores it: free time and exam dates only — class names stay on the phone. */
+data class FreeSlotDto(val day: String, val start: String, val end: String)
+data class ScheduleDto(val freeSlots: List<FreeSlotDto>, val examDates: List<String>, val bedtime: String?)

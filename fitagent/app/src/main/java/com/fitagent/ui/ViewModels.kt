@@ -22,6 +22,8 @@ import com.fitagent.domain.Profile
 import com.fitagent.domain.Readiness
 import com.fitagent.domain.StreakInfo
 import com.fitagent.domain.Suggestion
+import com.fitagent.domain.Timetable
+import com.fitagent.domain.parseIcs
 import com.fitagent.domain.Workout
 import com.fitagent.domain.WorkoutType
 import com.fitagent.domain.buildDays
@@ -171,6 +173,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     val lastCloudSync: Long get() = c.auth.lastSyncMs
+
+    // ── Exam mode ────────────────────────────────────────────────────────────
+    val timetable: StateFlow<Timetable> = c.timetable.timetable
+
+    fun updateTimetable(transform: (Timetable) -> Timetable) {
+        c.timetable.update(transform)
+        if (c.auth.account.value != null) viewModelScope.launch { c.cloud.pushSchedule() }
+    }
+
+    /** Merges classes and exams from a calendar export (.ics) into the timetable. */
+    fun importIcs(text: String) {
+        val r = parseIcs(text, zone)
+        if (r.busy.isEmpty() && r.exams.isEmpty()) {
+            _events.tryEmit("No weekly classes or exams found in that file.")
+            return
+        }
+        updateTimetable { t -> t.copy(busy = (t.busy + r.busy).distinct(), examDates = (t.examDates + r.exams).distinct()) }
+        _events.tryEmit("Imported ${r.busy.size} class slots and ${r.exams.size} exams.")
+    }
 
     /** Full re-read of the last 30 days from the watch app, plus a cloud sync when signed in. */
     fun syncNow() {

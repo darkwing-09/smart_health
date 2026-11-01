@@ -10,6 +10,7 @@ import com.fitagent.data.prefs.AuthStore
 import com.fitagent.data.prefs.ProfileStore
 import com.fitagent.data.prefs.SessionStore
 import com.fitagent.data.prefs.SyncStateStore
+import com.fitagent.data.prefs.TimetableStore
 import com.fitagent.data.sensors.PhoneStepCounter
 import com.fitagent.data.remote.ApiClient
 import com.fitagent.service.Notifications
@@ -25,7 +26,8 @@ class AppContainer(context: Context) {
     val phoneSteps = PhoneStepCounter(context)
     val db = AppDatabase.create(context)
     val fitness = FitnessRepository(context.applicationContext, db, health, phoneSteps, profiles, auth, syncState)
-    val cloud = CloudRepository(ApiClient(auth), auth, profiles, fitness)
+    val timetable = TimetableStore(context)
+    val cloud = CloudRepository(ApiClient(auth), auth, profiles, fitness, timetable)
 }
 
 class FitAgentApp : Application() {

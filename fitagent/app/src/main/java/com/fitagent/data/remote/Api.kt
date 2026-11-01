@@ -14,6 +14,7 @@ import com.fitagent.data.remote.dto.ProfileRes
 import com.fitagent.data.remote.dto.ProfileUpdateReq
 import com.fitagent.data.remote.dto.RefreshReq
 import com.fitagent.data.remote.dto.RegisterReq
+import com.fitagent.data.remote.dto.ScheduleDto
 import com.fitagent.data.remote.dto.SyncReq
 import com.fitagent.data.remote.dto.SyncRes
 import com.fitagent.data.remote.dto.TokenRes
@@ -35,6 +36,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.io.IOException
@@ -48,6 +50,7 @@ interface FitAgentApi {
     @PATCH("v1/me") suspend fun updateMe(@Body body: ProfileUpdateReq): ProfileRes
     @DELETE("v1/me") suspend fun deleteMe(): retrofit2.Response<Unit>
     @POST("v1/me/sync") suspend fun sync(@Body body: SyncReq): SyncRes
+    @PUT("v1/me/schedule") suspend fun putSchedule(@Body body: ScheduleDto): ScheduleDto
 
     @POST("v1/coach/chat") suspend fun chat(@Body body: ChatReq): ChatRes
     @GET("v1/coach/messages") suspend fun messages(@Query("limit") limit: Int = 100): List<MessageRes>

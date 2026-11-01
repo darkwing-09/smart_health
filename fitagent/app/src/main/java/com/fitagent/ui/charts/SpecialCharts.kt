@@ -212,7 +212,7 @@ fun WeekTimeline(
                 val top = y(b.startMin)
                 val h = (y(b.endMin) - top) * reveal
                 if (h <= 0f) continue
-                drawRoundRect(b.color, Offset(x, top), Size(colW - 4.dp.toPx(), h.coerceAtLeast(3f)), CornerRadius(5.dp.toPx()))
+                drawRoundRect(b.color, Offset(x, top), Size(colW - 4.dp.toPx(), h.coerceAtLeast(6.dp.toPx() * reveal)), CornerRadius(5.dp.toPx()))
             }
         }
         Row(Modifier.fillMaxWidth().padding(start = 26.dp, top = 4.dp)) {

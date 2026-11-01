@@ -63,6 +63,7 @@ import com.fitagent.ui.screens.DevicesScreen
 import com.fitagent.ui.screens.HeartScreen
 import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
+import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.WorkoutSummaryDialog
@@ -84,6 +85,11 @@ class MainActivity : ComponentActivity() {
     private val healthPermissions =
         registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { main.refresh() }
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    private val icsPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@registerForActivityResult
+        runCatching { contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }
+            .getOrNull()?.let(main::importIcs)
+    }
     /** Phone step sensor permission; asked right before Health Connect so both come from one "Connect" tap. */
     private val activityPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         main.refresh()
@@ -199,8 +205,11 @@ class MainActivity : ComponentActivity() {
                 when (tab) {
                     Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
                         onOpen = { detail = it })
-                    Tab.TRAIN -> TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
-                        onDelete = { main.deleteWorkout(it) })
+                    Tab.TRAIN -> {
+                        val timetable by main.timetable.collectAsStateWithLifecycle()
+                        TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
+                            onDelete = { main.deleteWorkout(it) }, timetable = timetable, onOpenTimetable = { detail = Detail.TIMETABLE })
+                    }
                     Tab.COACH -> CoachScreen(state, cloudState, padding, onSignIn = { showSignIn = true },
                         onLoad = cloud::loadCoach, onSend = cloud::send, onClear = { cloud.clearChat() },
                         onGeneratePlan = cloud::generatePlan, onStart = start)
@@ -236,6 +245,12 @@ class MainActivity : ComponentActivity() {
                             refreshing = state.refreshing, onSyncNow = main::syncNow, onRunCheck = main::runCompatibilityCheck,
                             onConnect = ::connectHealth, onBack = { detail = null },
                         )
+                    }
+                    Detail.TIMETABLE -> {
+                        val timetable by main.timetable.collectAsStateWithLifecycle()
+                        TimetableScreen(timetable, state.today, cloudState.plan, onUpdate = main::updateTimetable,
+                            onImportIcs = { icsPicker.launch(arrayOf("text/calendar", "text/x-vcalendar", "application/octet-stream", "*/*")) },
+                            onBack = { detail = null })
                     }
                     null -> Unit
                 }
