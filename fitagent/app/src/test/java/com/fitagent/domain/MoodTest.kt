@@ -32,3 +32,23 @@ class MoodTest {
         assertEquals("Breathe in", breathPhase(BreathPattern.RELAX, 19_000).first) // 4+7+8 = 19 s cycle
     }
 }
+
+class VoiceCueTest {
+    @Test fun intervalCues() {
+        val c = IntervalConfig(20, 10, 4)
+        assertEquals("Work. Round 1 of 4", voiceCue(c, -1, 0))
+        assertEquals("Three, two, one", voiceCue(c, 16, 17))
+        assertEquals("Rest", voiceCue(c, 19, 20))
+        assertEquals("Work. Round 2 of 4", voiceCue(c, 29, 30))
+        assertEquals("Rest. Halfway there", voiceCue(c, 49, 50))
+        assertEquals("All rounds done. Great work — cool down.", voiceCue(c, c.totalSeconds - 1L, c.totalSeconds.toLong()))
+        assertEquals(null, voiceCue(c, 5, 6))
+        assertEquals(null, voiceCue(c, 6, 6))
+    }
+
+    @Test fun openWorkoutTimeChecks() {
+        assertEquals("5 minutes", voiceCue(null, 299, 300))
+        assertEquals(null, voiceCue(null, 300, 301))
+        assertEquals("10 minutes", voiceCue(null, 595, 605)) // a skipped tick still announces once
+    }
+}

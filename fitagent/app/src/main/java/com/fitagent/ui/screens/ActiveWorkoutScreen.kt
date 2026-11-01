@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Pause
@@ -48,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +61,8 @@ import com.fitagent.domain.PhaseKind
 import com.fitagent.domain.Workout
 import com.fitagent.domain.formatClock
 import com.fitagent.domain.intervalPhaseAt
+import com.fitagent.domain.voiceCue
+import com.fitagent.ui.VoiceCoach
 import com.fitagent.domain.workoutKcal
 import com.fitagent.ui.components.LinearMeter
 import com.fitagent.ui.components.WorkoutBadge
@@ -74,6 +79,8 @@ fun ActiveWorkoutScreen(
     onFinish: () -> Unit,
     onDiscard: () -> Unit,
     onMinimize: () -> Unit,
+    voiceEnabled: Boolean = false,
+    onToggleVoice: () -> Unit = {},
 ) {
     val clock = LocalClock.current
     var now by remember { mutableLongStateOf(clock.millis()) }
@@ -99,6 +106,7 @@ fun ActiveWorkoutScreen(
         }, tween(400), label = "phase",
     )
     PhaseHaptics(phase?.kind, phase?.round)
+    VoiceCues(voiceEnabled && !session.isPaused, session, activeSec)
 
     var confirmDiscard by remember { mutableStateOf(false) }
 
@@ -113,6 +121,10 @@ fun ActiveWorkoutScreen(
                 Spacer(Modifier.width(8.dp))
                 Text(session.type.label, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.weight(1f))
+                IconButton(onClick = onToggleVoice) {
+                    Icon(if (voiceEnabled) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
+                        if (voiceEnabled) "Mute voice cues" else "Turn on voice cues")
+                }
                 IconButton(onClick = { confirmDiscard = true }) { Icon(Icons.Rounded.Close, "Discard") }
             }
 
@@ -233,5 +245,20 @@ fun MiniSessionBar(session: ActiveSession, onOpen: () -> Unit) {
             Text(if (session.isPaused) "Paused · ${formatClock(session.activeMs(now) / 1000)}" else formatClock(session.activeMs(now) / 1000),
                 style = MaterialTheme.typography.titleMedium, color = Color.Unspecified)
         }
+    }
+}
+
+
+/** Speaks phase changes, countdowns and time checks (X2). */
+@Composable
+private fun VoiceCues(enabled: Boolean, session: ActiveSession, activeSec: Long) {
+    if (LocalInspectionMode.current) return
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coach = remember { VoiceCoach(context) }
+    DisposableEffect(Unit) { onDispose { coach.shutdown() } }
+    var last by remember(session.startedAtMs) { mutableLongStateOf(activeSec - 1) }
+    LaunchedEffect(activeSec, enabled) {
+        if (enabled) voiceCue(session.interval, last, activeSec)?.let(coach::say)
+        last = activeSec
     }
 }

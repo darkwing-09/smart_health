@@ -15,6 +15,7 @@ import com.fitagent.data.sensors.PhoneStepCounter
 import com.fitagent.data.remote.ApiClient
 import com.fitagent.service.Notifications
 import com.fitagent.service.Scheduler
+import com.fitagent.widget.FitAgentWidget
 
 /** Manual dependency container — small enough that a DI framework would add more than it saves. */
 class AppContainer(context: Context) {
@@ -25,7 +26,9 @@ class AppContainer(context: Context) {
     val syncState = SyncStateStore(context)
     val phoneSteps = PhoneStepCounter(context)
     val db = AppDatabase.create(context)
-    val fitness = FitnessRepository(context.applicationContext, db, health, phoneSteps, profiles, auth, syncState)
+    val fitness = FitnessRepository(context.applicationContext, db, health, phoneSteps, profiles, auth, syncState).apply {
+        onDataChanged = { FitAgentWidget.refresh(context.applicationContext) }
+    }
     val timetable = TimetableStore(context)
     val cloud = CloudRepository(ApiClient(auth), auth, profiles, fitness, timetable)
 }
@@ -41,6 +44,7 @@ class FitAgentApp : Application() {
         Scheduler.scheduleReminder(this, container.profiles.profile.value)
         Scheduler.schedulePeriodicSync(this)
         Scheduler.scheduleWatchSync(this)
+        Scheduler.scheduleNudges(this, container.profiles.profile.value)
     }
 }
 
