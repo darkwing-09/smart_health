@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitAgent Campus Admin</title>
+<style>
+:root{--bg:#0A0D12;--card:#141A22;--text:#EDF1F5;--muted:#8A94A3;--lime:#C6F432;--cyan:#3DD9EB;--track:#232B36}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+main{max-width:1100px;margin:0 auto;padding:24px 16px}h1{margin:0 0 4px}p.muted,.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px}
+.card{background:var(--card);border-radius:20px;padding:20px}.card h2{font-size:16px;margin:0 0 4px}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stat{background:var(--card);border-radius:16px;padding:14px 18px;min-width:150px}
+.stat b{display:block;font-size:28px}input,select{background:var(--track);color:var(--text);border:0;border-radius:10px;padding:10px;margin:4px 0;width:100%}
+button{background:var(--lime);color:#0A0D12;border:0;border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:8px}
+svg text{fill:var(--muted);font-size:11px}.err{color:#FF6B6B}table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid var(--track)}
+</style>
+</head>
+<body><main>
+<h1>Campus wellness dashboard</h1>
+<p class="muted">Aggregated activity for your college. Groups under 10 students are never shown; no individual data is available here.</p>
+<section id="login" class="card" style="max-width:380px">
+  <h2>Admin sign in</h2>
+  <input id="email" type="email" placeholder="Email" autocomplete="username">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button onclick="login()">Sign in</button><p id="loginErr" class="err"></p>
+</section>
+<section id="app" hidden>
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div class="card"><h2>Participation</h2><p class="muted">Active students per day (bars) and share meeting a goal (line)</p><svg id="participation" width="100%" height="200"></svg></div>
+    <div class="card"><h2>Average daily steps (last 7 days)</h2><p class="muted">Students per band</p><svg id="histogram" width="100%" height="200"></svg></div>
+    <div class="card" style="grid-column:1/-1"><h2>Hostels — goal-day rate</h2><p class="muted">Darker = more active students met a goal</p><svg id="heatmap" width="100%" height="60"></svg></div>
+    <div class="card"><h2>New official challenge</h2>
+      <input id="cName" placeholder="Name, e.g. Freshers' Step Week">
+      <select id="cMetric"><option value="active_days">Goal days (fair for all levels)</option><option value="steps">Steps</option><option value="workout_minutes">Workout minutes</option></select>
+      <select id="cDays"><option>7</option><option>14</option><option>30</option></select>
+      <button onclick="createChallenge()">Publish</button><p id="cOut" class="muted"></p></div>
+    <div class="card"><h2>Partner perks</h2>
+      <input id="pTitle" placeholder="Title, e.g. Free gym day pass"><input id="pPartner" placeholder="Partner">
+      <input id="pCost" type="number" placeholder="Cost in points" min="10"><input id="pStock" type="number" placeholder="Stock" min="0">
+      <button onclick="createPerk()">Add perk</button><table id="perks"></table></div>
+  </div>
+</section>
+</main>
+<script>
+let token = sessionStorage.getItem("fa_token");
+const api = (path, opts = {}) => fetch(path, {...opts, headers: {"Content-Type": "application/json", Authorization: "Bearer " + token, ...(opts.headers || {})}})
+  .then(async r => { if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText); return r.json(); });
+async function login() {
+  const r = await fetch("/v1/auth/login", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({email: email.value, password: password.value})});
+  if (!r.ok) { loginErr.textContent = "Sign-in failed"; return; }
+  token = (await r.json()).access_token; sessionStorage.setItem("fa_token", token); load();
+}
+const el = (tag, attrs, text) => { const e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; return e; };
+function bars(svg, values, labels, color, line) {
+  svg.innerHTML = ""; const w = svg.clientWidth || 500, h = 200, pad = 20, max = Math.max(1, ...values), n = values.length, bw = (w - pad) / n;
+  values.forEach((v, i) => svg.appendChild(el("rect", {x: pad + i * bw + 1, y: h - pad - (h - 2 * pad) * v / max, width: Math.max(1, bw - 2), height: (h - 2 * pad) * v / max, rx: 3, fill: color})));
+  labels.forEach((l, i) => { if (l) svg.appendChild(el("text", {x: pad + i * bw, y: h - 4}, l)); });
+  if (line) { const pts = line.map((v, i) => `${pad + i * bw + bw / 2},${h - pad - (h - 2 * pad) * v}`).join(" "); svg.appendChild(el("polyline", {points: pts, fill: "none", stroke: "#3DD9EB", "stroke-width": 2})); }
+}
+function heatmap(svg, rows, names) {
+  svg.innerHTML = ""; const w = svg.clientWidth || 800, lab = 120, ch = 18, n = rows[0] ? rows[0].length : 0, cw = (w - lab) / Math.max(1, n);
+  svg.setAttribute("height", Math.max(40, rows.length * (ch + 4) + 10));
+  if (!rows.length) { svg.appendChild(el("text", {x: 0, y: 20}, "No hostel has 10+ students yet.")); return; }
+  rows.forEach((r, j) => { svg.appendChild(el("text", {x: 0, y: j * (ch + 4) + 13}, names[j]));
+    r.forEach((v, i) => svg.appendChild(el("rect", {x: lab + i * cw, y: j * (ch + 4), width: Math.max(1, cw - 2), height: ch, rx: 3,
+      fill: v == null ? "#232B36" : `rgba(198,244,50,${0.15 + 0.85 * v})`}))); });
+}
+async function load() {
+  try {
+    const o = await api("/v1/admin/overview?days=30");
+    document.getElementById("login").hidden = true; document.getElementById("app").hidden = false;
+    stats.innerHTML = [["Students", o.students], ["Active this week", o.funnel.active_this_week ?? "—"], ["Official challenges", o.funnel.official_challenges ?? 0], ["Joined official", o.funnel.joined_official ?? 0]]
+      .map(([k, v]) => `<div class="stat"><span class="muted">${k}</span><b>${v}</b></div>`).join("");
+    if (o.insufficient) { stats.innerHTML += `<p class="muted">Charts appear once ${o.min_group_size}+ students from ${o.institution} use FitAgent.</p>`; return; }
+    bars(participation, o.active_students, o.days.map((d, i) => i % 7 === 0 ? d.slice(5) : ""), "#C6F432", o.goal_rate);
+    bars(histogram, o.steps_histogram.map(b => b.students), o.steps_histogram.map(b => (b.from / 1000) + "k"), "#3DD9EB");
+    heatmap(heatmap_svg(), o.hostel_rates, o.hostels);
+    loadPerks();
+  } catch (e) { sessionStorage.removeItem("fa_token"); document.getElementById("login").hidden = false; loginErr.textContent = e.message; }
+}
+const heatmap_svg = () => document.getElementById("heatmap");
+async function createChallenge() {
+  try { const c = await api("/v1/admin/challenges", {method: "POST", body: JSON.stringify({name: cName.value, metric: cMetric.value, days: +cDays.value})});
+    cOut.textContent = `Published — students see it in Squad. Code ${c.code}`; } catch (e) { cOut.textContent = e.message; }
+}
+async function loadPerks() {
+  const ps = await api("/v1/admin/perks");
+  perks.innerHTML = ps.map(p => `<tr><td>${p.title}<br><span class="muted">${p.partner}</span></td><td>${p.cost} pts</td><td>${p.stock} left</td></tr>`).join("");
+}
+async function createPerk() {
+  try { await api("/v1/admin/perks", {method: "POST", body: JSON.stringify({title: pTitle.value, partner: pPartner.value, cost: +pCost.value, stock: +pStock.value})}); loadPerks(); }
+  catch (e) { alert(e.message); }
+}
+if (token) load();
+</script>
+</body></html>

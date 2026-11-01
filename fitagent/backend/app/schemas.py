@@ -324,3 +324,79 @@ class FoodEstimateOut(BaseModel):
     ai_powered: bool
     safety: str | None = None
     safety_message: str | None = None
+
+
+# ── Rewards & admin ─────────────────────────────────────────────────────────
+
+class WeekPoints(BaseModel):
+    week_start: date
+    points: int
+
+
+class PerkOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    partner: str
+    cost: int
+    stock: int
+    active: bool
+    institution: str | None
+
+
+class RedemptionOut(BaseModel):
+    code: str
+    perk_title: str
+    points: int
+    created_at: datetime
+
+
+class RewardsOut(BaseModel):
+    balance: int
+    earned_total: int
+    weeks: list[WeekPoints]
+    recent: list[dict]
+    perks: list[PerkOut]
+    redemptions: list[RedemptionOut]
+
+
+class RedeemIn(BaseModel):
+    perk_id: str = Field(min_length=1, max_length=36)
+
+
+class PerkIn(BaseModel):
+    title: str = Field(min_length=3, max_length=80)
+    description: str = Field("", max_length=300)
+    partner: str = Field(min_length=2, max_length=80)
+    cost: int = Field(ge=10, le=100_000)
+    stock: int = Field(ge=0, le=100_000)
+
+
+class PerkPatch(BaseModel):
+    active: bool | None = None
+    stock: int | None = Field(None, ge=0, le=100_000)
+
+
+class OfficialChallengeOut(BaseModel):
+    id: str
+    code: str
+    name: str
+    metric: Metric
+    start_date: date
+    end_date: date
+    participants: int
+    joined: bool
+
+
+class AdminOverview(BaseModel):
+    institution: str
+    students: int
+    min_group_size: int
+    insufficient: bool
+    days: list[date]
+    active_students: list[int] = Field(description="Students with any synced data, per day")
+    goal_rate: list[float] = Field(description="Share of active students who met a goal, per day")
+    hostels: list[str]
+    hostel_rates: list[list[float | None]] = Field(description="[hostel][day] goal-day rate; groups < min size omitted")
+    steps_histogram: list[dict]
+    funnel: dict[str, int]

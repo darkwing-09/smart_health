@@ -383,3 +383,83 @@ async def test_food_estimate_without_ai_offers_manual_entry_and_validates_input(
 
     r = await client.post("/v1/food/estimate", headers=auth(h), json={"image_base64": jpeg, "note": "I want to skip meals to lose weight"})
     assert r.json()["safety"] == "eating_disorder" and r.json()["items"] == []
+
+
+async def _make_admin(email: str, college: str):
+    from app.db import SessionLocal
+    from app.models import User
+    from sqlalchemy import select
+
+    async with SessionLocal() as s:
+        u = await s.scalar(select(User).where(User.email == email))
+        u.role, u.college = "admin", college
+        await s.commit()
+
+
+async def test_points_need_sensor_data_and_are_idempotent(client):
+    h = await register(client)
+    sensor = [{**d, "steps_source": "com.noisefit"} for d in days_payload(8, 9000)]  # 8 sensor goal days in a row
+    manual = days_payload(3, 9000)  # older days without a source: no points
+    for d in manual:
+        d["date"] = (date.fromisoformat(d["date"]) - timedelta(days=20)).isoformat()
+    await client.post("/v1/me/sync", headers=auth(h), json={"days": sensor + manual})
+    first = (await client.get("/v1/rewards", headers=auth(h))).json()
+    again = (await client.get("/v1/rewards", headers=auth(h))).json()
+    assert first["balance"] == again["balance"] == 8 * 10 + 25  # goal days + 7-day streak bonus, counted once
+    assert {e["kind"] for e in first["recent"]} == {"goal_day", "streak_7"}
+
+
+async def test_redeeming_perks(client):
+    limiter.reset()
+    admin = await register(client, "admin@uni.edu", "Admin")
+    await _make_admin("admin@uni.edu", "IIT Example")
+    perk = (await client.post("/v1/admin/perks", headers=auth(admin), json={"title": "Gym day pass", "partner": "Campus Gym", "cost": 50, "stock": 1})).json()
+
+    h = await register(client, "asha2@uni.edu", "Asha")
+    await client.patch("/v1/me", headers=auth(h), json={"college": "IIT Example"})
+    assert (await client.post("/v1/rewards/redeem", headers=auth(h), json={"perk_id": perk["id"]})).status_code == 409  # 0 points
+    await client.post("/v1/me/sync", headers=auth(h), json={"days": [{**d, "steps_source": "phone_sensor"} for d in days_payload(6, 9000)]})
+    r = await client.post("/v1/rewards/redeem", headers=auth(h), json={"perk_id": perk["id"]})
+    assert r.status_code == 201 and len(r.json()["code"]) == 8
+    rewards = (await client.get("/v1/rewards", headers=auth(h))).json()
+    assert rewards["balance"] == 60 - 50 and rewards["perks"] == [] and rewards["redemptions"][0]["perk_title"] == "Gym day pass"
+
+    other = await register(client, "far@uni.edu", "Far")  # another college can't see or redeem it
+    await client.patch("/v1/me", headers=auth(other), json={"college": "Other College"})
+    assert (await client.post("/v1/rewards/redeem", headers=auth(other), json={"perk_id": perk["id"]})).status_code == 404
+
+
+async def test_admin_is_scoped_and_k_anonymous(client):
+    limiter.reset()
+    h = await register(client, "student@uni.edu", "S")
+    assert (await client.get("/v1/admin/overview", headers=auth(h))).status_code == 403
+    admin = await register(client, "admin@uni.edu", "Admin")
+    await _make_admin("admin@uni.edu", "IIT Example")
+
+    for i in range(9):
+        limiter.reset()
+        s = await register(client, f"st{i}@uni.edu", f"St{i}")
+        await client.patch("/v1/me", headers=auth(s), json={"college": "iit  example", "hostel": "Hostel 4"})
+        await client.post("/v1/me/sync", headers=auth(s), json={"days": days_payload(5, 9000 if i % 2 else 3000)})
+    o = (await client.get("/v1/admin/overview", headers=auth(admin))).json()
+    assert o["students"] == 9 and o["insufficient"] is True and o["hostels"] == []  # below k = 10
+
+    limiter.reset()
+    s = await register(client, "st9@uni.edu", "St9")
+    await client.patch("/v1/me", headers=auth(s), json={"college": "IIT Example", "hostel": "Hostel 4"})
+    await client.post("/v1/me/sync", headers=auth(s), json={"days": days_payload(5, 9000)})
+    o = (await client.get("/v1/admin/overview", headers=auth(admin))).json()
+    assert o["insufficient"] is False and o["students"] == 10 and o["hostels"] == ["Hostel 4"]
+    assert o["active_students"][-1] == 10 and 0 < o["goal_rate"][-1] < 1
+    body = str(o)
+    assert "st0@uni.edu" not in body and "St0" not in body  # no individual data
+
+    c = (await client.post("/v1/admin/challenges", headers=auth(admin), json={"name": "Freshers Step Week", "metric": "active_days", "days": 7})).json()
+    official = (await client.get("/v1/challenges/official", headers=auth(s))).json()
+    assert [x["code"] for x in official] == [c["code"]] and official[0]["joined"] is False
+    await client.post("/v1/challenges/join", headers=auth(s), json={"code": c["code"]})
+    assert (await client.get("/v1/challenges/official", headers=auth(s))).json()[0]["joined"] is True
+    assert (await client.get("/v1/challenges/official", headers=auth(h))).json() == []  # no college → nothing
+
+    page = await client.get("/admin")
+    assert page.status_code == 200 and "Campus wellness dashboard" in page.text
