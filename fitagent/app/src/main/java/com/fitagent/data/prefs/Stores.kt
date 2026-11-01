@@ -34,6 +34,7 @@ class ProfileStore(context: Context) {
             .putBoolean("reminders", next.remindersEnabled)
             .putInt("reminder_hour", next.reminderHour)
             .putBoolean("onboarded", next.onboarded)
+            .putBoolean("voice_cues", next.voiceCues)
             .apply()
         _profile.value = next
     }
@@ -54,6 +55,7 @@ class ProfileStore(context: Context) {
             remindersEnabled = prefs.getBoolean("reminders", d.remindersEnabled),
             reminderHour = prefs.getInt("reminder_hour", d.reminderHour),
             onboarded = prefs.getBoolean("onboarded", d.onboarded),
+            voiceCues = prefs.getBoolean("voice_cues", d.voiceCues),
         )
     }
 }

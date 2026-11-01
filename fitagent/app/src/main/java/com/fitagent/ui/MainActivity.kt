@@ -266,7 +266,8 @@ class MainActivity : ComponentActivity() {
             AnimatedVisibility(session != null && playerOpen, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
                 session?.let { s ->
                     ActiveWorkoutScreen(s, profile.weightKg, onTogglePause = main::togglePause, onFinish = main::finishWorkout,
-                        onDiscard = main::discardWorkout, onMinimize = { playerOpen = false })
+                        onDiscard = main::discardWorkout, onMinimize = { playerOpen = false },
+                        voiceEnabled = profile.voiceCues, onToggleVoice = { main.updateProfile { it.copy(voiceCues = !it.voiceCues) } })
                 }
             }
             if (showSignIn) {

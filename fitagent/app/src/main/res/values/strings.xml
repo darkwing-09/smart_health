@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FitAgent</string>
+    <string name="widget_description">Readiness, goal rings and today\'s coach tip</string>
 </resources>

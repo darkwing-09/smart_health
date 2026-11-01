@@ -22,34 +22,56 @@ import androidx.work.WorkerParameters
 import com.fitagent.R
 import com.fitagent.container
 import com.fitagent.domain.Profile
+import com.fitagent.domain.NudgeKind
+import com.fitagent.domain.canPost
+import com.fitagent.domain.computeReadiness
 import com.fitagent.domain.computeStreak
-import com.fitagent.domain.formatCount
-import com.fitagent.domain.walkMinutesFor
+import com.fitagent.domain.eveningReminder
+import com.fitagent.domain.morningMessage
+import com.fitagent.domain.shouldNudgeStudyBreak
+import com.fitagent.domain.suggestToday
 import com.fitagent.ui.MainActivity
 import java.io.IOException
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 object Notifications {
     const val CHANNEL_REMINDERS = "reminders"
+    const val CHANNEL_MORNING = "morning"
+    const val CHANNEL_STUDY = "study_breaks"
 
     fun createChannels(context: Context) {
-        val channel = NotificationChannel(CHANNEL_REMINDERS, "Goal reminders", NotificationManager.IMPORTANCE_DEFAULT)
-            .apply { description = "A daily nudge when you're close to your goals" }
-        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        val nm = context.getSystemService(NotificationManager::class.java)
+        nm.createNotificationChannels(listOf(
+            NotificationChannel(CHANNEL_REMINDERS, "Goal reminders", NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = "An evening nudge when today's goal is within reach" },
+            NotificationChannel(CHANNEL_MORNING, "Morning readiness", NotificationManager.IMPORTANCE_LOW)
+                .apply { description = "Your readiness score and today's suggestion" },
+            NotificationChannel(CHANNEL_STUDY, "Study breaks", NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = "A gentle stretch reminder after long study sessions" },
+        ))
     }
 
-    fun post(context: Context, id: Int, title: String, text: String) {
+    /** Posts only if today's cap for [kind] allows it (see Nudges.kt), and records it. */
+    fun post(context: Context, kind: NudgeKind, id: Int, title: String, text: String): Boolean {
+        val log = NudgeLog(context)
+        if (!canPost(kind, log.today())) return false
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
-        ) return
+        ) return false
+        val channel = when (kind) {
+            NudgeKind.MORNING -> CHANNEL_MORNING
+            NudgeKind.STUDY_BREAK -> CHANNEL_STUDY
+            else -> CHANNEL_REMINDERS
+        }
         val intent = PendingIntent.getActivity(
             context, 0, Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val n = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
+        val n = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(text)
@@ -57,11 +79,30 @@ object Notifications {
             .setContentIntent(intent)
             .setAutoCancel(true)
             .build()
-        try {
+        return try {
             NotificationManagerCompat.from(context).notify(id, n)
+            log.record(kind)
+            true
         } catch (_: SecurityException) {
-            // Permission revoked between the check and the call — skip this reminder.
+            false // permission revoked between the check and the call
         }
+    }
+}
+
+/** Per-day notification counts, for the caps in Nudges.kt. */
+class NudgeLog(context: Context) {
+    private val prefs = context.getSharedPreferences("nudges", Context.MODE_PRIVATE)
+
+    fun today(): Map<NudgeKind, Int> {
+        if (prefs.getLong("day", -1) != LocalDate.now().toEpochDay()) return emptyMap()
+        return NudgeKind.entries.associateWith { prefs.getInt(it.name, 0) }.filterValues { it > 0 }
+    }
+
+    fun record(kind: NudgeKind) {
+        val day = LocalDate.now().toEpochDay()
+        val e = prefs.edit()
+        if (prefs.getLong("day", -1) != day) { e.clear(); e.putLong("day", day) }
+        e.putInt(kind.name, today()[kind]?.plus(1) ?: 1).apply()
     }
 }
 
@@ -70,6 +111,8 @@ object Scheduler {
     private const val SYNC_PERIODIC = "sync_periodic"
     private const val SYNC_NOW = "sync_now"
     private const val WATCH_SYNC = "watch_sync"
+    private const val MORNING = "morning_card"
+    private const val STUDY_BREAKS = "study_breaks"
 
     fun scheduleReminder(context: Context, profile: Profile) {
         val wm = WorkManager.getInstance(context)
@@ -84,6 +127,22 @@ object Scheduler {
             .setInitialDelay(Duration.between(now, next).toMinutes(), TimeUnit.MINUTES)
             .build()
         wm.enqueueUniquePeriodicWork(REMINDER, ExistingPeriodicWorkPolicy.UPDATE, request)
+    }
+
+    /** Morning readiness card at 08:00 and study-break checks every 30 min (both respect the daily caps). */
+    fun scheduleNudges(context: Context, profile: Profile) {
+        val wm = WorkManager.getInstance(context)
+        if (!profile.remindersEnabled) {
+            wm.cancelUniqueWork(MORNING); wm.cancelUniqueWork(STUDY_BREAKS); return
+        }
+        val now = LocalDateTime.now()
+        var next = now.toLocalDate().atTime(8, 0)
+        if (!next.isAfter(now)) next = next.plusDays(1)
+        wm.enqueueUniquePeriodicWork(MORNING, ExistingPeriodicWorkPolicy.UPDATE,
+            PeriodicWorkRequestBuilder<MorningWorker>(1, TimeUnit.DAYS)
+                .setInitialDelay(Duration.between(now, next).toMinutes(), TimeUnit.MINUTES).build())
+        wm.enqueueUniquePeriodicWork(STUDY_BREAKS, ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<StudyBreakWorker>(30, TimeUnit.MINUTES).build())
     }
 
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
@@ -122,17 +181,51 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val day = days.lastOrNull { it.date == today } ?: return Result.success()
         if (day.goalMet(profile.goals)) return Result.success()
 
+        val text = eveningReminder(day, profile.goals) ?: return Result.success()
         val streak = computeStreak(days, profile.goals, today)
-        val remainingSteps = (profile.goals.dailySteps - day.steps).coerceAtLeast(0)
-        val remainingMinutes = (profile.goals.dailyWorkoutMinutes - day.workoutMinutes).coerceAtLeast(0)
-        val walk = walkMinutesFor(remainingSteps)
         val title = if (streak.current > 1) "Keep your ${streak.current}-day streak alive 🔥" else "Close today's goal"
-        val text = if (walk <= remainingMinutes || remainingMinutes == 0) {
-            "${formatCount(remainingSteps)} steps to go — a $walk-minute brisk walk gets you there."
-        } else {
-            "$remainingMinutes workout minutes to go — a quick session in your room counts!"
+        Notifications.post(applicationContext, NudgeKind.EVENING, 1001, title, text)
+        return Result.success()
+    }
+}
+
+/** 08:00 readiness card with a concrete suggestion (and a time from the timetable when known). */
+class MorningWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val c = applicationContext.container
+        val profile = c.profiles.profile.value
+        if (!profile.remindersEnabled || !profile.onboarded) return Result.success()
+        c.fitness.refresh()
+        val (days, workouts) = c.fitness.snapshot()
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val day = days.lastOrNull { it.date == today } ?: return Result.success()
+        if (day.sleepMinutes == null && day.restingHr == null) return Result.success() // nothing new to say
+        val r = computeReadiness(days, workouts, today, zone)
+        val s = suggestToday(day, r, workouts, profile.goals, today, zone)
+        val (title, text) = morningMessage(r, s, c.timetable.timetable.value, LocalDateTime.now(zone))
+        Notifications.post(applicationContext, NudgeKind.MORNING, 1002, title, text)
+        return Result.success()
+    }
+}
+
+/** Every 30 min: after ~90 min of sitting in free time on a study day, suggest a 3-minute stretch. */
+class StudyBreakWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val c = applicationContext.container
+        if (!c.profiles.profile.value.remindersEnabled) return Result.success()
+        val timetable = c.timetable.timetable.value
+        if (timetable.busy.isEmpty()) return Result.success()
+        c.fitness.samplePhoneOnly()
+        val zone = ZoneId.systemDefault()
+        val now = LocalDateTime.now(zone)
+        val hourly = c.fitness.hourlyStepsNow(now.toLocalDate())
+        // Approximate "last 90 min" with this hour and the previous one.
+        val recent = hourly.getOrElse(now.hour) { 0 } + if (now.hour > 0) hourly.getOrElse(now.hour - 1) { 0 } else 0
+        if (shouldNudgeStudyBreak(now, timetable, recent)) {
+            Notifications.post(applicationContext, NudgeKind.STUDY_BREAK, 1003, "Time for a study break",
+                "You've been still for a while. Stand up for a 3-minute stretch — your focus will thank you.")
         }
-        Notifications.post(applicationContext, 1001, title, text)
         return Result.success()
     }
 }

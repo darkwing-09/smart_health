@@ -233,6 +233,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun updateProfile(transform: (Profile) -> Profile) {
         c.profiles.update(transform)
         Scheduler.scheduleReminder(getApplication(), c.profiles.profile.value)
+        Scheduler.scheduleNudges(getApplication(), c.profiles.profile.value)
         if (c.auth.account.value != null) viewModelScope.launch { c.cloud.pushProfile() }
     }
 

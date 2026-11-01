@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -84,6 +85,9 @@ class FitnessRepository(
     val status: StateFlow<HealthStatus> = _status.asStateFlow()
     val lastHealthSync: StateFlow<Long> = syncState.lastHealthSync
 
+    /** Called after new data lands (e.g. to refresh the home-screen widget). Set by the app container. */
+    var onDataChanged: suspend () -> Unit = {}
+
     /** Watch days with the phone's own step count filling days no watch app reported. */
     val deviceDays: Flow<Map<LocalDate, DeviceDay>> =
         combine(dao.observeDays(), healthDao.observePhoneDaily()) { rows, phoneRows ->
@@ -101,6 +105,9 @@ class FitnessRepository(
             else ph.associate { it.hour to it.steps }
             List(24) { byHour[it] ?: 0L }
         }
+
+    /** One-shot read of [hourlySteps] for background work. */
+    suspend fun hourlyStepsNow(date: LocalDate): List<Long> = hourlySteps(date).first()
 
     fun heartRate(date: LocalDate, zone: ZoneId): Flow<List<HrBucket>> {
         val from = date.atStartOfDay(zone).toInstant().toEpochMilli()
@@ -198,6 +205,7 @@ class FitnessRepository(
             syncState.markHealthSync(System.currentTimeMillis())
         }
         log(KIND_WATCH, started, result.isSuccess, records, result.exceptionOrNull()?.let(::describeError))
+        if (result.isSuccess) onDataChanged()
         result.onFailure { Log.w(TAG, "refresh failed", it) }
     }
 
@@ -271,6 +279,7 @@ class FitnessRepository(
         )
         val id = dao.insertWorkout(entity)
         health.writeWorkout(entity, ZoneId.systemDefault())?.let { dao.setHealthConnectId(id, it) }
+        onDataChanged()
         return entity.copy(id = id).toDomain()
     }
 
