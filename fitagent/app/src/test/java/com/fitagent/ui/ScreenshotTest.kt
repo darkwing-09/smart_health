@@ -1,6 +1,7 @@
 package com.fitagent.ui
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -49,6 +50,7 @@ import com.fitagent.ui.screens.HeartScreen
 import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.TodayScreen
+import com.fitagent.ui.screens.TrainingInsights
 import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.YouScreen
 import com.fitagent.ui.theme.FitAgentTheme
@@ -71,6 +73,9 @@ class ScreenshotTest {
 
     @Test fun today() = snap { TodayScreen(home, pad, {}, {}, {}, hourly, lastNight) }
     @Test fun today_light() = snap(dark = false) { TodayScreen(home, pad, {}, {}, {}, hourly, lastNight) }
+    @Test fun training_insights() = snap {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(16.dp, 28.dp)) { TrainingInsights(home) }
+    }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }

@@ -115,6 +115,8 @@ fun TrainScreen(
                 Text("Log a workout you already did")
             }
         }
+        item { SectionTitle("Your training") }
+        item { TrainingInsights(state) }
         item { SectionTitle("History") }
         if (history.isEmpty()) {
             item {

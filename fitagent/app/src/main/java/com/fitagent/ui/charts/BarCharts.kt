@@ -267,11 +267,19 @@ fun DivergingBars(
 
 /** Progress bar with a target tick (WHO 150 min/week, protein goal, challenge target). */
 @Composable
-fun BulletBar(value: Float, target: Float, color: Color, modifier: Modifier = Modifier, max: Float = target * 1.5f, height: Dp = 12.dp) {
+fun BulletBar(
+    value: Float,
+    target: Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+    max: Float = target * 1.5f,
+    height: Dp = 12.dp,
+    description: String = "",
+) {
     val reveal = rememberReveal(value)
     val track = Fit.colors.track
     val marker = MaterialTheme.colorScheme.onSurface
-    Canvas(modifier.fillMaxWidth().height(height + 8.dp)) {
+    Canvas(modifier.fillMaxWidth().height(height + 8.dp).semantics { if (description.isNotEmpty()) contentDescription = description }) {
         val y = 4.dp.toPx()
         val h = height.toPx()
         drawRoundRect(track, Offset(0f, y), Size(size.width, h), CornerRadius(h / 2))
