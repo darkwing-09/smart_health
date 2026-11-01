@@ -55,6 +55,7 @@ class User(Base):
     show_on_campus: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     # "student" or "admin". Admins manage official challenges and perks for their own college only.
     role: Mapped[str] = mapped_column(String(10), default="student", server_default="student")
+    language: Mapped[str] = mapped_column(String(5), default="en", server_default="en")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     days: Mapped[list[DailyActivity]] = relationship(back_populates="user", cascade="all, delete-orphan",

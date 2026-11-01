@@ -463,3 +463,11 @@ async def test_admin_is_scoped_and_k_anonymous(client):
 
     page = await client.get("/admin")
     assert page.status_code == 200 and "Campus wellness dashboard" in page.text
+
+
+async def test_hindi_preference_reaches_the_coach(client):
+    h = await register(client)
+    assert (await client.patch("/v1/me", headers=auth(h), json={"language": "hi"})).json()["language"] == "hi"
+    assert (await client.patch("/v1/me", headers=auth(h), json={"language": "xx"})).status_code == 422
+    r = (await client.post("/v1/coach/chat", headers=auth(h), json={"message": "What should I do today?"})).json()
+    assert any("ऀ" <= ch <= "ॿ" for ch in r["reply"])  # offline coach answers in Hindi

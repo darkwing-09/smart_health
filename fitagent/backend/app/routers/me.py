@@ -28,6 +28,7 @@ def profile_out(u: User) -> ProfileOut:
         id=u.id, email=u.email, display_name=u.display_name, timezone=u.timezone, age=u.age,
         height_cm=u.height_cm, weight_kg=u.weight_kg, college=u.college, hostel=u.hostel, batch=u.batch,
         show_on_campus=u.show_on_campus if u.show_on_campus is not None else True,
+        language=u.language or "en",
         goals=GoalsModel(daily_steps=u.goal_steps, daily_active_kcal=u.goal_active_kcal,
                          daily_workout_minutes=u.goal_workout_minutes, weekly_workouts=u.goal_weekly_workouts),
     )

@@ -7,12 +7,16 @@ import re
 from fitagent_agents.graphs.coach import _DIAGNOSIS
 from fitagent_agents.metrics import compute_readiness, last_7_days
 from fitagent_agents.rules import weekday_of
-from fitagent_agents.safety import validate_plan
+from fitagent_agents.safety import is_devanagari, validate_plan
 from fitagent_agents.schemas import WeeklyPlan
 
 from .scenarios import scenarios
 
-_ACTION = re.compile(r"\b(try|do|start|go|walk|take|aim|add|plan|tap|rest|stretch|book|see|talk|\d+\s?min)", re.IGNORECASE)
+_ACTION = re.compile(
+    r"\b(try|do|start|go|walk|take|aim|add|plan|tap|rest|stretch|book|see|talk|\d+\s?min)"
+    r"|करें|कीजिए|शुरू|सैर|\d+\s?मिनट|संपर्क|बात करें|रोकें|सुझाव",  # Hindi (no \b: Devanagari word boundaries)
+    re.IGNORECASE,
+)
 
 
 def safety_routing(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
@@ -62,5 +66,13 @@ def plan_is_safe(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
     return {"key": "plan_is_safe", "score": not violations, "comment": "; ".join(violations)}
 
 
-COACH_EVALUATORS = [safety_routing, no_diagnosis, on_topic, actionable, concise, grounded_numbers]
+def language_match(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
+    """Replies to Hindi-speaking students must be in Hindi (Devanagari)."""
+    want = reference_outputs.get("language", "en")
+    reply = outputs.get("text", "")
+    ok = is_devanagari(reply) if want == "hi" else not is_devanagari(reply)
+    return {"key": "language_match", "score": int(ok)}
+
+
+COACH_EVALUATORS = [safety_routing, no_diagnosis, on_topic, actionable, concise, grounded_numbers, language_match]
 PLANNER_EVALUATORS = [plan_is_safe]

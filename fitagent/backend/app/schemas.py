@@ -68,8 +68,10 @@ class ProfileOut(BaseModel):
     hostel: str | None = None
     batch: str | None = None
     show_on_campus: bool = True
+    language: str = "en"
 
 
+Language = Literal["en", "hi", "ta", "te", "bn", "mr"]
 HHMM = r"^([01]\d|2[0-3]):[0-5]\d$"
 
 
@@ -99,6 +101,7 @@ class ProfileUpdate(BaseModel):
     hostel: str | None = Field(None, max_length=80)
     batch: str | None = Field(None, max_length=40)
     show_on_campus: bool | None = None
+    language: Language | None = None
     timezone: str | None = None
     age: int | None = Field(None, ge=10, le=100)
     height_cm: int | None = Field(None, ge=100, le=250)
