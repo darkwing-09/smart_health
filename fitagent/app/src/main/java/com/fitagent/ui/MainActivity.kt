@@ -65,6 +65,9 @@ import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.BreatheScreen
 import com.fitagent.ui.screens.MoodScreen
+import com.fitagent.domain.Routines
+import com.fitagent.ui.screens.LibraryScreen
+import com.fitagent.ui.screens.RoutinePlayer
 import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainScreen
@@ -160,6 +163,7 @@ class MainActivity : ComponentActivity() {
         var tab by rememberSaveable { mutableStateOf(Tab.TODAY) }
         var showSignIn by rememberSaveable { mutableStateOf(false) }
         var detail by rememberSaveable { mutableStateOf<Detail?>(null) }
+        var routineId by rememberSaveable { mutableStateOf<String?>(null) }
         // Keeps the closing screen rendered while it slides out.
         val shownDetail = remember { mutableStateOf<Detail?>(null) }
         if (detail != null) shownDetail.value = detail
@@ -211,7 +215,8 @@ class MainActivity : ComponentActivity() {
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
-                            onDelete = { main.deleteWorkout(it) }, timetable = timetable, onOpenTimetable = { detail = Detail.TIMETABLE })
+                            onDelete = { main.deleteWorkout(it) }, timetable = timetable, onOpenTimetable = { detail = Detail.TIMETABLE },
+                            onOpenLibrary = { detail = Detail.LIBRARY }, onStartRoutine = { routineId = it.id })
                     }
                     Tab.COACH -> CoachScreen(state, cloudState, padding, onSignIn = { showSignIn = true },
                         onLoad = cloud::loadCoach, onSend = cloud::send, onClear = { cloud.clearChat() },
@@ -254,6 +259,7 @@ class MainActivity : ComponentActivity() {
                         MoodScreen(state, moods, heartToday, hourly, onBreathe = { detail = Detail.BREATHE }) { detail = null }
                     }
                     Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
+                    Detail.LIBRARY -> LibraryScreen(onStartRoutine = { routineId = it.id }) { detail = null }
                     Detail.TIMETABLE -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TimetableScreen(timetable, state.today, cloudState.plan, onUpdate = main::updateTimetable,
@@ -269,6 +275,11 @@ class MainActivity : ComponentActivity() {
                         onDiscard = main::discardWorkout, onMinimize = { playerOpen = false },
                         voiceEnabled = profile.voiceCues, onToggleVoice = { main.updateProfile { it.copy(voiceCues = !it.voiceCues) } })
                 }
+            }
+            routineId?.let { id ->
+                val routine = Routines.byId(id)
+                RoutinePlayer(routine, profile.voiceCues, onToggleVoice = { main.updateProfile { it.copy(voiceCues = !it.voiceCues) } },
+                    onFinish = { secs -> main.saveRoutine(routine, secs); routineId = null }, onQuit = { routineId = null })
             }
             if (showSignIn) {
                 SignInScreen(cloudState, profile.name, onSignIn = cloud::signIn, onRegister = cloud::register,

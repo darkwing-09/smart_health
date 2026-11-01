@@ -1,6 +1,7 @@
 package com.fitagent.ui
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -53,6 +54,8 @@ import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.BreatheScreen
 import com.fitagent.ui.screens.MoodCheckInCard
 import com.fitagent.ui.screens.MoodScreen
+import com.fitagent.ui.screens.LibraryScreen
+import com.fitagent.ui.screens.RoutinePlayer
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainingInsights
 import com.fitagent.ui.screens.TrainScreen
@@ -107,6 +110,34 @@ class ScreenshotTest {
         MoodScreen(home, moods, heartToday, hourly, {}, {})
     }
     @Test fun breathe() = snap { BreatheScreen {} }
+    @Test fun library() = snap { LibraryScreen({}, {}) }
+    @Test fun routine_player() = snap { RoutinePlayer(com.fitagent.domain.Routines.byId("quiet_full_body"), true, {}, {}, {}) }
+    /** Every exercise's keyframes side by side, to review the drawn poses. */
+    @Test fun exercise_poses() = paparazzi.snapshot {
+        FitAgentTheme(dark = true) {
+            CompositionLocalProvider(LocalInspectionMode provides true) {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(4.dp)) {
+                        com.fitagent.domain.ExerciseLibrary.all.chunked(3).forEach { row ->
+                            androidx.compose.foundation.layout.Row {
+                                row.forEach { e ->
+                                    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.weight(1f)) {
+                                        androidx.compose.foundation.layout.Row {
+                                            e.keyframes.take(2).forEachIndexed { i, _ ->
+                                                com.fitagent.ui.components.ExerciseAnimation(e, androidx.compose.ui.graphics.Color(0xFFC6F432),
+                                                    androidx.compose.ui.Modifier.weight(1f).height(64.dp), phase = i / e.keyframes.size.toFloat())
+                                            }
+                                        }
+                                        androidx.compose.material3.Text(e.name, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }
