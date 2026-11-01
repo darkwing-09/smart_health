@@ -153,8 +153,12 @@ fun TrainScreen(
     pendingDelete?.let { w ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Delete this workout?") },
-            text = { Text("${w.type.label}, ${w.minutes} min. This also removes it from Health Connect and your cloud backup.") },
+            title = { Text(if (w.source == com.fitagent.domain.WorkoutSource.APP) "Delete this workout?" else "Hide this workout?") },
+            text = {
+                Text(if (w.source == com.fitagent.domain.WorkoutSource.APP)
+                    "${w.type.label}, ${w.minutes} min. This also removes it from Health Connect and your cloud backup."
+                else "${w.type.label}, ${w.minutes} min, detected by your watch app. FitAgent will stop counting it (e.g. a wrongly detected walk); it stays in the watch app.")
+            },
             confirmButton = { TextButton(onClick = { onDelete(w.id); pendingDelete = null }) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Cancel") } },
         )

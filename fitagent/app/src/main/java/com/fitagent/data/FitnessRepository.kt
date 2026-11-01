@@ -8,6 +8,7 @@ import com.fitagent.data.health.HealthAvailability
 import com.fitagent.data.health.HealthConnectSource
 import com.fitagent.data.local.AppDatabase
 import com.fitagent.data.local.DailyDeviceEntity
+import com.fitagent.data.local.HiddenImportEntity
 import com.fitagent.data.local.HourlyEntity
 import com.fitagent.data.local.HrBucketEntity
 import com.fitagent.data.local.PhoneStepsEntity
@@ -289,8 +290,14 @@ class FitnessRepository(
 
     suspend fun deleteWorkout(id: Long) {
         val w = dao.getWorkout(id) ?: return
-        if (w.source == WorkoutSource.APP.name) w.healthConnectId?.let { health.deleteWorkout(it) }
-        dao.deleteWorkout(id)
+        if (w.source == WorkoutSource.APP.name) {
+            w.healthConnectId?.let { health.deleteWorkout(it) }
+            dao.deleteWorkout(id)
+            db.route().delete(w.startMs)
+        } else {
+            // Another app owns this record and the next refresh would re-import it: hide it instead (D6).
+            dao.hideImport(HiddenImportEntity(w.uid))
+        }
         if (auth.account.value != null) auth.queueDeletion(w.uid)
     }
 
