@@ -28,7 +28,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Watch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,7 +62,14 @@ import com.fitagent.domain.formatKm
 import com.fitagent.ui.CloudState
 import com.fitagent.ui.HomeState
 import com.fitagent.ui.components.AppCard
-import com.fitagent.ui.components.BarChart
+import com.fitagent.domain.stepsTrendHeadline
+import com.fitagent.ui.charts.Bars
+import com.fitagent.ui.charts.ChartPeriod
+import com.fitagent.ui.charts.Legend
+import com.fitagent.ui.charts.LineChart
+import com.fitagent.ui.charts.LineSeries
+import com.fitagent.ui.charts.PeriodChips
+import com.fitagent.ui.charts.sparseLabels
 import com.fitagent.ui.components.LinearMeter
 import com.fitagent.ui.components.SectionTitle
 import com.fitagent.ui.theme.Fit
@@ -85,19 +91,14 @@ fun YouScreen(
     onPrivacy: () -> Unit,
     onOpenDevices: () -> Unit = {},
 ) {
-    var range by rememberSaveable { mutableStateOf(7) }
+    var range by rememberSaveable { mutableStateOf(ChartPeriod.WEEK) }
     LazyColumn(
         contentPadding = PaddingValues(16.dp, contentPadding.calculateTopPadding() + 8.dp, 16.dp,
             contentPadding.calculateBottomPadding() + 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { ProfileHeader(state, cloud) }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(range == 7, { range = 7 }, label = { Text("7 days") })
-                FilterChip(range == 30, { range = 30 }, label = { Text("30 days") })
-            }
-        }
+        item { PeriodChips(range, { range = it }) }
         item { ProgressCharts(state, range) }
         item { SectionTitle("Achievements", trailing = {
             Text("${state.achievements.count { it.unlocked }}/${state.achievements.size}",
@@ -154,28 +155,29 @@ private fun HeaderStat(value: String, label: String, modifier: Modifier) {
 }
 
 @Composable
-private fun ProgressCharts(state: HomeState, range: Int) {
-    val days = state.days.takeLast(range)
-    val labels = if (range == 7) days.map { it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()) }
-    else days.mapIndexed { i, d -> if (i % 5 == 0 || i == days.lastIndex) "${d.date.dayOfMonth}" else "" }
+private fun ProgressCharts(state: HomeState, range: ChartPeriod) {
+    val days = state.history.takeLast(range.days)
+    val previous = state.history.dropLast(range.days).takeLast(range.days)
+    val labels = if (days.size <= 7) days.map { it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()) }
+    else sparseLabels(days.map { "${it.date.dayOfMonth}" }, if (days.size <= 31) 7 else 21)
     val g = state.profile.goals
-    AppCard {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text("Steps", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text("avg ${formatCount(days.map { it.steps }.average().roundToInt())}/day",
-                style = MaterialTheme.typography.labelMedium, color = Fit.colors.muted)
-        }
-        Spacer(Modifier.height(12.dp))
-        BarChart(days.map { it.steps.toFloat() }, labels, Fit.colors.steps, goal = g.dailySteps.toFloat())
+    val fc = Fit.colors
+    val dayFmt = java.time.format.DateTimeFormatter.ofPattern("EEE d MMM")
+    fun change(now: Double, before: Double): String? =
+        if (before <= 0) null else ((now - before) / before * 100).roundToInt().let { if (it >= 0) " · ▲ $it% vs previous" else " · ▼ ${-it}% vs previous" }
+
+    val stepsAvg = days.map { it.steps }.average()
+    ChartCard("Steps", stepsTrendHeadline(days, g.dailySteps) + (change(stepsAvg, previous.map { it.steps }.average().takeIf { previous.isNotEmpty() } ?: 0.0) ?: "")) {
+        Bars(days.map { it.steps.toFloat() }, fc.steps, goal = g.dailySteps.toFloat(), labels = labels, highlight = setOf(days.lastIndex),
+            maxBarWidth = if (days.size > 31) 6.dp else 28.dp,
+            scrubLabel = { "${days[it].date.format(dayFmt)} · ${formatCount(days[it].steps)}" }, description = "Steps per day")
     }
     Spacer(Modifier.height(12.dp))
-    AppCard {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text("Workout minutes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text("${days.sumOf { it.workoutMinutes }} min total", style = MaterialTheme.typography.labelMedium, color = Fit.colors.muted)
-        }
-        Spacer(Modifier.height(12.dp))
-        BarChart(days.map { it.workoutMinutes.toFloat() }, labels, Fit.colors.workout, goal = g.dailyWorkoutMinutes.toFloat())
+    ChartCard("Workout minutes", "${days.sumOf { it.workoutMinutes }} min over ${days.size} days" +
+        (change(days.sumOf { it.workoutMinutes }.toDouble(), previous.sumOf { it.workoutMinutes }.toDouble()) ?: "")) {
+        Bars(days.map { it.workoutMinutes.toFloat() }, fc.workout, goal = g.dailyWorkoutMinutes.toFloat(), labels = labels,
+            maxBarWidth = if (days.size > 31) 6.dp else 28.dp,
+            scrubLabel = { "${days[it].date.format(dayFmt)} · ${days[it].workoutMinutes} min" }, description = "Workout minutes per day")
         Spacer(Modifier.height(16.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Spacer(Modifier.height(12.dp))
@@ -185,6 +187,16 @@ private fun ProgressCharts(state: HomeState, range: Int) {
             val sleep = days.mapNotNull { it.sleepMinutes }
             MiniStat(if (sleep.isEmpty()) "—" else "${(sleep.average() / 60 * 10).roundToInt() / 10.0} h", "avg sleep", Modifier.weight(1f))
         }
+    }
+    Spacer(Modifier.height(12.dp))
+    ChartCard("Active calories", "Average ${days.map { it.activeKcal }.average().roundToInt()} kcal a day") {
+        LineChart(
+            listOf(LineSeries(days.map { it.activeKcal.toFloat() }, fc.move, fill = true),
+                LineSeries(previous.map { it.activeKcal.toFloat() }.takeIf { it.size == days.size } ?: emptyList(), fc.muted, dashed = true)),
+            goal = g.dailyActiveKcal.toFloat(), yMin = 0f, xLabels = labels,
+            scrubLabel = { "${days[it].date.format(dayFmt)} · ${days[it].activeKcal} kcal" }, description = "Active calories per day",
+        )
+        if (previous.size == days.size) Legend(listOf("This period" to fc.move, "Previous period" to fc.muted))
     }
 }
 
