@@ -30,6 +30,7 @@ import com.fitagent.domain.StreakInfo
 import com.fitagent.domain.FoodEntry
 import com.fitagent.domain.Meal
 import com.fitagent.domain.MoodEntry
+import com.fitagent.domain.RoutePoint
 import com.fitagent.domain.hrMax
 import com.fitagent.domain.hrSummary
 import com.fitagent.domain.mealFor
@@ -45,6 +46,7 @@ import com.fitagent.domain.computeReadiness
 import com.fitagent.domain.computeStreak
 import com.fitagent.domain.suggestToday
 import com.fitagent.domain.workoutsThisWeek
+import com.fitagent.service.RouteService
 import com.fitagent.service.Scheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -312,8 +314,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun startWorkout(type: WorkoutType, interval: IntervalConfig? = null) {
         if (session.value != null) return
-        c.sessions.set(ActiveSession(type, System.currentTimeMillis(), interval = interval))
+        val s = ActiveSession(type, System.currentTimeMillis(), interval = interval)
+        c.sessions.set(s)
+        startRoute()
     }
+
+    /** Starts GPS recording for outdoor sessions when location is allowed (called again after the permission prompt). */
+    fun startRoute() {
+        val s = session.value ?: return
+        if (s.type.usesGps) RouteService.start(getApplication(), s.startedAtMs)
+    }
+
+    /** Route of the just-finished workout, for the summary. */
+    private val _finishedRoute = MutableStateFlow<List<RoutePoint>>(emptyList())
+    val finishedRoute: StateFlow<List<RoutePoint>> = _finishedRoute.asStateFlow()
 
     fun togglePause() {
         val s = session.value ?: return
@@ -350,18 +364,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val activeSeconds = s.activeMs(now) / 1000
         c.sessions.set(null)
         val hr = hrSummary(hrSamples.filter { it.first >= s.startedAtMs }, hrMax(c.profiles.profile.value.ageYears))
+        RouteService.stop(getApplication())
         hrSamples.clear(); _liveHr.value = emptyList()
         if (activeSeconds < 60) {
             _events.tryEmit("Workouts under a minute aren't saved.")
             return
         }
         viewModelScope.launch {
+            _finishedRoute.value = c.db.route().points(s.startedAtMs).map { RoutePoint(it.timeMs, it.lat, it.lon, it.accuracy) }
             _finished.value = c.fitness.saveWorkout(s.type, s.startedAtMs, now, activeSeconds, hr)
             if (c.auth.account.value != null) Scheduler.syncSoon(getApplication())
         }
     }
 
-    fun discardWorkout() { c.sessions.set(null); hrSamples.clear(); _liveHr.value = emptyList() }
+    fun discardWorkout() {
+        val s = session.value
+        c.sessions.set(null); hrSamples.clear(); _liveHr.value = emptyList()
+        RouteService.stop(getApplication())
+        if (s != null) viewModelScope.launch { c.db.route().delete(s.startedAtMs) }
+    }
 
     /** Saves a guided library routine as a workout of the routine's type. */
     fun saveRoutine(routine: Routine, activeSeconds: Long) {

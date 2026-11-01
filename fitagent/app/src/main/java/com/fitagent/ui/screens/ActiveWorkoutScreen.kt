@@ -67,6 +67,15 @@ import com.fitagent.domain.ZONE_NAMES
 import com.fitagent.domain.zoneOf
 import com.fitagent.ui.charts.ArcGauge
 import com.fitagent.ui.charts.Sparkline
+import com.fitagent.domain.RoutePoint
+import com.fitagent.domain.cleanRoute
+import com.fitagent.domain.formatPace
+import com.fitagent.domain.kmSplits
+import com.fitagent.domain.routeDistance
+import com.fitagent.domain.segmentPaces
+import com.fitagent.ui.charts.Bars
+import com.fitagent.ui.charts.HorizontalStackBar
+import com.fitagent.ui.charts.RouteTrace
 import com.fitagent.domain.intervalPhaseAt
 import com.fitagent.domain.voiceCue
 import com.fitagent.ui.VoiceCoach
@@ -229,16 +238,39 @@ private fun PhaseHaptics(kind: PhaseKind?, round: Int?) {
 }
 
 /** Post-workout celebration. */
+/** Post-workout summary: time, calories, heart-rate zones (with a sensor) and the GPS route with km splits. */
 @Composable
-fun WorkoutSummaryDialog(workout: Workout, onDismiss: () -> Unit) {
+fun WorkoutSummaryDialog(workout: Workout, route: List<RoutePoint> = emptyList(), onDismiss: () -> Unit) {
+    val fc = Fit.colors
+    val clean = remember(route) { cleanRoute(route, workout.type) }
+    val distance = remember(clean) { routeDistance(clean) }
+    val splits = remember(clean) { kmSplits(clean) }
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { WorkoutBadge(workout.type, 56.dp) },
         title = { Text("${workout.type.label} complete!") },
         text = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Metric(formatClock(workout.activeSeconds), "time")
-                Metric("${workout.kcal.toInt()}", "kcal")
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    Metric(formatClock(workout.activeSeconds), "time")
+                    Metric("${workout.kcal.toInt()}", "kcal")
+                    workout.avgHr?.let { Metric("$it", "avg bpm") }
+                    if (distance >= 100) Metric("%.2f".format(distance / 1000), "km")
+                }
+                workout.zoneSeconds?.takeIf { z -> z.any { it > 0 } }?.let { z ->
+                    val top = z.indices.maxBy { z[it] }
+                    Text("Mostly ${ZONE_NAMES[top].lowercase()} zone · max ${workout.maxHr ?: "—"} bpm", style = MaterialTheme.typography.bodySmall, color = fc.muted)
+                    HorizontalStackBar(z.mapIndexed { i, s -> s.toFloat() to fc.zones[i] })
+                }
+                if (clean.size >= 2) {
+                    RouteTrace(clean, segmentPaces(clean), fc.push, fc.move, Modifier.fillMaxWidth().height(160.dp),
+                        description = "Route, %.2f km".format(distance / 1000))
+                    if (splits.isNotEmpty()) {
+                        Text("Splits · avg ${formatPace(splits.average().toInt())}", style = MaterialTheme.typography.labelMedium)
+                        Bars(splits.map { it.toFloat() }, fc.workout, height = 70.dp, labels = splits.indices.map { "${it + 1}" },
+                            scrubLabel = { formatPace(splits[it]) }, description = "Time per kilometre")
+                    }
+                }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Nice!") } },
