@@ -8,6 +8,7 @@ import com.fitagent.data.health.HealthConnectSource
 import com.fitagent.data.local.AppDatabase
 import com.fitagent.data.prefs.AuthStore
 import com.fitagent.data.prefs.ProfileStore
+import com.fitagent.data.ble.BleHeartRateMonitor
 import com.fitagent.data.prefs.SessionStore
 import com.fitagent.data.prefs.SyncStateStore
 import com.fitagent.data.prefs.TimetableStore
@@ -30,6 +31,7 @@ class AppContainer(context: Context) {
         onDataChanged = { FitAgentWidget.refresh(context.applicationContext) }
     }
     val timetable = TimetableStore(context)
+    val heartRate = BleHeartRateMonitor(context.applicationContext)
     val cloud = CloudRepository(ApiClient(auth), auth, profiles, fitness, timetable)
 }
 

@@ -183,9 +183,14 @@ data class WorkoutEntity(
     @ColumnInfo(name = "kcal") val kcal: Double,
     @ColumnInfo(name = "source") val source: String,
     @ColumnInfo(name = "hc_id") val healthConnectId: String?,
+    @ColumnInfo(name = "avg_hr") val avgHr: Int? = null,
+    @ColumnInfo(name = "max_hr") val maxHr: Int? = null,
+    /** Comma-separated seconds in zones 1–5. */
+    @ColumnInfo(name = "zone_seconds") val zoneSeconds: String? = null,
 ) {
     fun toDomain() = Workout(
         id, uid, WorkoutType.fromName(type), title, startMs, endMs, activeSeconds, kcal, WorkoutSource.valueOf(source),
+        avgHr, maxHr, zoneSeconds?.split(',')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 5 },
     )
 }
 
@@ -347,10 +352,13 @@ interface MoodDao {
         DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
         SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
-    // v2: watch metrics; v3: mood; v4: food log. Additive only, so Room generates the migrations.
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
+    // v2: watch metrics; v3: mood; v4: food log; v5: workout heart rate. Additive only → auto-migrations.
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5),
+    ],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): FitnessDao

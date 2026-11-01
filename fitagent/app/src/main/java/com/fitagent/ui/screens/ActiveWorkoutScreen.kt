@@ -45,6 +45,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +62,11 @@ import com.fitagent.domain.ActiveSession
 import com.fitagent.domain.PhaseKind
 import com.fitagent.domain.Workout
 import com.fitagent.domain.formatClock
+import com.fitagent.data.ble.BleState
+import com.fitagent.domain.ZONE_NAMES
+import com.fitagent.domain.zoneOf
+import com.fitagent.ui.charts.ArcGauge
+import com.fitagent.ui.charts.Sparkline
 import com.fitagent.domain.intervalPhaseAt
 import com.fitagent.domain.voiceCue
 import com.fitagent.ui.VoiceCoach
@@ -81,6 +88,12 @@ fun ActiveWorkoutScreen(
     onMinimize: () -> Unit,
     voiceEnabled: Boolean = false,
     onToggleVoice: () -> Unit = {},
+    heartRate: BleState = BleState.Off,
+    liveHr: List<Int> = emptyList(),
+    hrMax: Int = 200,
+    onScanHr: () -> Unit = {},
+    onConnectHr: (String) -> Unit = {},
+    onDisconnectHr: () -> Unit = {},
 ) {
     val clock = LocalClock.current
     var now by remember { mutableLongStateOf(clock.millis()) }
@@ -154,6 +167,8 @@ fun ActiveWorkoutScreen(
                 Metric("${workoutKcal(session.type, weightKg, activeSec).toInt()}", "kcal")
                 Metric("${activeSec / 60}", "min")
             }
+            Spacer(Modifier.height(20.dp))
+            HeartRatePanel(heartRate, liveHr, hrMax, onScanHr, onConnectHr, onDisconnectHr)
             Spacer(Modifier.weight(1f))
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -260,5 +275,68 @@ private fun VoiceCues(enabled: Boolean, session: ActiveSession, activeSec: Long)
     LaunchedEffect(activeSec, enabled) {
         if (enabled) voiceCue(session.interval, last, activeSec)?.let(coach::say)
         last = activeSec
+    }
+}
+
+
+/** Live heart rate + zone from a Bluetooth sensor, or a button to connect one (R3, D3). */
+@Composable
+private fun HeartRatePanel(
+    state: BleState,
+    samples: List<Int>,
+    hrMax: Int,
+    onScan: () -> Unit,
+    onConnect: (String) -> Unit,
+    onDisconnect: () -> Unit,
+) {
+    val fc = Fit.colors
+    var picker by remember { mutableStateOf(false) }
+    when (state) {
+        is BleState.Connected -> {
+            val bpm = state.bpm
+            val zone = bpm?.let { zoneOf(it, hrMax) } ?: 0
+            val c = if (zone > 0) fc.zones[zone - 1] else fc.heart
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ArcGauge(((bpm ?: 0) / hrMax.toFloat()).coerceIn(0f, 1f), c, Modifier.size(84.dp), thickness = 8.dp,
+                    description = "Heart rate ${bpm ?: "—"}") {
+                    Text(bpm?.toString() ?: "—", style = MaterialTheme.typography.headlineSmall, color = c)
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(if (zone > 0) "Zone $zone · ${ZONE_NAMES[zone - 1]}" else "Below zones", style = MaterialTheme.typography.titleMedium, color = c)
+                    Sparkline(samples.map { it.toFloat() }, c, Modifier.width(140.dp).height(28.dp))
+                    Text(state.name, style = MaterialTheme.typography.labelSmall, color = fc.muted, modifier = Modifier.clickable { onDisconnect() })
+                }
+            }
+        }
+        is BleState.Connecting -> Text("Connecting to ${state.name}…", style = MaterialTheme.typography.bodyMedium, color = fc.muted)
+        else -> TextButton(onClick = { picker = true; onScan() }) {
+            Icon(Icons.Rounded.Favorite, null, tint = fc.heart); Spacer(Modifier.width(6.dp)); Text("Connect heart-rate sensor")
+        }
+    }
+    if (picker && state !is BleState.Connected && state !is BleState.Connecting) {
+        AlertDialog(
+            onDismissRequest = { picker = false },
+            title = { Text("Heart-rate sensors") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    when (state) {
+                        is BleState.Scanning -> {
+                            if (state.devices.isEmpty()) Text("Searching… Turn on “broadcast heart rate” on your watch, or wear your chest strap.")
+                            state.devices.forEach { (address, name) ->
+                                TextButton(onClick = { onConnect(address); picker = false }) { Text(name) }
+                            }
+                        }
+                        BleState.NoPermission -> Text("Allow Nearby devices to find heart-rate sensors.")
+                        is BleState.Error -> Text(state.message)
+                        else -> Text("Searching…")
+                    }
+                    Text("Works with chest straps and watches that broadcast heart rate (Garmin, Amazfit, Polar…). Noise and boAt watches don't broadcast it.",
+                        style = MaterialTheme.typography.bodySmall, color = fc.muted)
+                }
+            },
+            confirmButton = { TextButton(onClick = onScan) { Text("Scan again") } },
+            dismissButton = { TextButton(onClick = { picker = false }) { Text("Close") } },
+        )
     }
 }

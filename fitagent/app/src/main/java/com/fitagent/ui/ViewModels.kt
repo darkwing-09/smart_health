@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitagent.container
 import com.fitagent.data.DataSource
+import com.fitagent.data.ble.BleState
 import com.fitagent.data.local.FoodEntity
 import com.fitagent.data.local.MoodEntity
 import com.fitagent.data.HealthStatus
@@ -29,6 +30,8 @@ import com.fitagent.domain.StreakInfo
 import com.fitagent.domain.FoodEntry
 import com.fitagent.domain.Meal
 import com.fitagent.domain.MoodEntry
+import com.fitagent.domain.hrMax
+import com.fitagent.domain.hrSummary
 import com.fitagent.domain.mealFor
 import com.fitagent.domain.Routine
 import com.fitagent.domain.Suggestion
@@ -318,22 +321,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         c.sessions.set(if (s.isPaused) s.resume(now) else s.pause(now))
     }
 
+    // ── Live heart rate (BLE) ────────────────────────────────────────────────
+    val heartRate: StateFlow<BleState> = c.heartRate.state
+    /** (time ms, bpm) samples for the current session; kept in memory while the player runs. */
+    private val hrSamples = mutableListOf<Pair<Long, Int>>()
+    private val _liveHr = MutableStateFlow<List<Int>>(emptyList())
+    val liveHr: StateFlow<List<Int>> = _liveHr.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            c.heartRate.state.collect { st ->
+                val bpm = (st as? BleState.Connected)?.bpm ?: return@collect
+                val s = session.value ?: return@collect
+                if (s.isPaused) return@collect
+                hrSamples += System.currentTimeMillis() to bpm
+                _liveHr.value = (_liveHr.value + bpm).takeLast(120)
+            }
+        }
+    }
+
+    fun scanHeartRate() = c.heartRate.scan()
+    fun connectHeartRate(address: String) = c.heartRate.connect(address)
+    fun disconnectHeartRate() = c.heartRate.disconnect()
+
     fun finishWorkout() {
         val s = session.value ?: return
         val now = System.currentTimeMillis()
         val activeSeconds = s.activeMs(now) / 1000
         c.sessions.set(null)
+        val hr = hrSummary(hrSamples.filter { it.first >= s.startedAtMs }, hrMax(c.profiles.profile.value.ageYears))
+        hrSamples.clear(); _liveHr.value = emptyList()
         if (activeSeconds < 60) {
             _events.tryEmit("Workouts under a minute aren't saved.")
             return
         }
         viewModelScope.launch {
-            _finished.value = c.fitness.saveWorkout(s.type, s.startedAtMs, now, activeSeconds)
+            _finished.value = c.fitness.saveWorkout(s.type, s.startedAtMs, now, activeSeconds, hr)
             if (c.auth.account.value != null) Scheduler.syncSoon(getApplication())
         }
     }
 
-    fun discardWorkout() = c.sessions.set(null)
+    fun discardWorkout() { c.sessions.set(null); hrSamples.clear(); _liveHr.value = emptyList() }
 
     /** Saves a guided library routine as a workout of the routine's type. */
     fun saveRoutine(routine: Routine, activeSeconds: Long) {

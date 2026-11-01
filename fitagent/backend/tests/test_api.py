@@ -89,7 +89,8 @@ async def test_sync_is_idempotent_and_supports_deletes(client):
     h = await register(client)
     start = datetime.now(IST).replace(microsecond=0) - timedelta(hours=2)
     workout = {"client_id": "app-1", "type": "RUN", "start": start.isoformat(),
-               "end": (start + timedelta(minutes=35)).isoformat(), "active_seconds": 1800, "kcal": 300}
+               "end": (start + timedelta(minutes=35)).isoformat(), "active_seconds": 1800, "kcal": 300,
+               "avg_hr": 148, "max_hr": 176, "zone_seconds": [60, 300, 900, 480, 60]}
     body = {"timezone": "Asia/Kolkata", "days": days_payload(7, 8000), "workouts": [workout]}
     for _ in range(2):
         r = await client.post("/v1/me/sync", headers=auth(h), json=body)
@@ -103,6 +104,7 @@ async def test_sync_is_idempotent_and_supports_deletes(client):
     ws = (await client.get("/v1/me/workouts", headers=auth(h))).json()
     assert len(ws) == 1
     assert datetime.fromisoformat(ws[0]["start"]) == start  # timezone preserved through storage
+    assert ws[0]["avg_hr"] == 148 and ws[0]["zone_seconds"] == [60, 300, 900, 480, 60]
 
     r = await client.post("/v1/me/sync", headers=auth(h), json={"deleted_workout_ids": ["app-1"]})
     assert r.json()["workouts_deleted"] == 1

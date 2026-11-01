@@ -51,3 +51,27 @@ const val WHO_WEEKLY_MINUTES = 150
  * vigorous (×2), the rest as moderate.
  */
 fun whoMinutesFromWorkouts(workouts: List<Workout>): Int = workouts.sumOf { if (it.type.isHard) it.minutes * 2 else it.minutes }
+
+
+/** Heart-rate summary of a workout from live samples (time ms, bpm). */
+data class HrSummary(val avg: Int, val max: Int, val zoneSeconds: List<Int>)
+
+/**
+ * Averages are time-weighted; each sample counts until the next one, capped at [maxGapMs] so a dropped sensor
+ * doesn't stretch one reading over minutes. Null with fewer than 10 samples.
+ */
+fun hrSummary(samples: List<Pair<Long, Int>>, hrMax: Int, maxGapMs: Long = 5_000): HrSummary? {
+    if (samples.size < 10) return null
+    val zones = DoubleArray(5)
+    var weighted = 0.0
+    var total = 0.0
+    samples.zipWithNext().forEach { (a, b) ->
+        val dt = (b.first - a.first).coerceIn(0, maxGapMs) / 1000.0
+        weighted += a.second * dt
+        total += dt
+        val z = zoneOf(a.second, hrMax)
+        if (z > 0) zones[z - 1] += dt
+    }
+    if (total <= 0) return null
+    return HrSummary((weighted / total).roundToInt(), samples.maxOf { it.second }, zones.map { it.roundToInt() })
+}

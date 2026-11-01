@@ -162,6 +162,9 @@ class CloudRepository(
                         activeSeconds = it.activeSeconds.coerceIn(0, 86_400),
                         kcal = (it.kcal * 10).roundToInt() / 10.0,
                         source = it.source.name,
+                        avgHr = it.avgHr?.takeIf { hr -> hr in 30..230 },
+                        maxHr = it.maxHr?.takeIf { hr -> hr in 30..250 },
+                        zoneSeconds = it.zoneSeconds,
                     )
                 },
                 deletedWorkoutIds = deletions.toList(),

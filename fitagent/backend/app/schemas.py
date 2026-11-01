@@ -158,6 +158,9 @@ class WorkoutIn(BaseModel):
     active_seconds: int = Field(ge=0, le=86_400)
     kcal: float = Field(0, ge=0, le=10_000)
     source: Literal["APP", "HEALTH_CONNECT"] = "APP"
+    avg_hr: int | None = Field(None, ge=30, le=230)
+    max_hr: int | None = Field(None, ge=30, le=250)
+    zone_seconds: list[int] | None = Field(None, min_length=5, max_length=5, description="Seconds in HR zones 1–5")
 
     @model_validator(mode="after")
     def _order(self) -> WorkoutIn:

@@ -183,6 +183,11 @@ class ScreenshotTest {
             62.0, {}, {}, {}, {},
         )
     }
+    @Test fun workout_player_live_hr() = snap {
+        ActiveWorkoutScreen(ActiveSession(WorkoutType.RUN, clock.millis() - 1_523_000), 62.0, {}, {}, {}, {},
+            heartRate = com.fitagent.data.ble.BleState.Connected("Polar H10", 152),
+            liveHr = (0 until 60).map { 130 + (it % 12) * 2 }, hrMax = 194)
+    }
     @Test fun workout_player_run() = snap {
         ActiveWorkoutScreen(ActiveSession(WorkoutType.RUN, clock.millis() - 1_523_000), 62.0, {}, {}, {}, {})
     }
