@@ -141,12 +141,12 @@ fun Scatter(
     val measurer = rememberTextMeasurer()
     Canvas(modifier.fillMaxWidth().height(height).semantics { if (description.isNotEmpty()) contentDescription = description }) {
         if (points.isEmpty()) return@Canvas
-        val left = 8.dp.toPx(); val bottomPad = 16.dp.toPx()
+        val left = 8.dp.toPx(); val bottomPad = 16.dp.toPx(); val topPad = if (yLabel.isNotEmpty()) 14.dp.toPx() else 0f
         val xs = points.map { it.first }; val ys = points.map { it.second }
         val xLo = xs.min(); val xHi = xs.max().let { if (it == xLo) xLo + 1 else it }
         val yLo = ys.min(); val yHi = ys.max().let { if (it == yLo) yLo + 1 else it }
         fun px(x: Float) = left + (size.width - left) * (x - xLo) / (xHi - xLo)
-        fun py(y: Float) = (size.height - bottomPad) * (1 - (y - yLo) / (yHi - yLo)) * 0.9f + (size.height - bottomPad) * 0.05f
+        fun py(y: Float) = topPad + (size.height - bottomPad - topPad) * ((1 - (y - yLo) / (yHi - yLo)) * 0.9f + 0.05f)
         drawLine(track, Offset(left, size.height - bottomPad), Offset(size.width, size.height - bottomPad), 1.dp.toPx())
         points.forEach { (x, y) -> drawCircle(color.copy(alpha = 0.75f), 5.dp.toPx() * reveal, Offset(px(x), py(y))) }
         if (trend && points.size >= 3) {

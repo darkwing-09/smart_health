@@ -295,19 +295,40 @@ interface HealthDao {
 
 data class DaySteps(val epochDay: Long, val steps: Long)
 
+/** One mood check-in per day. Stays on the phone. [tags] is a comma-separated list. */
+@Entity(tableName = "mood")
+data class MoodEntity(
+    @PrimaryKey @ColumnInfo(name = "epoch_day") val epochDay: Long,
+    @ColumnInfo(name = "score") val score: Int,
+    @ColumnInfo(name = "tags") val tags: String,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis(),
+)
+
+@Dao
+interface MoodDao {
+    @Upsert suspend fun upsert(row: MoodEntity)
+
+    @Query("SELECT * FROM mood ORDER BY epoch_day")
+    fun observe(): Flow<List<MoodEntity>>
+
+    @Query("DELETE FROM mood")
+    suspend fun clear()
+}
+
 @Database(
     entities = [
         DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
-        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class,
+        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    // v2: watch metrics. Additive only, so Room generates the migration from the exported schemas.
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    // v2: watch metrics; v3: mood. Additive only, so Room generates the migrations from the exported schemas.
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): FitnessDao
     abstract fun health(): HealthDao
+    abstract fun mood(): MoodDao
 
     companion object {
         // Future schema changes must ship Room migrations: logged workouts are user data.
