@@ -8,7 +8,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from .schedule import Schedule
 
 WORKOUT_TYPES = ("WALK", "RUN", "CYCLE", "STRENGTH", "HIIT", "YOGA", "SWIM", "SPORTS", "DANCE", "OTHER")
 HARD_TYPES = frozenset({"RUN", "HIIT", "SWIM", "SPORTS"})
@@ -92,6 +95,7 @@ class UserContext:
     days: list[ActivityDay]
     workouts: list[WorkoutRecord]
     challenges: list[ChallengeStanding] = field(default_factory=list)
+    schedule: Schedule | None = None
 
     def day(self, d: date) -> ActivityDay | None:
         return next((x for x in self.days if x.day == d), None)

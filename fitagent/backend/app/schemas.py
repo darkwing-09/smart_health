@@ -66,6 +66,29 @@ class ProfileOut(BaseModel):
     goals: GoalsModel
 
 
+HHMM = r"^([01]\d|2[0-3]):[0-5]\d$"
+
+
+class FreeSlotModel(BaseModel):
+    day: Literal["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+    start: str = Field(pattern=HHMM)
+    end: str = Field(pattern=HHMM)
+
+    @model_validator(mode="after")
+    def _order(self) -> FreeSlotModel:
+        if self.end <= self.start:
+            raise ValueError("end must be after start")
+        return self
+
+
+class ScheduleModel(BaseModel):
+    """Exam mode timetable. Deliberately has no field for course or class names."""
+
+    free_slots: list[FreeSlotModel] = Field(default_factory=list, max_length=70)
+    exam_dates: list[date] = Field(default_factory=list, max_length=40)
+    bedtime: str | None = Field(None, pattern=HHMM)
+
+
 class ProfileUpdate(BaseModel):
     display_name: str | None = Field(None, min_length=1, max_length=60)
     timezone: str | None = None

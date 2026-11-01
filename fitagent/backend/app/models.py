@@ -45,6 +45,8 @@ class User(Base):
     goal_active_kcal: Mapped[int] = mapped_column(Integer, default=400)
     goal_workout_minutes: Mapped[int] = mapped_column(Integer, default=30)
     goal_weekly_workouts: Mapped[int] = mapped_column(Integer, default=4)
+    # Exam mode: free slots, exam dates and target bedtime only — never course names (see ScheduleModel).
+    schedule: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     days: Mapped[list[DailyActivity]] = relationship(back_populates="user", cascade="all, delete-orphan",

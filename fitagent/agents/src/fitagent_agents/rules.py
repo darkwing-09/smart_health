@@ -10,6 +10,7 @@ from datetime import timedelta
 from .data import UserContext
 from .metrics import Band, Readiness, current_streak, last_7_days
 from .safety import week_order, weekly_minutes_cap
+from .schedule import EXAM_WEEK_MAX_MIN
 from .schemas import WEEKDAYS, PlannedSession, Weekday, WeeklyPlan
 
 STEPS_PER_BRISK_MINUTE = 100
@@ -96,17 +97,22 @@ _ROTATION: list[tuple[str, str]] = [
 
 
 def fallback_plan(ctx: UserContext, readiness: Readiness) -> WeeklyPlan:
-    """A rule-based 7-day plan that always passes `validate_plan`."""
+    """A rule-based 7-day plan that always passes `validate_plan` (including Exam mode and timetable rules)."""
     goals = ctx.profile.goals
     order = week_order(weekday_of(ctx))
+    sched = ctx.schedule
+    exam_week = sched is not None and sched.exam_in_window(ctx.today)
     n = min(max(goals.weekly_workouts, 2), 6)
     last_week = last_7_days(ctx).workout_minutes
     per = max(10, min(goals.daily_workout_minutes, weekly_minutes_cap(last_week) // n, 60))
+    if exam_week:
+        per = min(per, EXAM_WEEK_MAX_MIN - 5)
     positions = sorted({min(round(i * 7 / n), 6) for i in range(n)})
 
     sessions: list[PlannedSession] = []
     slot = 0
     for idx, day in enumerate(order):
+        date_ = ctx.today + timedelta(days=idx)
         if idx not in positions:
             sessions.append(PlannedSession(day=day, type="REST", minutes=0, intensity="rest", focus=FOCUS["REST"]))
             continue
@@ -115,14 +121,36 @@ def fallback_plan(ctx: UserContext, readiness: Readiness) -> WeeklyPlan:
         if readiness.band is Band.RECOVER and idx < 2:
             type_, intensity = ("YOGA", "easy") if idx == 0 else ("WALK", "easy")
         minutes = min(per, 25) if type_ == "HIIT" else per
+        if sched is not None:
+            if sched.is_exam(date_):
+                type_, intensity, minutes = "WALK", "easy", min(minutes, 15)
+            elif sched.is_exam(date_ + timedelta(days=1)) and intensity == "hard":
+                type_, intensity = "YOGA", "easy"
+            start = sched.first_fit(day, minutes) if (sched.has_slots(day) or sched.bedtime) else None
+            if (sched.has_slots(day) or sched.bedtime) and start is None:
+                # No gap in the timetable is long enough: try a 10-minute "movement snack", else rest.
+                start = sched.first_fit(day, 10)
+                if start is None:
+                    sessions.append(PlannedSession(day=day, type="REST", minutes=0, intensity="rest",
+                                                   focus="Busy day — no free slot. Take the stairs and walk between classes."))
+                    continue
+                type_, intensity, minutes = "WALK", "easy", 10
+            sessions.append(PlannedSession(day=day, type=type_, minutes=minutes, intensity=intensity, focus=FOCUS[type_],
+                                           start_time=start))
+            continue
         sessions.append(PlannedSession(day=day, type=type_, minutes=minutes, intensity=intensity, focus=FOCUS[type_]))
 
     hard = sum(1 for s in sessions if s.intensity == "hard")
+    active = sum(1 for s in sessions if s.type != "REST")
+    if exam_week:
+        why = "Exam week: short sessions in your free slots keep you fresh without stealing study time."
+    elif readiness.band is Band.RECOVER:
+        why = "Starting gently because your readiness is low."
+    else:
+        why = "Built to keep you consistent and progressing safely."
     summary = (
-        f"{n} sessions this week ({sum(s.minutes for s in sessions)} min) with {hard} hard day"
-        f"{'s' if hard != 1 else ''} spaced by easier ones. "
-        + ("Starting gently because your readiness is low." if readiness.band is Band.RECOVER
-           else "Built to keep you consistent and progressing safely.")
+        f"{active} sessions this week ({sum(s.minutes for s in sessions)} min) with {hard} hard day"
+        f"{'s' if hard != 1 else ''} spaced by easier ones. {why}"
     )
     return WeeklyPlan(summary=summary, sessions=sessions)
 

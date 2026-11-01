@@ -267,3 +267,35 @@ async def test_old_clients_without_watch_fields_still_sync(client):
     assert r.status_code == 200
     stored = (await client.get("/v1/me/activity?days=3", headers=auth(h))).json()
     assert all(d["hrv_ms"] is None for d in stored)
+
+
+async def test_exam_mode_schedule_shapes_the_rule_based_plan(client):
+    h = await register(client)
+    days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+    exam = today() + timedelta(days=1)
+    body = {"free_slots": [{"day": d, "start": "17:00", "end": "18:30"} for d in days],
+            "exam_dates": [exam.isoformat()], "bedtime": "23:00"}
+    r = await client.put("/v1/me/schedule", headers=auth(h), json=body)
+    assert r.status_code == 200
+    assert (await client.get("/v1/me/schedule", headers=auth(h))).json()["exam_dates"] == [exam.isoformat()]
+
+    await client.post("/v1/me/sync", headers=auth(h), json={"days": days_payload(14, 8000)})
+    plan = (await client.post("/v1/coach/plan", headers=auth(h))).json()["plan"]
+    sessions = plan["sessions"]
+    assert all(s["minutes"] <= 30 for s in sessions)  # exam week
+    assert sessions[1]["intensity"] in ("rest", "easy")  # exam day
+    assert all(s["start_time"] and "17:00" <= s["start_time"] < "18:30" for s in sessions if s["type"] != "REST")
+
+
+async def test_schedule_validation_and_clearing(client):
+    h = await register(client)
+    bad = [{"free_slots": [{"day": "MON", "start": "18:00", "end": "17:00"}]},
+           {"free_slots": [{"day": "Monday", "start": "17:00", "end": "18:00"}]},
+           {"bedtime": "25:00"},
+           {"free_slots": [], "course": "Maths"}]
+    for b in bad[:3]:
+        assert (await client.put("/v1/me/schedule", headers=auth(h), json=b)).status_code == 422, b
+    # Unknown fields such as course names are ignored, never stored.
+    await client.put("/v1/me/schedule", headers=auth(h), json=bad[3])
+    assert "course" not in (await client.get("/v1/me/schedule", headers=auth(h))).json()
+    assert (await client.put("/v1/me/schedule", headers=auth(h), json={})).json() == {"free_slots": [], "exam_dates": [], "bedtime": None}

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date, timedelta
 from itertools import pairwise
 
 from langsmith import traceable
 
 from .metrics import Band
-from .schemas import WEEKDAYS, Weekday, WeeklyPlan
+from .schedule import EXAM_DAY_MAX_MIN, EXAM_WEEK_MAX_MIN, Schedule
+from .schemas import WEEKDAYS, PlannedSession, Weekday, WeeklyPlan
 
 DISCLAIMER = "FitAgent is a fitness coach, not a medical service."
 
@@ -90,9 +92,17 @@ def week_order(start: Weekday) -> list[Weekday]:
 
 
 @traceable(name="validate_plan", run_type="chain")
-def validate_plan(plan: WeeklyPlan, *, band: Band, last_week_minutes: int, start: Weekday = "MON") -> list[str]:
+def validate_plan(
+    plan: WeeklyPlan,
+    *,
+    band: Band,
+    last_week_minutes: int,
+    start: Weekday = "MON",
+    schedule: Schedule | None = None,
+    start_date: date | None = None,
+) -> list[str]:
     """Returns human-readable rule violations; empty means the plan is safe to show.
-    The plan covers 7 consecutive days beginning on [start]."""
+    The plan covers 7 consecutive days beginning on [start] (calendar date [start_date] when a schedule is given)."""
     violations: list[str] = []
     order = week_order(start)
     if sorted(s.day for s in plan.sessions) != sorted(order):
@@ -127,4 +137,28 @@ def validate_plan(plan: WeeklyPlan, *, band: Band, last_week_minutes: int, start
         early = [s for s in ordered[:2] if s.intensity in ("moderate", "hard")]
         if early:
             violations.append("Readiness is low: the first two days must be rest or easy.")
+
+    if schedule is not None and start_date is not None:
+        violations += _schedule_violations(ordered, schedule, start_date)
     return violations
+
+
+def _schedule_violations(ordered: list[PlannedSession], schedule: Schedule, start_date: date) -> list[str]:
+    """Exam mode and timetable rules."""
+    out: list[str] = []
+    exam_week = schedule.exam_in_window(start_date)
+    for i, s in enumerate(ordered):
+        day = start_date + timedelta(days=i)
+        active = s.type != "REST"
+        if schedule.is_exam(day) and active and (s.intensity not in ("rest", "easy") or s.minutes > EXAM_DAY_MAX_MIN):
+            out.append(f"{s.day} is an exam day: only rest or an easy session of at most {EXAM_DAY_MAX_MIN} min.")
+        if schedule.is_exam(day + timedelta(days=1)) and s.intensity == "hard":
+            out.append(f"{s.day} is the day before an exam: no hard session.")
+        if exam_week and active and s.minutes > EXAM_WEEK_MAX_MIN:
+            out.append(f"{s.day}: exam week — keep sessions to {EXAM_WEEK_MAX_MIN} min or less.")
+        if active and (schedule.has_slots(s.day) or schedule.bedtime):
+            if s.start_time is None:
+                out.append(f"{s.day}: give a start_time inside a free slot.")
+            elif not schedule.fits(s.day, s.start_time, s.minutes):
+                out.append(f"{s.day}: {s.start_time} + {s.minutes} min doesn't fit a free slot or ends too close to bedtime.")
+    return out
