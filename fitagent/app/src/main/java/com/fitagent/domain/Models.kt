@@ -19,6 +19,8 @@ enum class WorkoutType(val label: String, val met: Double) {
     OTHER("Workout", 4.0);
 
     val isHard: Boolean get() = this == RUN || this == HIIT || this == SWIM || this == SPORTS
+    /** Outdoor types that record a GPS route. */
+    val usesGps: Boolean get() = this == WALK || this == RUN || this == CYCLE
 
     companion object {
         fun fromName(name: String?): WorkoutType = entries.firstOrNull { it.name == name } ?: OTHER

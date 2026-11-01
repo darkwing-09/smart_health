@@ -336,6 +336,31 @@ interface FoodDao {
     fun observeSince(fromDay: Long): Flow<List<FoodEntity>>
 }
 
+/** One GPS fix of a workout route, keyed by the session's start time (= the saved workout's start). */
+@Entity(tableName = "route_points", primaryKeys = ["session_start", "time_ms"])
+data class RoutePointEntity(
+    @ColumnInfo(name = "session_start") val sessionStart: Long,
+    @ColumnInfo(name = "time_ms") val timeMs: Long,
+    @ColumnInfo(name = "lat") val lat: Double,
+    @ColumnInfo(name = "lon") val lon: Double,
+    @ColumnInfo(name = "accuracy") val accuracy: Float,
+)
+
+@Dao
+interface RouteDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(row: RoutePointEntity)
+
+    @Query("SELECT * FROM route_points WHERE session_start = :sessionStart ORDER BY time_ms")
+    suspend fun points(sessionStart: Long): List<RoutePointEntity>
+
+    @Query("SELECT DISTINCT session_start FROM route_points")
+    fun observeSessions(): Flow<List<Long>>
+
+    @Query("DELETE FROM route_points WHERE session_start = :sessionStart")
+    suspend fun delete(sessionStart: Long)
+}
+
 @Dao
 interface MoodDao {
     @Upsert suspend fun upsert(row: MoodEntity)
@@ -350,14 +375,14 @@ interface MoodDao {
 @Database(
     entities = [
         DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
-        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class,
+        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class, RoutePointEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
-    // v2: watch metrics; v3: mood; v4: food log; v5: workout heart rate. Additive only → auto-migrations.
+    // v2 watch metrics · v3 mood · v4 food log · v5 workout heart rate · v6 GPS routes. Additive only → auto-migrations.
     autoMigrations = [
         AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6),
     ],
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -365,6 +390,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun health(): HealthDao
     abstract fun mood(): MoodDao
     abstract fun food(): FoodDao
+    abstract fun route(): RouteDao
 
     companion object {
         // Future schema changes must ship Room migrations: logged workouts are user data.

@@ -111,6 +111,16 @@ class MainActivity : ComponentActivity() {
             .onFailure { pendingPhoto = null }
     }
 
+    private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { main.startRoute() }
+
+    /** Starts a workout; outdoor types ask (once) for location so the route can be recorded. */
+    private fun startWorkout(type: WorkoutType, interval: com.fitagent.domain.IntervalConfig? = null) {
+        main.startWorkout(type, interval)
+        if (type.usesGps && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
+
     private val blePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { main.scanHeartRate() }
 
     private fun scanHeartRate() {
@@ -244,7 +254,7 @@ class MainActivity : ComponentActivity() {
             Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
             return
         }
-        val start: (WorkoutType) -> Unit = { main.startWorkout(it) }
+        val start: (WorkoutType) -> Unit = { startWorkout(it) }
 
         Box(Modifier.fillMaxSize()) {
             Scaffold(
@@ -268,7 +278,7 @@ class MainActivity : ComponentActivity() {
                         onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods)
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
-                        TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
+                        TrainScreen(state, padding, onStart = { t, i -> startWorkout(t, i) }, onLog = main::logPastWorkout,
                             onDelete = { main.deleteWorkout(it) }, timetable = timetable, onOpenTimetable = { detail = Detail.TIMETABLE },
                             onOpenLibrary = { detail = Detail.LIBRARY }, onStartRoutine = { routineId = it.id })
                     }
@@ -351,7 +361,8 @@ class MainActivity : ComponentActivity() {
                 SignInScreen(cloudState, profile.name, onSignIn = cloud::signIn, onRegister = cloud::register,
                     onClose = { showSignIn = false; cloud.clearAuthError() })
             }
-            finished?.let { WorkoutSummaryDialog(it, main::dismissSummary) }
+            val finishedRoute by main.finishedRoute.collectAsStateWithLifecycle()
+            finished?.let { WorkoutSummaryDialog(it, finishedRoute, main::dismissSummary) }
         }
     }
 }

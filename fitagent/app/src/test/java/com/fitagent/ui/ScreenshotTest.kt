@@ -188,6 +188,19 @@ class ScreenshotTest {
             heartRate = com.fitagent.data.ble.BleState.Connected("Polar H10", 152),
             liveHr = (0 until 60).map { 130 + (it % 12) * 2 }, hrMax = 194)
     }
+    @Test fun workout_summary() = snap {
+        val start = clock.millis() - 1_800_000
+        // A ~3 km loop around a campus with a faster middle section.
+        val route = (0 until 600).map { i ->
+            val a = i / 600.0 * 2 * Math.PI
+            val r = 0.0045 * (1 + 0.25 * kotlin.math.sin(3 * a))
+            com.fitagent.domain.RoutePoint(start + i * 3000L + (if (i in 200..350) -800L * (i - 200) / 150 else 0), 28.545 + r * kotlin.math.sin(a), 77.193 + r * kotlin.math.cos(a) * 1.1, 6f)
+        }
+        val w = Workout(1, "w", WorkoutType.RUN, null, start, start + 1_800_000, 1_800, 300.0, WorkoutSource.APP, 151, 178, listOf(60, 240, 900, 480, 120))
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(top = 40.dp)) {
+            com.fitagent.ui.screens.WorkoutSummaryDialog(w, route) {}
+        }
+    }
     @Test fun workout_player_run() = snap {
         ActiveWorkoutScreen(ActiveSession(WorkoutType.RUN, clock.millis() - 1_523_000), 62.0, {}, {}, {}, {})
     }
