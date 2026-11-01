@@ -46,11 +46,11 @@ object Notifications {
     fun createChannels(context: Context) {
         val nm = context.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannels(listOf(
-            NotificationChannel(CHANNEL_REMINDERS, "Goal reminders", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel(CHANNEL_REMINDERS, context.getString(R.string.channel_reminders), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = "An evening nudge when today's goal is within reach" },
-            NotificationChannel(CHANNEL_MORNING, "Morning readiness", NotificationManager.IMPORTANCE_LOW)
+            NotificationChannel(CHANNEL_MORNING, context.getString(R.string.channel_morning), NotificationManager.IMPORTANCE_LOW)
                 .apply { description = "Your readiness score and today's suggestion" },
-            NotificationChannel(CHANNEL_STUDY, "Study breaks", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel(CHANNEL_STUDY, context.getString(R.string.channel_study), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = "A gentle stretch reminder after long study sessions" },
         ))
     }
@@ -223,8 +223,8 @@ class StudyBreakWorker(context: Context, params: WorkerParameters) : CoroutineWo
         // Approximate "last 90 min" with this hour and the previous one.
         val recent = hourly.getOrElse(now.hour) { 0 } + if (now.hour > 0) hourly.getOrElse(now.hour - 1) { 0 } else 0
         if (shouldNudgeStudyBreak(now, timetable, recent)) {
-            Notifications.post(applicationContext, NudgeKind.STUDY_BREAK, 1003, "Time for a study break",
-                "You've been still for a while. Stand up for a 3-minute stretch — your focus will thank you.")
+            Notifications.post(applicationContext, NudgeKind.STUDY_BREAK, 1003, applicationContext.getString(R.string.study_break_title),
+                applicationContext.getString(R.string.study_break_text))
         }
         return Result.success()
     }

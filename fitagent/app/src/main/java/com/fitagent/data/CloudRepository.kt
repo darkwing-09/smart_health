@@ -92,6 +92,7 @@ class CloudRepository(
         hostel = p.hostel.trim(),
         batch = p.batch.trim(),
         showOnCampus = p.showOnCampus,
+        language = p.language,
     )
 
     fun signOut() = auth.signOut()

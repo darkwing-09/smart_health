@@ -8,6 +8,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.fitagent.R
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,12 +81,12 @@ import com.fitagent.ui.screens.WorkoutSummaryDialog
 import com.fitagent.ui.screens.YouScreen
 import com.fitagent.ui.theme.FitAgentTheme
 
-private enum class Tab(val label: String, val icon: ImageVector) {
-    TODAY("Today", Icons.Rounded.Today),
-    TRAIN("Train", Icons.Rounded.FitnessCenter),
-    COACH("Coach", Icons.Rounded.AutoAwesome),
-    SQUAD("Squad", Icons.Rounded.Groups),
-    YOU("You", Icons.Rounded.Person),
+private enum class Tab(@StringRes val label: Int, val icon: ImageVector) {
+    TODAY(R.string.tab_today, Icons.Rounded.Today),
+    TRAIN(R.string.tab_train, Icons.Rounded.FitnessCenter),
+    COACH(R.string.tab_coach, Icons.Rounded.AutoAwesome),
+    SQUAD(R.string.tab_squad, Icons.Rounded.Groups),
+    YOU(R.string.tab_you, Icons.Rounded.Person),
 }
 
 class MainActivity : ComponentActivity() {
@@ -241,7 +244,7 @@ class MainActivity : ComponentActivity() {
                             Tab.entries.forEach { t ->
                                 NavigationBarItem(
                                     selected = tab == t, onClick = { tab = t },
-                                    icon = { Icon(t.icon, null) }, label = { Text(t.label) },
+                                    icon = { Icon(t.icon, null) }, label = { Text(stringResource(t.label)) },
                                 )
                             }
                         }

@@ -44,7 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.fitagent.R
 import com.fitagent.data.health.HealthAvailability
 import com.fitagent.domain.MoodEntry
 import com.fitagent.domain.SleepSegment
@@ -119,7 +121,7 @@ fun TodayScreen(
 private fun Header(state: HomeState, onRefresh: () -> Unit, onOpen: (Detail) -> Unit) {
     val clock = LocalClock.current
     val hour = remember(clock) { LocalTime.now(clock).hour }
-    val greeting = when (hour) { in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; else -> "Good evening" }
+    val greeting = stringResource(when (hour) { in 5..11 -> R.string.greeting_morning; in 12..16 -> R.string.greeting_afternoon; else -> R.string.greeting_evening })
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(state.today.format(DateTimeFormatter.ofPattern("EEEE, d MMM")).uppercase(),

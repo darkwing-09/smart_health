@@ -122,6 +122,7 @@ fun YouScreen(
         item { BodyCard(state.profile, onUpdateProfile) }
         item { SectionTitle("Settings") }
         item { RemindersCard(state.profile, onUpdateProfile) }
+        item { LanguageCard(state.profile, onUpdateProfile) }
         item { HealthCard(state, onManageHealth, onOpenDevices) }
         if (cloud.account != null) item { CampusGroupsCard(state.profile, onUpdateProfile) }
         item { AccountCard(cloud, onSignIn, onSignOut, onDeleteAccount, onServerUrl) }
@@ -429,6 +430,23 @@ private fun CampusGroupsCard(profile: Profile, onUpdate: ((Profile) -> Profile) 
         if (changed) {
             Button(onClick = { onUpdate { it.copy(college = college.trim(), hostel = hostel.trim(), batch = batch.trim()) } },
                 modifier = Modifier.fillMaxWidth()) { Text("Save") }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LanguageCard(profile: Profile, onUpdate: ((Profile) -> Profile) -> Unit) {
+    AppCard {
+        Text(androidx.compose.ui.res.stringResource(com.fitagent.R.string.coach_language), style = MaterialTheme.typography.titleMedium)
+        Text("Your AI coach replies in this language. App language: Android Settings → Apps → FitAgent → Language.",
+            style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            com.fitagent.domain.COACH_LANGUAGES.forEach { (code, name) ->
+                androidx.compose.material3.FilterChip(profile.language == code, { onUpdate { it.copy(language = code) } }, label = { Text(name) })
+            }
         }
     }
 }
