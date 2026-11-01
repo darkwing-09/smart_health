@@ -151,3 +151,14 @@ data class ErrorRes(val detail: Any?)
 /** Exam mode timetable as the server stores it: free time and exam dates only — class names stay on the phone. */
 data class FreeSlotDto(val day: String, val start: String, val end: String)
 data class ScheduleDto(val freeSlots: List<FreeSlotDto>, val examDates: List<String>, val bedtime: String?)
+
+data class FoodPhotoReq(val imageBase64: String, val mimeType: String, val note: String)
+data class FoodItemDto(val name: String, val portion: String, val kcal: Int, val proteinG: Double, val carbsG: Double, val fatG: Double, val confidence: String)
+data class FoodEstimateRes(
+    val items: List<FoodItemDto>,
+    val note: String,
+    val totalKcal: Int,
+    val aiPowered: Boolean,
+    val safety: String?,
+    val safetyMessage: String?,
+)

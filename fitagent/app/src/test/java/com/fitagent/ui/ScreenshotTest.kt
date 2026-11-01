@@ -142,6 +142,18 @@ class ScreenshotTest {
         com.fitagent.ui.screens.ChallengeDetail(cloud.challenges.first(), "https://api.fitagent.app/j/K7QM2P", {}, {}, { _, _, _ -> })
     }
     @Test fun recap() = snap { com.fitagent.ui.screens.RecapScreen(home) {} }
+    @Test fun food() = snap {
+        val m = com.fitagent.domain.Meal.entries
+        val foods = (0L..6L).flatMap { ago ->
+            val d = today.minusDays(ago)
+            listOf(com.fitagent.domain.FoodEntry(ago * 10, d, m[0], "Poha", "1 plate", 250, 5.0, 45.0, 6.0),
+                com.fitagent.domain.FoodEntry(ago * 10 + 1, d, m[1], "Dal tadka", "1 katori", 150, 9.0, 20.0, 4.0, fromPhoto = true),
+                com.fitagent.domain.FoodEntry(ago * 10 + 2, d, m[1], "Chapati / roti", "3 × 1 piece", 300, 9.0, 54.0, 7.5, fromPhoto = true),
+                com.fitagent.domain.FoodEntry(ago * 10 + 3, d, m[2], "Chai with sugar", "1 cup", 90, 2.5, 12.0, 3.0),
+                com.fitagent.domain.FoodEntry(ago * 10 + 4, d, m[3], "Egg curry", "2 eggs", 280, 13.0, 8.0, 21.0))
+        }
+        com.fitagent.ui.screens.FoodScreen(home, foods, com.fitagent.ui.FoodPhotoState.Idle, {}, {}, {}, {}, {})
+    }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }

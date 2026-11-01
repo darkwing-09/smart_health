@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitagent.container
 import com.fitagent.data.DataSource
+import com.fitagent.data.local.FoodEntity
 import com.fitagent.data.local.MoodEntity
 import com.fitagent.data.HealthStatus
 import com.fitagent.data.SyncEvent
@@ -23,7 +24,10 @@ import com.fitagent.domain.IntervalConfig
 import com.fitagent.domain.Profile
 import com.fitagent.domain.Readiness
 import com.fitagent.domain.StreakInfo
+import com.fitagent.domain.FoodEntry
+import com.fitagent.domain.Meal
 import com.fitagent.domain.MoodEntry
+import com.fitagent.domain.mealFor
 import com.fitagent.domain.Routine
 import com.fitagent.domain.Suggestion
 import com.fitagent.domain.Timetable
@@ -75,6 +79,14 @@ data class HomeState(
     /** When watch data was last read successfully (0 = never). */
     val lastWatchSync: Long = 0,
 )
+
+sealed interface FoodPhotoState {
+    data object Idle : FoodPhotoState
+    data object Analysing : FoodPhotoState
+    /** Editable estimate; the user confirms before anything is saved. */
+    data class Review(val items: List<FoodEntry>, val note: String) : FoodPhotoState
+    data class Message(val text: String, val supportive: Boolean = false) : FoodPhotoState
+}
 
 sealed interface CompatibilityState {
     data object Idle : CompatibilityState
@@ -189,6 +201,53 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             c.db.mood().upsert(MoodEntity(LocalDate.now().toEpochDay(), score.coerceIn(1, 5), tags.joinToString(",")))
         }
     }
+
+    // ── Food log (stays on the phone) ────────────────────────────────────────
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val foods: StateFlow<List<FoodEntry>> = today.flatMapLatest { d -> c.db.food().observeSince(d.minusDays(6).toEpochDay()) }
+        .map { rows -> rows.map { FoodEntry(it.id, LocalDate.ofEpochDay(it.epochDay), Meal.valueOf(it.meal), it.name, it.portion, it.kcal, it.proteinG, it.carbsG, it.fatG, it.fromPhoto) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _foodPhoto = MutableStateFlow<FoodPhotoState>(FoodPhotoState.Idle)
+    val foodPhoto: StateFlow<FoodPhotoState> = _foodPhoto.asStateFlow()
+
+    fun addFoods(entries: List<FoodEntry>) = viewModelScope.launch {
+        c.db.food().insert(entries.map {
+            FoodEntity(0, it.date.toEpochDay(), it.meal.name, it.name.take(60), it.portion.take(40), it.kcal.coerceIn(0, 3000),
+                it.proteinG.coerceIn(0.0, 300.0), it.carbsG.coerceIn(0.0, 600.0), it.fatG.coerceIn(0.0, 300.0), it.fromPhoto)
+        })
+        _foodPhoto.value = FoodPhotoState.Idle
+    }
+
+    fun deleteFood(id: Long) = viewModelScope.launch { c.db.food().delete(id) }
+
+    /** Sends the photo for an estimate. The file is deleted right after it's read. */
+    fun estimateFoodPhoto(file: java.io.File, note: String) {
+        _foodPhoto.value = FoodPhotoState.Analysing
+        viewModelScope.launch {
+            val jpeg = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { com.fitagent.ui.screens.downscaleJpeg(file) }.also { file.delete() }.getOrNull()
+            }
+            if (jpeg == null) { _foodPhoto.value = FoodPhotoState.Message("Couldn't read the photo — try again."); return@launch }
+            if (c.auth.account.value == null) { _foodPhoto.value = FoodPhotoState.Message("Sign in to estimate meals from photos, or add items from the list."); return@launch }
+            c.cloud.estimateFood(jpeg, note).fold(
+                onSuccess = { r ->
+                    val now = java.time.LocalDateTime.now()
+                    _foodPhoto.value = when {
+                        r.safety != null -> FoodPhotoState.Message(r.safetyMessage ?: "", supportive = true)
+                        r.items.isEmpty() && !r.aiPowered -> FoodPhotoState.Message("The AI coach is offline right now — add items from the list instead.")
+                        r.items.isEmpty() -> FoodPhotoState.Message("No food found in that photo. Try again with the plate in view.")
+                        else -> FoodPhotoState.Review(r.items.map {
+                            FoodEntry(0, now.toLocalDate(), mealFor(now.hour), it.name, it.portion, it.kcal, it.proteinG, it.carbsG, it.fatG, fromPhoto = true)
+                        }, r.note)
+                    }
+                },
+                onFailure = { _foodPhoto.value = FoodPhotoState.Message(it.userMessage()) },
+            )
+        }
+    }
+
+    fun dismissFoodPhoto() { _foodPhoto.value = FoodPhotoState.Idle }
 
     // ── Exam mode ────────────────────────────────────────────────────────────
     val timetable: StateFlow<Timetable> = c.timetable.timetable

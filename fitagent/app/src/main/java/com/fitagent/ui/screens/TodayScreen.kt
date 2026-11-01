@@ -86,6 +86,7 @@ fun TodayScreen(
     onOpen: (Detail) -> Unit = {},
     todayMood: MoodEntry? = null,
     onSaveMood: (Int, Set<String>) -> Unit = { _, _ -> },
+    foods: List<com.fitagent.domain.FoodEntry> = emptyList(),
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -102,6 +103,7 @@ fun TodayScreen(
         item { Tiles(state, onOpen) }
         item { SleepCard(state, lastNight) { onOpen(Detail.SLEEP) } }
         item { MoodCheckInCard(todayMood, onSaveMood) { onOpen(Detail.MOOD) } }
+        item { FoodTodayCard(foods, state.today, state.profile.weightKg) { onOpen(Detail.FOOD) } }
         item { WeekStrip(state) }
         val todays = state.workouts.filter {
             java.time.Instant.ofEpochMilli(it.startMs).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == state.today

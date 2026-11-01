@@ -66,6 +66,7 @@ import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.BreatheScreen
 import com.fitagent.ui.screens.MoodScreen
 import com.fitagent.domain.Routines
+import com.fitagent.ui.screens.FoodScreen
 import com.fitagent.ui.screens.LibraryScreen
 import com.fitagent.ui.screens.RecapScreen
 import com.fitagent.ui.screens.RoutinePlayer
@@ -91,6 +92,21 @@ class MainActivity : ComponentActivity() {
     private val healthPermissions =
         registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { main.refresh() }
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    private var pendingPhoto: java.io.File? = null
+    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        val file = pendingPhoto ?: return@registerForActivityResult
+        pendingPhoto = null
+        if (saved) main.estimateFoodPhoto(file, "") else file.delete()
+    }
+
+    private fun launchFoodCamera() {
+        val dir = java.io.File(cacheDir, "photos").apply { mkdirs() }
+        val file = java.io.File(dir, "meal-${System.currentTimeMillis()}.jpg")
+        pendingPhoto = file
+        runCatching { takePhoto.launch(androidx.core.content.FileProvider.getUriForFile(this, "$packageName.files", file)) }
+            .onFailure { pendingPhoto = null }
+    }
+
     private val icsPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri ?: return@registerForActivityResult
         runCatching { contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }
@@ -191,6 +207,7 @@ class MainActivity : ComponentActivity() {
         val hourly by main.hourlySteps.collectAsStateWithLifecycle()
         val lastNight by main.lastNight.collectAsStateWithLifecycle()
         val moods by main.moods.collectAsStateWithLifecycle()
+        val foods by main.foods.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
 
@@ -232,7 +249,7 @@ class MainActivity : ComponentActivity() {
             ) { padding ->
                 when (tab) {
                     Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
-                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood)
+                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods)
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
@@ -283,6 +300,11 @@ class MainActivity : ComponentActivity() {
                     }
                     Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
                     Detail.RECAP -> RecapScreen(state) { detail = null }
+                    Detail.FOOD -> {
+                        val photo by main.foodPhoto.collectAsStateWithLifecycle()
+                        FoodScreen(state, foods, photo, onTakePhoto = ::launchFoodCamera, onAdd = { main.addFoods(it) },
+                            onDelete = { main.deleteFood(it) }, onDismissPhoto = main::dismissFoodPhoto) { detail = null }
+                    }
                     Detail.LIBRARY -> LibraryScreen(onStartRoutine = { routineId = it.id }) { detail = null }
                     Detail.TIMETABLE -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
