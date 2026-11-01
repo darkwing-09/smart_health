@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitagent.container
 import com.fitagent.data.DataSource
+import com.fitagent.data.local.MoodEntity
 import com.fitagent.data.HealthStatus
 import com.fitagent.data.SyncEvent
 import com.fitagent.data.health.CompatibilityRow
@@ -21,6 +22,7 @@ import com.fitagent.domain.IntervalConfig
 import com.fitagent.domain.Profile
 import com.fitagent.domain.Readiness
 import com.fitagent.domain.StreakInfo
+import com.fitagent.domain.MoodEntry
 import com.fitagent.domain.Suggestion
 import com.fitagent.domain.Timetable
 import com.fitagent.domain.parseIcs
@@ -36,6 +38,7 @@ import com.fitagent.service.Scheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -173,6 +176,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     val lastCloudSync: Long get() = c.auth.lastSyncMs
+
+    // ── Mood (stays on the phone) ────────────────────────────────────────────
+    val moods: StateFlow<List<MoodEntry>> = c.db.mood().observe()
+        .map { rows -> rows.map { MoodEntry(LocalDate.ofEpochDay(it.epochDay), it.score, it.tags.split(',').filter(String::isNotBlank).toSet()) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun saveMood(score: Int, tags: Set<String>) {
+        viewModelScope.launch {
+            c.db.mood().upsert(MoodEntity(LocalDate.now().toEpochDay(), score.coerceIn(1, 5), tags.joinToString(",")))
+        }
+    }
 
     // ── Exam mode ────────────────────────────────────────────────────────────
     val timetable: StateFlow<Timetable> = c.timetable.timetable

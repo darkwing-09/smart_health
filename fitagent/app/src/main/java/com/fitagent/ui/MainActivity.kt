@@ -63,6 +63,8 @@ import com.fitagent.ui.screens.DevicesScreen
 import com.fitagent.ui.screens.HeartScreen
 import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
+import com.fitagent.ui.screens.BreatheScreen
+import com.fitagent.ui.screens.MoodScreen
 import com.fitagent.ui.screens.TimetableScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainScreen
@@ -163,6 +165,7 @@ class MainActivity : ComponentActivity() {
         if (detail != null) shownDetail.value = detail
         val hourly by main.hourlySteps.collectAsStateWithLifecycle()
         val lastNight by main.lastNight.collectAsStateWithLifecycle()
+        val moods by main.moods.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
 
@@ -204,7 +207,7 @@ class MainActivity : ComponentActivity() {
             ) { padding ->
                 when (tab) {
                     Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
-                        onOpen = { detail = it })
+                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood)
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = main::startWorkout, onLog = main::logPastWorkout,
@@ -246,6 +249,11 @@ class MainActivity : ComponentActivity() {
                             onConnect = ::connectHealth, onBack = { detail = null },
                         )
                     }
+                    Detail.MOOD -> {
+                        val heartToday by main.heartToday.collectAsStateWithLifecycle()
+                        MoodScreen(state, moods, heartToday, hourly, onBreathe = { detail = Detail.BREATHE }) { detail = null }
+                    }
+                    Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
                     Detail.TIMETABLE -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TimetableScreen(timetable, state.today, cloudState.plan, onUpdate = main::updateTimetable,

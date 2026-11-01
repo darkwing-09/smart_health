@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fitagent.data.health.HealthAvailability
+import com.fitagent.domain.MoodEntry
 import com.fitagent.domain.SleepSegment
 import com.fitagent.domain.activeHourHeadline
 import com.fitagent.domain.bandFor
@@ -83,6 +84,8 @@ fun TodayScreen(
     hourly: List<Long> = List(24) { 0L },
     lastNight: List<SleepSegment> = emptyList(),
     onOpen: (Detail) -> Unit = {},
+    todayMood: MoodEntry? = null,
+    onSaveMood: (Int, Set<String>) -> Unit = { _, _ -> },
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -98,6 +101,7 @@ fun TodayScreen(
         item { CoachCard(state, onStart) }
         item { Tiles(state, onOpen) }
         item { SleepCard(state, lastNight) { onOpen(Detail.SLEEP) } }
+        item { MoodCheckInCard(todayMood, onSaveMood) { onOpen(Detail.MOOD) } }
         item { WeekStrip(state) }
         val todays = state.workouts.filter {
             java.time.Instant.ofEpochMilli(it.startMs).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == state.today

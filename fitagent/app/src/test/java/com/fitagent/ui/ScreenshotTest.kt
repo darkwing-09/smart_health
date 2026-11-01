@@ -50,6 +50,9 @@ import com.fitagent.ui.screens.HeartScreen
 import com.fitagent.ui.screens.ReadinessScreen
 import com.fitagent.ui.screens.SleepScreen
 import com.fitagent.ui.screens.TimetableScreen
+import com.fitagent.ui.screens.BreatheScreen
+import com.fitagent.ui.screens.MoodCheckInCard
+import com.fitagent.ui.screens.MoodScreen
 import com.fitagent.ui.screens.TodayScreen
 import com.fitagent.ui.screens.TrainingInsights
 import com.fitagent.ui.screens.TrainScreen
@@ -93,6 +96,17 @@ class ScreenshotTest {
         )))
         TimetableScreen(timetable, today, examPlan, {}, {}, {})
     }
+    @Test fun mood_today_card() = snap {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(16.dp, 28.dp)) {
+            MoodCheckInCard(com.fitagent.domain.MoodEntry(today, 4, setOf("Exams")), { _, _ -> }, {})
+        }
+    }
+    @Test fun stress_and_mood() = snap {
+        val moods = (0L..40L).map { com.fitagent.domain.MoodEntry(today.minusDays(it), listOf(4, 3, 4, 5, 2, 3, 4)[(it % 7).toInt()],
+            setOf(listOf("Exams", "Sleep", "Friends")[(it % 3).toInt()])) }
+        MoodScreen(home, moods, heartToday, hourly, {}, {})
+    }
+    @Test fun breathe() = snap { BreatheScreen {} }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }
