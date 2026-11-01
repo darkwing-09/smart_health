@@ -154,6 +154,14 @@ class ScreenshotTest {
         }
         com.fitagent.ui.screens.FoodScreen(home, foods, com.fitagent.ui.FoodPhotoState.Idle, {}, {}, {}, {}, {})
     }
+    @Test fun rewards() = snap {
+        val r = com.fitagent.data.remote.dto.RewardsRes(185, 235,
+            (7 downTo 0).map { com.fitagent.data.remote.dto.WeekPointsDto(today.minusWeeks(it.toLong()).toString(), listOf(20, 40, 35, 60, 50, 70, 45, 30)[7 - it]) },
+            listOf(com.fitagent.data.remote.dto.PerkDto("p1", "Free gym day pass", "", "Campus Gym", 150, 12),
+                com.fitagent.data.remote.dto.PerkDto("p2", "20% off at the juice bar", "", "Fresh Squeeze", 300, 40)),
+            listOf(com.fitagent.data.remote.dto.RedemptionDto("K7Q2MXPA", "Canteen fruit bowl", 50, "2026-10-21T10:00:00Z")))
+        com.fitagent.ui.screens.RewardsScreen(cloud.copy(rewards = r), {}, {}, {})
+    }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }

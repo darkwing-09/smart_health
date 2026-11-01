@@ -92,6 +92,7 @@ fun YouScreen(
     onPrivacy: () -> Unit,
     onOpenDevices: () -> Unit = {},
     onOpenRecap: () -> Unit = {},
+    onOpenRewards: () -> Unit = {},
 ) {
     var range by rememberSaveable { mutableStateOf(ChartPeriod.WEEK) }
     LazyColumn(
@@ -106,6 +107,9 @@ fun YouScreen(
             OutlinedButton(onClick = onOpenRecap, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text("Share my weekly recap")
             }
+        }
+        if (cloud.account != null) item {
+            OutlinedButton(onClick = onOpenRewards, modifier = Modifier.fillMaxWidth()) { Text("🎁  Rewards & campus perks") }
         }
         item { SectionTitle("Achievements", trailing = {
             Text("${state.achievements.count { it.unlocked }}/${state.achievements.size}",

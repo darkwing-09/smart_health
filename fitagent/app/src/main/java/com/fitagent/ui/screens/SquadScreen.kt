@@ -130,6 +130,22 @@ fun SquadScreen(
                     style = MaterialTheme.typography.bodyMedium, color = Fit.colors.muted)
             }
         }
+        val joinable = cloud.official.filter { !it.joined }
+        if (joinable.isNotEmpty()) {
+            item { SectionTitle("From your college") }
+            items(joinable, key = { "o" + it.id }) { o ->
+                AppCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("🏛 ${o.name}", style = MaterialTheme.typography.titleMedium)
+                            Text("${METRICS.first { it.first == o.metric }.second} · ${o.participants} joined · ends ${o.endDate}",
+                                style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+                        }
+                        Button(onClick = { onJoin(o.code) {} }) { Text("Join") }
+                    }
+                }
+            }
+        }
         val active = cloud.challenges.filter { it.status != "finished" }
         val finished = cloud.challenges.filter { it.status == "finished" }
         if (active.isNotEmpty()) item { SectionTitle("Active") }
