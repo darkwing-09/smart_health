@@ -56,3 +56,14 @@ class NudgesTest {
         assertTrue(later.endsWith("fits at 11:00."))
     }
 }
+
+class BedtimeTest {
+    @Test fun bedtimeFromTomorrowsFirstClass() {
+        val t = Timetable(busy = listOf(BusyBlock(DayOfWeek.TUESDAY, 8 * 60, 10 * 60), BusyBlock(DayOfWeek.TUESDAY, 14 * 60, 15 * 60)))
+        // 08:00 class − 45 min − 8 h = 23:15
+        assertEquals(23 * 60 + 10, bedtimeTarget(t, DayOfWeek.TUESDAY))
+        // No class tomorrow → 09:00 − 45 − 480 = 00:15 (after midnight)
+        assertEquals(10, bedtimeTarget(t, DayOfWeek.WEDNESDAY))
+        assertTrue(bedtimeMessage(23 * 60 + 10, 8 * 60).contains("first class is at 08:00"))
+    }
+}

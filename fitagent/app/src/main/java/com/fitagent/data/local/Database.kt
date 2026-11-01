@@ -205,11 +205,15 @@ interface FitnessDao {
     @Upsert
     suspend fun upsertDays(days: List<DailyDeviceEntity>)
 
-    @Query("SELECT * FROM workouts ORDER BY start_ms DESC")
+    // Imported workouts the user removed stay hidden even though every refresh re-imports them.
+    @Query("SELECT * FROM workouts WHERE uid NOT IN (SELECT uid FROM hidden_imports) ORDER BY start_ms DESC")
     fun observeWorkouts(): Flow<List<WorkoutEntity>>
 
-    @Query("SELECT * FROM workouts ORDER BY start_ms DESC")
+    @Query("SELECT * FROM workouts WHERE uid NOT IN (SELECT uid FROM hidden_imports) ORDER BY start_ms DESC")
     suspend fun getWorkouts(): List<WorkoutEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun hideImport(row: HiddenImportEntity)
 
     @Query("SELECT * FROM workouts WHERE id = :id")
     suspend fun getWorkout(id: Long): WorkoutEntity?
@@ -336,6 +340,13 @@ interface FoodDao {
     fun observeSince(fromDay: Long): Flow<List<FoodEntity>>
 }
 
+/** An imported (Health Connect) workout the user removed — e.g. a wrongly auto-detected walk. */
+@Entity(tableName = "hidden_imports")
+data class HiddenImportEntity(
+    @PrimaryKey @ColumnInfo(name = "uid") val uid: String,
+    @ColumnInfo(name = "hidden_at") val hiddenAt: Long = System.currentTimeMillis(),
+)
+
 /** One GPS fix of a workout route, keyed by the session's start time (= the saved workout's start). */
 @Entity(tableName = "route_points", primaryKeys = ["session_start", "time_ms"])
 data class RoutePointEntity(
@@ -375,14 +386,14 @@ interface MoodDao {
 @Database(
     entities = [
         DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
-        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class, RoutePointEntity::class,
+        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class, RoutePointEntity::class, HiddenImportEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
-    // v2 watch metrics · v3 mood · v4 food log · v5 workout heart rate · v6 GPS routes. Additive only → auto-migrations.
+    // v2 watch metrics · v3 mood · v4 food log · v5 workout HR · v6 GPS routes · v7 hidden imports. Additive → auto.
     autoMigrations = [
         AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7),
     ],
 )
 abstract class AppDatabase : RoomDatabase() {

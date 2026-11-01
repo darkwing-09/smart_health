@@ -1,0 +1,713 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 7,
+    "identityHash": "9c5cd12b7321dde8f4c33388de3df0aa",
+    "entities": [
+      {
+        "tableName": "daily_device",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epoch_day` INTEGER NOT NULL, `steps` INTEGER NOT NULL, `distance_m` REAL NOT NULL, `active_kcal` REAL, `resting_hr` INTEGER, `avg_hr` INTEGER, `sleep_min` INTEGER, `updated_at` INTEGER NOT NULL, `hr_min` INTEGER, `hr_max` INTEGER, `floors` INTEGER, `vo2max` REAL, `sleep_deep_min` INTEGER, `sleep_rem_min` INTEGER, `sleep_light_min` INTEGER, `sleep_awake_min` INTEGER, `bed_ms` INTEGER, `wake_ms` INTEGER, `hrv_ms` REAL, `spo2_avg` REAL, `spo2_min` REAL, `resp_rate` REAL, `skin_temp_delta` REAL, `steps_source` TEXT, `sleep_source` TEXT, PRIMARY KEY(`epoch_day`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "steps",
+            "columnName": "steps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "distanceMeters",
+            "columnName": "distance_m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeKcal",
+            "columnName": "active_kcal",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "restingHr",
+            "columnName": "resting_hr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "avgHr",
+            "columnName": "avg_hr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sleepMinutes",
+            "columnName": "sleep_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hrMin",
+            "columnName": "hr_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "hrMax",
+            "columnName": "hr_max",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "floors",
+            "columnName": "floors",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "vo2max",
+            "columnName": "vo2max",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "sleepDeep",
+            "columnName": "sleep_deep_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sleepRem",
+            "columnName": "sleep_rem_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sleepLight",
+            "columnName": "sleep_light_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sleepAwake",
+            "columnName": "sleep_awake_min",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bedMs",
+            "columnName": "bed_ms",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "wakeMs",
+            "columnName": "wake_ms",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "hrvMs",
+            "columnName": "hrv_ms",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "spo2Avg",
+            "columnName": "spo2_avg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "spo2Min",
+            "columnName": "spo2_min",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "respiratoryRate",
+            "columnName": "resp_rate",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "skinTempDelta",
+            "columnName": "skin_temp_delta",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "stepsSource",
+            "columnName": "steps_source",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sleepSource",
+            "columnName": "sleep_source",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epoch_day"
+          ]
+        }
+      },
+      {
+        "tableName": "workouts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` TEXT NOT NULL, `type` TEXT NOT NULL, `title` TEXT, `start_ms` INTEGER NOT NULL, `end_ms` INTEGER NOT NULL, `active_seconds` INTEGER NOT NULL, `kcal` REAL NOT NULL, `source` TEXT NOT NULL, `hc_id` TEXT, `avg_hr` INTEGER, `max_hr` INTEGER, `zone_seconds` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startMs",
+            "columnName": "start_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endMs",
+            "columnName": "end_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeSeconds",
+            "columnName": "active_seconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kcal",
+            "columnName": "kcal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "hc_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avgHr",
+            "columnName": "avg_hr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "maxHr",
+            "columnName": "max_hr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "zoneSeconds",
+            "columnName": "zone_seconds",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_workouts_uid",
+            "unique": true,
+            "columnNames": [
+              "uid"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_workouts_uid` ON `${TABLE_NAME}` (`uid`)"
+          },
+          {
+            "name": "index_workouts_start_ms",
+            "unique": false,
+            "columnNames": [
+              "start_ms"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_workouts_start_ms` ON `${TABLE_NAME}` (`start_ms`)"
+          }
+        ]
+      },
+      {
+        "tableName": "hourly",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epoch_day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `steps` INTEGER NOT NULL, `active_kcal` REAL, PRIMARY KEY(`epoch_day`, `hour`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hour",
+            "columnName": "hour",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "steps",
+            "columnName": "steps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeKcal",
+            "columnName": "active_kcal",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epoch_day",
+            "hour"
+          ]
+        }
+      },
+      {
+        "tableName": "hr_buckets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`start_ms` INTEGER NOT NULL, `bpm_min` INTEGER NOT NULL, `bpm_avg` INTEGER NOT NULL, `bpm_max` INTEGER NOT NULL, PRIMARY KEY(`start_ms`))",
+        "fields": [
+          {
+            "fieldPath": "startMs",
+            "columnName": "start_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "min",
+            "columnName": "bpm_min",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "avg",
+            "columnName": "bpm_avg",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "max",
+            "columnName": "bpm_max",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "start_ms"
+          ]
+        }
+      },
+      {
+        "tableName": "sleep_segments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`start_ms` INTEGER NOT NULL, `end_ms` INTEGER NOT NULL, `stage` TEXT NOT NULL, `night_epoch_day` INTEGER NOT NULL, PRIMARY KEY(`start_ms`))",
+        "fields": [
+          {
+            "fieldPath": "startMs",
+            "columnName": "start_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endMs",
+            "columnName": "end_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stage",
+            "columnName": "stage",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nightEpochDay",
+            "columnName": "night_epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "start_ms"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sleep_segments_night_epoch_day",
+            "unique": false,
+            "columnNames": [
+              "night_epoch_day"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sleep_segments_night_epoch_day` ON `${TABLE_NAME}` (`night_epoch_day`)"
+          }
+        ]
+      },
+      {
+        "tableName": "phone_steps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epoch_day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `steps` INTEGER NOT NULL, PRIMARY KEY(`epoch_day`, `hour`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hour",
+            "columnName": "hour",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "steps",
+            "columnName": "steps",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epoch_day",
+            "hour"
+          ]
+        }
+      },
+      {
+        "tableName": "sources",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `label` TEXT NOT NULL, `first_seen_ms` INTEGER NOT NULL, `last_data_ms` INTEGER NOT NULL, `records_received` INTEGER NOT NULL, `data_types` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstSeenMs",
+            "columnName": "first_seen_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastDataMs",
+            "columnName": "last_data_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordsReceived",
+            "columnName": "records_received",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dataTypes",
+            "columnName": "data_types",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "sync_log",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `time_ms` INTEGER NOT NULL, `kind` TEXT NOT NULL, `ok` INTEGER NOT NULL, `records` INTEGER NOT NULL, `duration_ms` INTEGER NOT NULL, `message` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeMs",
+            "columnName": "time_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ok",
+            "columnName": "ok",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "records",
+            "columnName": "records",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationMs",
+            "columnName": "duration_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sync_log_time_ms",
+            "unique": false,
+            "columnNames": [
+              "time_ms"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sync_log_time_ms` ON `${TABLE_NAME}` (`time_ms`)"
+          }
+        ]
+      },
+      {
+        "tableName": "mood",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epoch_day` INTEGER NOT NULL, `score` INTEGER NOT NULL, `tags` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`epoch_day`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epoch_day"
+          ]
+        }
+      },
+      {
+        "tableName": "food",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epoch_day` INTEGER NOT NULL, `meal` TEXT NOT NULL, `name` TEXT NOT NULL, `portion` TEXT NOT NULL, `kcal` INTEGER NOT NULL, `protein_g` REAL NOT NULL, `carbs_g` REAL NOT NULL, `fat_g` REAL NOT NULL, `from_photo` INTEGER NOT NULL, `created_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epoch_day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meal",
+            "columnName": "meal",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "portion",
+            "columnName": "portion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kcal",
+            "columnName": "kcal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "proteinG",
+            "columnName": "protein_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carbsG",
+            "columnName": "carbs_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fatG",
+            "columnName": "fat_g",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromPhoto",
+            "columnName": "from_photo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_food_epoch_day",
+            "unique": false,
+            "columnNames": [
+              "epoch_day"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_food_epoch_day` ON `${TABLE_NAME}` (`epoch_day`)"
+          }
+        ]
+      },
+      {
+        "tableName": "route_points",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_start` INTEGER NOT NULL, `time_ms` INTEGER NOT NULL, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `accuracy` REAL NOT NULL, PRIMARY KEY(`session_start`, `time_ms`))",
+        "fields": [
+          {
+            "fieldPath": "sessionStart",
+            "columnName": "session_start",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeMs",
+            "columnName": "time_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accuracy",
+            "columnName": "accuracy",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_start",
+            "time_ms"
+          ]
+        }
+      },
+      {
+        "tableName": "hidden_imports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `hidden_at` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "fields": [
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hiddenAt",
+            "columnName": "hidden_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "uid"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c5cd12b7321dde8f4c33388de3df0aa')"
+    ]
+  }
+}

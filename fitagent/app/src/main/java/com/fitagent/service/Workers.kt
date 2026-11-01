@@ -23,6 +23,8 @@ import com.fitagent.R
 import com.fitagent.container
 import com.fitagent.domain.Profile
 import com.fitagent.domain.NudgeKind
+import com.fitagent.domain.bedtimeMessage
+import com.fitagent.domain.bedtimeTarget
 import com.fitagent.domain.canPost
 import com.fitagent.domain.computeReadiness
 import com.fitagent.domain.computeStreak
@@ -113,6 +115,7 @@ object Scheduler {
     private const val WATCH_SYNC = "watch_sync"
     private const val MORNING = "morning_card"
     private const val STUDY_BREAKS = "study_breaks"
+    private const val BEDTIME = "bedtime"
 
     fun scheduleReminder(context: Context, profile: Profile) {
         val wm = WorkManager.getInstance(context)
@@ -143,6 +146,18 @@ object Scheduler {
                 .setInitialDelay(Duration.between(now, next).toMinutes(), TimeUnit.MINUTES).build())
         wm.enqueueUniquePeriodicWork(STUDY_BREAKS, ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<StudyBreakWorker>(30, TimeUnit.MINUTES).build())
+        scheduleBedtime(context)
+    }
+
+    /** One-off reminder 30 minutes before tonight's target bedtime (re-planned every evening by the worker). */
+    fun scheduleBedtime(context: Context) {
+        val now = LocalDateTime.now()
+        val target = bedtimeTarget(context.container.timetable.timetable.value, now.toLocalDate().plusDays(1).dayOfWeek)
+        val bedDate = if (target < 12 * 60) now.toLocalDate().plusDays(1) else now.toLocalDate()
+        var at = bedDate.atStartOfDay().plusMinutes(target - 30L)
+        if (!at.isAfter(now)) at = at.plusDays(1)
+        WorkManager.getInstance(context).enqueueUniqueWork(BEDTIME, ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<BedtimeWorker>().setInitialDelay(Duration.between(now, at).toMinutes(), TimeUnit.MINUTES).build())
     }
 
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
@@ -205,6 +220,22 @@ class MorningWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val s = suggestToday(day, r, workouts, profile.goals, today, zone)
         val (title, text) = morningMessage(r, s, c.timetable.timetable.value, LocalDateTime.now(zone))
         Notifications.post(applicationContext, NudgeKind.MORNING, 1002, title, text)
+        return Result.success()
+    }
+}
+
+/** Bedtime reminder (D2), then schedules tomorrow's. */
+class BedtimeWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val c = applicationContext.container
+        if (c.profiles.profile.value.remindersEnabled) {
+            val timetable = c.timetable.timetable.value
+            val tomorrow = LocalDate.now().plusDays(1).dayOfWeek
+            val target = bedtimeTarget(timetable, tomorrow)
+            val first = timetable.busy.filter { it.day == tomorrow }.minOfOrNull { it.startMin }
+            Notifications.post(applicationContext, NudgeKind.BEDTIME, 1004, "Wind down in 30 minutes", bedtimeMessage(target, first))
+        }
+        Scheduler.scheduleBedtime(applicationContext)
         return Result.success()
     }
 }

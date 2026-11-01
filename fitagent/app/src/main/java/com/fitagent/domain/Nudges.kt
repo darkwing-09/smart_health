@@ -8,7 +8,7 @@ import java.time.LocalDateTime
  * Pure decisions; the workers in service/ only post what these functions allow.
  */
 
-enum class NudgeKind { MORNING, EVENING, STUDY_BREAK, CHALLENGE }
+enum class NudgeKind { MORNING, EVENING, STUDY_BREAK, CHALLENGE, BEDTIME }
 
 /** At most this many notifications of all kinds per day; study breaks have their own smaller cap. */
 const val DAILY_NOTIFICATION_CAP = 3
@@ -73,3 +73,23 @@ fun morningMessage(r: Readiness, s: Suggestion, timetable: Timetable, now: Local
     }
     return title to text
 }
+
+
+/** Default first commitment when the timetable has no class tomorrow. */
+const val DEFAULT_WAKE_COMMITMENT_MIN = 9 * 60
+const val GET_READY_MIN = 45
+const val SLEEP_NEED_MIN = 8 * 60
+
+/**
+ * Target bedtime for tonight (D2): tomorrow's first class (or 09:00) − 45 min to get ready − 8 h of sleep,
+ * rounded down to 10 minutes. Returned as minutes after midnight, wrapping (e.g. 22:30 → 1350, 00:15 → 15).
+ */
+fun bedtimeTarget(timetable: Timetable, tomorrow: java.time.DayOfWeek, sleepNeedMin: Int = SLEEP_NEED_MIN): Int {
+    val first = timetable.busy.filter { it.day == tomorrow }.minOfOrNull { it.startMin } ?: DEFAULT_WAKE_COMMITMENT_MIN
+    val raw = first - GET_READY_MIN - sleepNeedMin
+    val wrapped = ((raw % 1440) + 1440) % 1440
+    return wrapped / 10 * 10
+}
+
+fun bedtimeMessage(targetMin: Int, firstClassMin: Int?): String =
+    "Aim to be asleep by ${hhmm(targetMin)}" + (firstClassMin?.let { " — your first class is at ${hhmm(it)}." } ?: " for a full 8 hours.")
