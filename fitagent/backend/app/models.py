@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     Date,
     DateTime,
     Float,
@@ -47,6 +48,11 @@ class User(Base):
     goal_weekly_workouts: Mapped[int] = mapped_column(Integer, default=4)
     # Exam mode: free slots, exam dates and target bedtime only — never course names (see ScheduleModel).
     schedule: Mapped[dict | None] = mapped_column(JSON)
+    # Campus leaderboards (optional, opt-out with show_on_campus). Only group aggregates are ever shown.
+    college: Mapped[str | None] = mapped_column(String(80))
+    hostel: Mapped[str | None] = mapped_column(String(80))
+    batch: Mapped[str | None] = mapped_column(String(40))
+    show_on_campus: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     days: Mapped[list[DailyActivity]] = relationship(back_populates="user", cascade="all, delete-orphan",
@@ -157,4 +163,19 @@ class WeeklyPlanRecord(Base):
     readiness_score: Mapped[int] = mapped_column(Integer)
     readiness_band: Mapped[str] = mapped_column(String(10))
     readiness_detail: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Kudos(Base):
+    """A reaction from one challenge member to another for a given day (one of each emoji per day)."""
+
+    __tablename__ = "kudos"
+    __table_args__ = (UniqueConstraint("challenge_id", "from_user_id", "to_user_id", "day", "emoji"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    challenge_id: Mapped[str] = mapped_column(ForeignKey("challenges.id", ondelete="CASCADE"), index=True)
+    from_user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    to_user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    day: Mapped[date] = mapped_column(Date)
+    emoji: Mapped[str] = mapped_column(String(8))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

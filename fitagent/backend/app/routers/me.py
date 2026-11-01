@@ -26,7 +26,8 @@ router = APIRouter(prefix="/v1/me", tags=["me"])
 def profile_out(u: User) -> ProfileOut:
     return ProfileOut(
         id=u.id, email=u.email, display_name=u.display_name, timezone=u.timezone, age=u.age,
-        height_cm=u.height_cm, weight_kg=u.weight_kg,
+        height_cm=u.height_cm, weight_kg=u.weight_kg, college=u.college, hostel=u.hostel, batch=u.batch,
+        show_on_campus=u.show_on_campus if u.show_on_campus is not None else True,
         goals=GoalsModel(daily_steps=u.goal_steps, daily_active_kcal=u.goal_active_kcal,
                          daily_workout_minutes=u.goal_workout_minutes, weekly_workouts=u.goal_weekly_workouts),
     )
@@ -42,7 +43,9 @@ async def update_me(body: ProfileUpdate, user: CurrentUser, session: SessionDep)
     data = body.model_dump(exclude_unset=True)
     goals = data.pop("goals", None)
     for key, value in data.items():
-        setattr(user, key, value.strip() if isinstance(value, str) else value)
+        if isinstance(value, str):
+            value = value.strip() or None if key in ("college", "hostel", "batch") else value.strip()
+        setattr(user, key, value)
     if goals:
         user.goal_steps = goals["daily_steps"]
         user.goal_active_kcal = goals["daily_active_kcal"]
