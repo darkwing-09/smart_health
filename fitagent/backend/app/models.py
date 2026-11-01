@@ -53,6 +53,8 @@ class User(Base):
     hostel: Mapped[str | None] = mapped_column(String(80))
     batch: Mapped[str | None] = mapped_column(String(40))
     show_on_campus: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    # "student" or "admin". Admins manage official challenges and perks for their own college only.
+    role: Mapped[str] = mapped_column(String(10), default="student", server_default="student")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     days: Mapped[list[DailyActivity]] = relationship(back_populates="user", cascade="all, delete-orphan",
@@ -123,6 +125,9 @@ class Challenge(Base):
     end_date: Mapped[date] = mapped_column(Date)
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Official campus challenges (B2) are published by a college admin and listed for that college's students.
+    official: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    institution: Mapped[str | None] = mapped_column(String(80), index=True)
 
     members: Mapped[list[ChallengeMember]] = relationship(back_populates="challenge", cascade="all, delete-orphan",
                                                           passive_deletes=True)
@@ -178,4 +183,49 @@ class Kudos(Base):
     to_user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     day: Mapped[date] = mapped_column(Date)
     emoji: Mapped[str] = mapped_column(String(8))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PointsEntry(Base):
+    """Rewards ledger (G5). One row per earned award; (user, kind, ref) is unique so awarding is idempotent."""
+
+    __tablename__ = "points"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "ref"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # goal_day | streak_7 | streak_30 | challenge_podium | redeem
+    ref: Mapped[str] = mapped_column(String(60))
+    points: Mapped[int] = mapped_column(Integer)
+    day: Mapped[date] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Perk(Base):
+    """A partner perk students can redeem points for (gym day pass, canteen discount, …)."""
+
+    __tablename__ = "perks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    institution: Mapped[str | None] = mapped_column(String(80), index=True)  # None = available everywhere
+    title: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str] = mapped_column(String(300), default="")
+    partner: Mapped[str] = mapped_column(String(80))
+    cost: Mapped[int] = mapped_column(Integer)
+    stock: Mapped[int] = mapped_column(Integer)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Redemption(Base):
+    """Audit log of redeemed perks; the code is shown to the partner."""
+
+    __tablename__ = "redemptions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    perk_id: Mapped[str] = mapped_column(ForeignKey("perks.id", ondelete="CASCADE"))
+    code: Mapped[str] = mapped_column(String(12), unique=True)
+    points: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

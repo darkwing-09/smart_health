@@ -40,6 +40,16 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_admin(user: CurrentUser) -> User:
+    """College admins only, and only with a college set — every admin query is scoped to it."""
+    if user.role != "admin" or not (user.college or "").strip():
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin access required")
+    return user
+
+
+AdminUser = Annotated[User, Depends(get_admin)]
+
+
 class RateLimiter:
     """Sliding-window limiter, in process memory.
 
