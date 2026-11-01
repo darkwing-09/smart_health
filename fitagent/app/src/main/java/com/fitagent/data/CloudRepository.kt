@@ -18,6 +18,8 @@ import com.fitagent.data.remote.dto.RegisterReq
 import com.fitagent.data.remote.dto.SyncReq
 import com.fitagent.data.remote.dto.FreeSlotDto
 import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.FoodEstimateRes
+import com.fitagent.data.remote.dto.FoodPhotoReq
 import com.fitagent.data.remote.dto.KudosReq
 import com.fitagent.data.remote.dto.ScheduleDto
 import com.fitagent.data.prefs.TimetableStore
@@ -197,6 +199,11 @@ class CloudRepository(
     suspend fun joinChallenge(code: String): Result<ChallengeRes> = runCatching { api.join(JoinReq(code.trim())) }
     suspend fun kudos(challengeId: String, toUserId: String, emoji: String, remove: Boolean): Result<ChallengeRes> = runCatching {
         if (remove) api.removeKudos(challengeId, toUserId, emoji) else api.giveKudos(challengeId, KudosReq(toUserId, emoji))
+    }
+
+    /** Sends one JPEG for an estimate; the server never stores it. */
+    suspend fun estimateFood(jpeg: ByteArray, note: String): Result<FoodEstimateRes> = runCatching {
+        api.estimateFood(FoodPhotoReq(android.util.Base64.encodeToString(jpeg, android.util.Base64.NO_WRAP), "image/jpeg", note))
     }
 
     suspend fun campus(scope: String): Result<CampusRes> = runCatching { api.campus(scope) }

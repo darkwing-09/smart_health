@@ -304,6 +304,33 @@ data class MoodEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis(),
 )
 
+/** A food-log entry. Stays on the phone. */
+@Entity(tableName = "food", indices = [Index(value = ["epoch_day"])])
+data class FoodEntity(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Long = 0,
+    @ColumnInfo(name = "epoch_day") val epochDay: Long,
+    @ColumnInfo(name = "meal") val meal: String,
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "portion") val portion: String,
+    @ColumnInfo(name = "kcal") val kcal: Int,
+    @ColumnInfo(name = "protein_g") val proteinG: Double,
+    @ColumnInfo(name = "carbs_g") val carbsG: Double,
+    @ColumnInfo(name = "fat_g") val fatG: Double,
+    @ColumnInfo(name = "from_photo") val fromPhoto: Boolean,
+    @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
+)
+
+@Dao
+interface FoodDao {
+    @Insert suspend fun insert(rows: List<FoodEntity>)
+
+    @Query("DELETE FROM food WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("SELECT * FROM food WHERE epoch_day >= :fromDay ORDER BY epoch_day, created_at")
+    fun observeSince(fromDay: Long): Flow<List<FoodEntity>>
+}
+
 @Dao
 interface MoodDao {
     @Upsert suspend fun upsert(row: MoodEntity)
@@ -318,17 +345,18 @@ interface MoodDao {
 @Database(
     entities = [
         DailyDeviceEntity::class, WorkoutEntity::class, HourlyEntity::class, HrBucketEntity::class,
-        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class,
+        SleepSegmentEntity::class, PhoneStepsEntity::class, SourceEntity::class, SyncLogEntity::class, MoodEntity::class, FoodEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    // v2: watch metrics; v3: mood. Additive only, so Room generates the migrations from the exported schemas.
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    // v2: watch metrics; v3: mood; v4: food log. Additive only, so Room generates the migrations.
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): FitnessDao
     abstract fun health(): HealthDao
     abstract fun mood(): MoodDao
+    abstract fun food(): FoodDao
 
     companion object {
         // Future schema changes must ship Room migrations: logged workouts are user data.

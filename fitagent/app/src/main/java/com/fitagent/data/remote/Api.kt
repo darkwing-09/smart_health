@@ -15,6 +15,8 @@ import com.fitagent.data.remote.dto.ProfileUpdateReq
 import com.fitagent.data.remote.dto.RefreshReq
 import com.fitagent.data.remote.dto.RegisterReq
 import com.fitagent.data.remote.dto.CampusRes
+import com.fitagent.data.remote.dto.FoodEstimateRes
+import com.fitagent.data.remote.dto.FoodPhotoReq
 import com.fitagent.data.remote.dto.KudosReq
 import com.fitagent.data.remote.dto.ScheduleDto
 import com.fitagent.data.remote.dto.SyncReq
@@ -69,6 +71,7 @@ interface FitAgentApi {
     @DELETE("v1/challenges/{id}/kudos") suspend fun removeKudos(
         @Path("id") id: String, @Query("to_user_id") toUserId: String, @Query("emoji") emoji: String,
     ): ChallengeRes
+    @POST("v1/food/estimate") suspend fun estimateFood(@Body body: FoodPhotoReq): FoodEstimateRes
     @GET("v1/campus/leaderboard") suspend fun campus(@Query("scope") scope: String, @Query("days") days: Int = 7): CampusRes
 }
 
