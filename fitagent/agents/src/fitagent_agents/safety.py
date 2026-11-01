@@ -60,7 +60,8 @@ _RULES: list[tuple[str, re.Pattern[str], str]] = [
         "eating_disorder",
         re.compile(
             r"\b(purg(e|ing)|throw(ing)? up after eat\w*|starv(e|ing) myself|not eat(ing)? for \d+ days|"
-            r"under \d{3} (calories|kcal) a day|laxatives?|burn off everything i ate)\b",
+            r"under \d{3} (calories|kcal) a day|laxatives?|burn off everything i ate|"
+            r"skip(ping)? (all )?meals? to lose|lose \d+ ?kg in (a|one|\d+) (days?|weeks?))\b",
             re.IGNORECASE,
         ),
         _EATING,

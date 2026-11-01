@@ -367,3 +367,19 @@ async def test_invite_page_and_assetlinks(client):
     assert page.status_code == 200 and c["code"] in page.text and "Hostel Step-Off" in page.text
     assert (await client.get("/j/ZZZZZZ")).status_code == 404
     assert (await client.get("/.well-known/assetlinks.json")).json() == []
+
+
+async def test_food_estimate_without_ai_offers_manual_entry_and_validates_input(client):
+    import base64
+
+    h = await register(client)
+    jpeg = base64.b64encode(b"\xff\xd8\xff\xe0" + b"0" * 200).decode()
+    r = await client.post("/v1/food/estimate", headers=auth(h), json={"image_base64": jpeg})
+    assert r.status_code == 200 and r.json()["items"] == [] and r.json()["ai_powered"] is False
+
+    png_as_jpeg = base64.b64encode(b"\x89PNG" + b"0" * 200).decode()
+    assert (await client.post("/v1/food/estimate", headers=auth(h), json={"image_base64": png_as_jpeg})).status_code == 422
+    assert (await client.post("/v1/food/estimate", headers=auth(h), json={"image_base64": "!" * 200})).status_code == 422
+
+    r = await client.post("/v1/food/estimate", headers=auth(h), json={"image_base64": jpeg, "note": "I want to skip meals to lose weight"})
+    assert r.json()["safety"] == "eating_disorder" and r.json()["items"] == []
