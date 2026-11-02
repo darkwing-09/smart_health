@@ -54,6 +54,21 @@ object Poses {
     /** Hands on a chair seat behind (≈ y 0.70), feet on the floor. */
     val DIP_UP = Pose(0.45f, 0.72f, -85f, -85f, 0f, 90f, 2f, 92f, 120f, 120f, 122f, 122f)
     val DIP_DOWN = Pose(0.45f, 0.8f, -80f, -80f, -20f, 95f, -18f, 97f, 165f, 60f, 166f, 62f)
+    /** Hands and knees: hands under shoulders and knees under hips both on the floor. */
+    val QUADRUPED = Pose(0.45f, 0.72f, -19.5f, -19.5f, 90f, 180f, 92f, 182f, 90f, 90f, 92f, 92f)
+    val DONKEY_KICK = QUADRUPED.copy(nearThigh = 195f, nearShin = -80f)
+    val BIRD_DOG = QUADRUPED.copy(nearArm = -10f, nearForearm = -10f, farThigh = 185f, farShin = 185f)
+    val DEAD_BUG = Pose(0.5f, 0.87f, 180f, 180f, -90f, 0f, -88f, 2f, -90f, -90f, -88f, -88f)
+    val DEAD_BUG_REACH = DEAD_BUG.copy(nearThigh = -15f, nearShin = -10f, farArm = 190f, farForearm = 190f)
+    val FLUTTER_A = Pose(0.5f, 0.87f, 180f, 180f, -25f, -25f, -8f, -8f, 8f, 0f, 10f, 0f)
+    val FLUTTER_B = FLUTTER_A.copy(nearThigh = -8f, nearShin = -8f, farThigh = -25f, farShin = -25f)
+    val KNEES_IN = Pose(0.5f, 0.87f, 180f, 180f, -115f, -20f, -113f, -18f, 8f, 0f, 10f, 0f)
+    val KNEES_OUT = KNEES_IN.copy(nearThigh = -60f, nearShin = 30f, farThigh = -58f, farShin = 32f)
+    val SUMO_SQUAT = SQUAT.copy(torso = -78f, head = -80f, nearArm = 60f, nearForearm = -30f, farArm = 62f, farForearm = -28f)
+    val PIKE_DOWN = DOWN_DOG.copy(torso = 62f, head = 75f, nearArm = 120f, nearForearm = 40f, farArm = 122f, farForearm = 42f)
+    val LOW_LUNGE = LUNGE.copy(torso = -95f, head = -95f, nearArm = -100f, nearForearm = -100f, farArm = -95f, farForearm = -95f)
+    val ARMS_FORWARD = STAND.copy(nearArm = 0f, nearForearm = 0f, farArm = 2f, farForearm = 2f)
+    val ARMS_HIGH = STAND.copy(nearArm = -45f, nearForearm = -45f, farArm = -43f, farForearm = -43f)
 }
 
 enum class BodyArea(val label: String) { FULL("Full body"), LEGS("Legs"), CORE("Core"), UPPER("Upper body"), MOBILITY("Mobility"), CARDIO("Cardio") }
@@ -170,6 +185,36 @@ object ExerciseLibrary {
         ex("skater", "Skaters (step)", BodyArea.CARDIO, Level.INTERMEDIATE, true,
             listOf("Step wide side to side", "Swing arms across", "Stay low"),
             listOf("Standing tall between reps"), "Smaller steps", listOf(Poses.HALF_SQUAT, Poses.STAND, Poses.HALF_SQUAT.copy(nearArm = -20f, nearForearm = -20f), Poses.STAND), 1400),
+        ex("donkey_kick", "Donkey kicks", BodyArea.LEGS, Level.BEGINNER, true,
+            listOf("Hands and knees, back flat", "Kick one heel up toward the ceiling", "Squeeze the glute at the top"),
+            listOf("Arching the lower back"), "Smaller kick, slower", listOf(Poses.QUADRUPED, Poses.DONKEY_KICK), 1800),
+        ex("bird_dog", "Bird dog", BodyArea.CORE, Level.BEGINNER, true,
+            listOf("Hands and knees", "Reach one arm forward and the opposite leg back", "Hold 2 s, keep hips level"),
+            listOf("Rotating the hips"), "Move only the leg", listOf(Poses.QUADRUPED, Poses.BIRD_DOG), 3000),
+        ex("dead_bug", "Dead bug", BodyArea.CORE, Level.BEGINNER, true,
+            listOf("On your back, arms up, knees over hips", "Lower opposite arm and leg slowly", "Lower back stays on the floor"),
+            listOf("Back lifting off the floor"), "Move only the legs", listOf(Poses.DEAD_BUG, Poses.DEAD_BUG_REACH), 3000),
+        ex("flutter_kicks", "Flutter kicks", BodyArea.CORE, Level.INTERMEDIATE, true,
+            listOf("On your back, legs straight and low", "Small fast up-and-down kicks", "Press the lower back down"),
+            listOf("Arching the back"), "Legs higher, hands under hips", listOf(Poses.FLUTTER_A, Poses.FLUTTER_B), 700),
+        ex("reverse_crunch", "Reverse crunch", BodyArea.CORE, Level.BEGINNER, true,
+            listOf("On your back, knees bent", "Pull knees toward your chest, hips lift a little", "Lower slowly"),
+            listOf("Swinging the legs"), "Smaller range", listOf(Poses.KNEES_OUT, Poses.KNEES_IN)),
+        ex("sumo_squat", "Sumo squat", BodyArea.LEGS, Level.BEGINNER, true,
+            listOf("Wide stance, toes turned out", "Sit straight down, chest tall", "Knees track over toes"),
+            listOf("Knees caving in"), "Shallower squat", listOf(Poses.STAND, Poses.SUMO_SQUAT)),
+        ex("pike_pushup", "Pike push-up", BodyArea.UPPER, Level.ADVANCED, true,
+            listOf("Hips high in an inverted V", "Bend elbows to bring the head toward the floor", "Press back up"),
+            listOf("Elbows flaring"), "Hands on the bed edge", listOf(Poses.DOWN_DOG, Poses.PIKE_DOWN)),
+        ex("hip_flexor_stretch", "Low lunge stretch", BodyArea.MOBILITY, Level.BEGINNER, true,
+            listOf("Back knee down, front foot forward", "Reach arms up, tuck the pelvis", "Feel the stretch at the front of the back hip"),
+            listOf("Arching the lower back"), "Hands on the front knee", listOf(Poses.LUNGE, Poses.LOW_LUNGE), 4000),
+        ex("arm_circles", "Arm circles", BodyArea.MOBILITY, Level.BEGINNER, true,
+            listOf("Arms out at shoulder height", "Small circles, growing bigger", "Switch direction halfway"),
+            listOf("Shrugging the shoulders"), "Smaller circles", listOf(Poses.ARMS_FORWARD, Poses.ARMS_HIGH, Poses.ARMS_UP, Poses.ARMS_HIGH), 1600),
+        ex("jump_lunge", "Jump lunges", BodyArea.LEGS, Level.ADVANCED, false,
+            listOf("Start in a lunge", "Jump and switch legs in the air", "Land softly back in a lunge"),
+            listOf("Front knee collapsing inward"), "Alternating reverse lunges (quiet)", listOf(Poses.LUNGE, Poses.JUMP), 1400),
         ex("breathing", "Box breathing", BodyArea.MOBILITY, Level.BEGINNER, true,
             listOf("In for 4", "Hold for 4", "Out for 4, hold for 4"),
             listOf("Shallow chest breathing"), "Shorter counts (3-3-3-3)", listOf(Poses.STAND, Poses.STAND.copy(nearArm = 80f, nearForearm = 80f)), 8000),
@@ -203,15 +248,18 @@ object Routines {
         r("wake_up", "5-min wake-up", "Gentle mobility to start the day", Level.BEGINNER, WorkoutType.YOGA, 5,
             "side_bend" to 40, "toe_touch" to 40, "cobra" to 40, "child_pose" to 40, "down_dog" to 40, "breathing" to 40),
         r("study_break", "Study-break stretch", "3 minutes, no sweat — undo the desk slump", Level.BEGINNER, WorkoutType.YOGA, 5,
-            "side_bend" to 30, "good_morning" to 30, "calf_raise" to 30, "toe_touch" to 30, "breathing" to 40),
+            "arm_circles" to 30, "side_bend" to 30, "hip_flexor_stretch" to 30, "good_morning" to 30, "toe_touch" to 30, "breathing" to 40),
         r("quiet_full_body", "Quiet full body", "No jumping — fine for a hostel room at night", Level.BEGINNER, WorkoutType.STRENGTH, 15,
             "squat" to 40, "pushup_knee" to 40, "glute_bridge" to 40, "lunge" to 40, "plank" to 30, "superman" to 30, "calf_raise" to 40),
         r("core_10", "10-min core", "Stable middle for sport and posture", Level.INTERMEDIATE, WorkoutType.STRENGTH, 15,
-            "plank" to 40, "crunch" to 40, "superman" to 40, "bicycle" to 40, "plank_shoulder_tap" to 40, "glute_bridge" to 40, "plank" to 40, "child_pose" to 40),
+            "plank" to 40, "dead_bug" to 40, "superman" to 40, "bicycle" to 40, "plank_shoulder_tap" to 40, "reverse_crunch" to 40,
+            "bird_dog" to 40, "flutter_kicks" to 30, "child_pose" to 40),
         r("legs_15", "Leg day, no gym", "Strong legs with just the floor and a wall", Level.INTERMEDIATE, WorkoutType.STRENGTH, 20,
-            "squat" to 45, "lunge" to 45, "wall_sit" to 40, "glute_bridge" to 45, "lateral_lunge" to 45, "step_up" to 45, "calf_raise" to 45, "wall_sit" to 40),
+            "squat" to 45, "lunge" to 45, "wall_sit" to 40, "glute_bridge" to 45, "lateral_lunge" to 45, "sumo_squat" to 45,
+            "donkey_kick" to 45, "step_up" to 45, "calf_raise" to 45, "wall_sit" to 40),
         r("upper_12", "Upper body", "Push, dip and hold", Level.INTERMEDIATE, WorkoutType.STRENGTH, 20,
-            "pushup" to 40, "tricep_dip" to 40, "plank_shoulder_tap" to 40, "pushup_knee" to 40, "superman" to 40, "tricep_dip" to 40, "plank" to 40),
+            "arm_circles" to 30, "pushup" to 40, "tricep_dip" to 40, "pike_pushup" to 30, "plank_shoulder_tap" to 40, "pushup_knee" to 40,
+            "superman" to 40, "tricep_dip" to 40, "plank" to 40),
         r("cardio_quiet", "Quiet cardio", "Heart rate up without the stomping", Level.BEGINNER, WorkoutType.HIIT, 15,
             "high_knees" to 40, "shadow_box" to 40, "skater" to 40, "mountain_climber" to 30, "high_knees" to 40, "shadow_box" to 40),
         r("hiit_20", "20-min HIIT", "Hard intervals for a push day", Level.ADVANCED, WorkoutType.HIIT, 15,
