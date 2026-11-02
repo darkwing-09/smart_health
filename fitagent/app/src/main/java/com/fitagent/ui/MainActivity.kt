@@ -121,6 +121,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok) repsRequested.value = true
+    }
+    private val repsRequested = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    private fun openReps() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) repsRequested.value = true
+        else cameraPermission.launch(Manifest.permission.CAMERA)
+    }
+
     private val blePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { main.scanHeartRate() }
 
     private fun scanHeartRate() {
@@ -223,6 +233,8 @@ class MainActivity : ComponentActivity() {
         var showSignIn by rememberSaveable { mutableStateOf(false) }
         var detail by rememberSaveable { mutableStateOf<Detail?>(null) }
         val squadRequested by openSquad.collectAsStateWithLifecycle()
+        val reps by repsRequested.collectAsStateWithLifecycle()
+        LaunchedEffect(reps) { if (reps) { detail = Detail.REPS; repsRequested.value = false } }
         LaunchedEffect(squadRequested) { if (squadRequested) { tab = Tab.SQUAD; detail = null; openSquad.value = false } }
         var routineId by rememberSaveable { mutableStateOf<String?>(null) }
         // Keeps the closing screen rendered while it slides out.
@@ -280,7 +292,8 @@ class MainActivity : ComponentActivity() {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = { t, i -> startWorkout(t, i) }, onLog = main::logPastWorkout,
                             onDelete = { main.deleteWorkout(it) }, timetable = timetable, onOpenTimetable = { detail = Detail.TIMETABLE },
-                            onOpenLibrary = { detail = Detail.LIBRARY }, onStartRoutine = { routineId = it.id })
+                            onOpenLibrary = { detail = Detail.LIBRARY }, onStartRoutine = { routineId = it.id },
+                            onOpenReps = ::openReps)
                     }
                     Tab.COACH -> CoachScreen(state, cloudState, padding, onSignIn = { showSignIn = true },
                         onLoad = cloud::loadCoach, onSend = cloud::send, onClear = { cloud.clearChat() },
@@ -327,6 +340,8 @@ class MainActivity : ComponentActivity() {
                     }
                     Detail.BREATHE -> BreatheScreen { detail = Detail.MOOD }
                     Detail.RECAP -> RecapScreen(state) { detail = null }
+                    Detail.REPS -> com.fitagent.ui.reps.RepCounterScreen(profile.voiceCues,
+                        onSave = { e, n, secs -> main.saveReps(e, n, secs); detail = null }) { detail = null }
                     Detail.REWARDS -> RewardsScreen(cloudState, onLoad = cloud::loadRewards, onRedeem = { cloud.redeem(it) }) { detail = null }
                     Detail.FOOD -> {
                         val photo by main.foodPhoto.collectAsStateWithLifecycle()

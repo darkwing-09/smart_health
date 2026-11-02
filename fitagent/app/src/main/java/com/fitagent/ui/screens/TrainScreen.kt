@@ -73,6 +73,7 @@ fun TrainScreen(
     onOpenTimetable: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
     onStartRoutine: (Routine) -> Unit = {},
+    onOpenReps: () -> Unit = {},
 ) {
     var showLog by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<Workout?>(null) }
@@ -88,6 +89,7 @@ fun TrainScreen(
         item { WeeklyGoalCard(state) }
         item { ExamModeCard(timetable, state.today, onOpenTimetable) }
         item { LibraryCard(onOpenLibrary, onStartRoutine) }
+        item { com.fitagent.ui.reps.RepCounterCard(onOpenReps) }
         item { SectionTitle("Interval training") }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
