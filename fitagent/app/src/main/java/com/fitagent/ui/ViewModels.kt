@@ -384,6 +384,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (s != null) viewModelScope.launch { c.db.route().delete(s.startedAtMs) }
     }
 
+    /** Saves a camera-counted set as a strength (or HIIT for jumping jacks) workout. */
+    fun saveReps(exercise: com.fitagent.domain.RepExercise, reps: Int, seconds: Long) {
+        if (reps <= 0) return
+        val now = System.currentTimeMillis()
+        val type = if (exercise == com.fitagent.domain.RepExercise.JUMPING_JACK) WorkoutType.HIIT else WorkoutType.STRENGTH
+        val secs = seconds.coerceAtLeast(60)
+        viewModelScope.launch {
+            _finished.value = c.fitness.saveWorkout(type, now - secs * 1000, now, secs, title = "$reps ${exercise.label.lowercase()}")
+        }
+    }
+
     /** Saves a guided library routine as a workout of the routine's type. */
     fun saveRoutine(routine: Routine, activeSeconds: Long) {
         if (activeSeconds < 60) return

@@ -5,7 +5,7 @@ Last updated: 2 Nov 2026 · branch `feat/fitagent`
 `[x]` = built, unit/screenshot-tested and committed · `[ ]` = not built yet.
 Built does **not** mean phone-verified: every item is confirmed on a real device through [TESTING.md](../TESTING.md).
 
-**Summary:** 27 of 32 features built. The 5 not built are the Wear OS app (W1–W4) and the camera rep counter (G6).
+**Summary:** 28 of 32 features built. The 4 not built are the Wear OS app (W1–W4).
 The phone test can start now (see [§4](#4-when-to-test)).
 
 ---
@@ -46,7 +46,7 @@ The phone test can start now (see [§4](#4-when-to-test)).
 - [x] **G3** Shareable weekly recap image (sleep hidden unless enabled)
 - [x] **G4** Campus leaderboards (hostel/college/batch, per-capita, groups < 5 hidden, opt-out)
 - [x] **G5** Rewards points (sensor-backed only) and partner perks with redemption codes
-- [ ] **G6** Camera rep counter (ML Kit pose detection): started, then reverted; not built
+- [x] **G6** Camera rep counter: on-device ML Kit pose detection (CameraX), squats/push-ups/lunges/jacks, time-smoothed angle state machine, form tips, spoken count; frames never stored *(accuracy on real recordings to be checked in TESTING C9)*
 
 ### X — Experience & reach
 - [x] **X1** Home-screen widget (small/medium)
@@ -69,7 +69,8 @@ The phone test can start now (see [§4](#4-when-to-test)).
 - [ ] Release setup: signing key, public HTTPS domain, `ANDROID_CERT_SHA256` for App Links, `fitagent.inviteHost`
 - [ ] Live-model checks once API keys are in `fitagent/.env`: `evals.run_evals` against LangSmith; food photo estimates on real meals
 - [x] 10 more library exercises (40 total: donkey kick, bird dog, dead bug, flutter kicks, reverse crunch, sumo squat, pike push-up, low lunge, arm circles, jump lunges)
-- [ ] Wear OS module (W1–W4) and rep counter (G6): see §1
+- [ ] Wear OS module (W1–W4): see §1
+- [x] Release APKs split per CPU architecture (ML Kit's native library): ~25–28 MB each; Play app bundles do this automatically
 
 ## 3. Needs you (can't be done from this machine)
 
@@ -91,8 +92,8 @@ block the phone test, and the test answers the biggest unknown: whether your wat
 | Agent tests (`uv run pytest agents`) | 255 passed |
 | Backend tests (`uv run pytest` in backend) | 30 passed |
 | Offline evals | 10/10 on every coach evaluator; 3/3 plans safe |
-| Android unit + screenshot tests | 85 passed (29 screenshots) |
+| Android unit + screenshot tests | 92 passed (30 screenshots) |
 | Android lint | 0 errors |
-| Debug APK / release APK | 72 MB (unminified) / 6.0 MB (minified) |
+| Debug APK / release APK | 114 MB (unminified, arm64 + x86_64) / 28 MB (arm64, minified) |
 | Postgres stack + smoke test (`docker compose`, 7 migrations) | 19/19 checks passed |
 | Ruff | clean |

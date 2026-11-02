@@ -75,6 +75,7 @@ resting HR / HRV / SpO₂ / workouts) → fill in [DEVICE_TEST_MATRIX.md](DEVICE
 - [ ] C5 *Only with a chest strap or a watch that broadcasts HR (not Noise/boAt):* player → "Connect heart-rate sensor" → live bpm + zone; summary shows avg HR and zones
 - [ ] C6 Train → Dorm workouts → open a routine → animated figure, countdown, "Next:" during rests, voice names each move; finishing saves a workout
 - [ ] C7 Library → tap an exercise → animation, how-to, mistakes, easier version
+- [ ] C9 Train → Camera rep counter → allow camera → prop the phone, do 10 squats → count reaches 10 (± 1); a too-shallow squat shows "Go a little deeper"; Save adds a workout. Try push-ups side-on too. Note the count you got: ____
 - [ ] C8 A workout detected by your watch app appears in history with "synced"; deleting it says "Hide" and it stays hidden after ⟳
 
 ## D. Exam mode & coach (sign in first: You → Cloud account → Server `http://192.168.1.42:8010/` → create account)

@@ -267,11 +267,11 @@ class FitnessRepository(
     }
 
     /** Saves a workout tracked or logged in the app and mirrors it to Health Connect. */
-    suspend fun saveWorkout(type: WorkoutType, startMs: Long, endMs: Long, activeSeconds: Long, hr: HrSummary? = null): Workout {
+    suspend fun saveWorkout(type: WorkoutType, startMs: Long, endMs: Long, activeSeconds: Long, hr: HrSummary? = null, title: String? = null): Workout {
         val entity = WorkoutEntity(
             uid = "app:${UUID.randomUUID()}",
             type = type.name,
-            title = null,
+            title = title,
             startMs = startMs,
             endMs = endMs,
             activeSeconds = activeSeconds,

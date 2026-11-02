@@ -162,6 +162,7 @@ class ScreenshotTest {
             listOf(com.fitagent.data.remote.dto.RedemptionDto("K7Q2MXPA", "Canteen fruit bowl", 50, "2026-10-21T10:00:00Z")))
         com.fitagent.ui.screens.RewardsScreen(cloud.copy(rewards = r), {}, {}, {})
     }
+    @Test fun rep_counter() = snap { com.fitagent.ui.reps.RepCounterScreen(true, { _, _, _ -> }, {}) }
     @Test fun readiness_detail() = snap { ReadinessScreen(home) {} }
     @Test fun sleep_detail() = snap { SleepScreen(home, lastNight) {} }
     @Test fun heart_detail() = snap { HeartScreen(home, heartToday, heartToday) {} }

@@ -15,6 +15,8 @@ val keystoreProps = Properties().apply {
     val file = rootProject.file("keystore.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
+/** Release task in this run → per-ABI APK splits; otherwise one debug APK filtered to phone + emulator ABIs. */
+val releaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
 val apiUrl = (findProperty("fitagent.apiUrl") as String?) ?: "http://10.0.2.2:8000/"
 
 android {
@@ -48,6 +50,8 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            // Phones (arm64) and emulators (x86_64) only: keeps the single debug APK smaller.
+            if (!releaseBuild) ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         }
         release {
             isMinifyEnabled = true
@@ -63,6 +67,16 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    // ML Kit's native pose library is ~13 MB per CPU architecture. Release APKs are split per ABI (Play's app bundle
+    // does this automatically); debug stays a single APK.
+    splits {
+        abi {
+            isEnable = releaseBuild
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = false
+        }
     }
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
@@ -103,6 +117,14 @@ dependencies {
     implementation(libs.work.runtime.ktx)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+
+    // Camera rep counter (G6): on-device pose detection; frames never leave the phone and are never stored.
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.mlkit.pose)
+    // ML Kit pulls an old androidx.fragment via Play services; Activity Result APIs need ≥ 1.3.
+    implementation(libs.fragment.ktx)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)

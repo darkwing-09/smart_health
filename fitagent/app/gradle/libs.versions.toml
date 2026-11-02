@@ -15,6 +15,9 @@ glance = "1.1.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 junit = "4.13.2"
+camerax = "1.5.1"
+fragment = "1.8.5"
+mlkitPose = "17.0.0"
 
 [libraries]
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -41,6 +44,11 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 retrofit-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 junit = { module = "junit:junit", version.ref = "junit" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
+mlkit-pose = { module = "com.google.mlkit:pose-detection", version.ref = "mlkitPose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
