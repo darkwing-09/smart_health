@@ -7,7 +7,7 @@ import org.junit.Test
 
 class LibraryTest {
     @Test fun libraryIsComplete() {
-        assertTrue(ExerciseLibrary.all.size >= 30)
+        assertTrue(ExerciseLibrary.all.size >= 40)
         assertEquals(ExerciseLibrary.all.size, ExerciseLibrary.all.map { it.id }.toSet().size)
         ExerciseLibrary.all.forEach { e ->
             assertTrue("${e.id}: 3 cues", e.cues.size >= 3)

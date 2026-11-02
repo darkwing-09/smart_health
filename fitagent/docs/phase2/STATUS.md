@@ -36,7 +36,7 @@ The phone test can start now (see [§4](#4-when-to-test)).
 ### S — Student-specific
 - [x] **S1** Exam mode: plans fit free slots, exam days easy, ≤ 30 min in exam weeks, sleep protected
 - [x] **S2** Timetable editor + `.ics` import (class names stay on the phone)
-- [x] **S3** Dorm workout library: 30 exercises with animated demos, 12 guided routines, quiet filter *(spec said 40+ exercises: 10 to add later)*
+- [x] **S3** Dorm workout library: 40 exercises with animated demos, 12 guided routines, quiet filter
 - [x] **S4** Food log: photo estimate (needs an AI key), 42 built-in Indian foods, protein goal, eating-disorder guard
 - [x] **S5** Mood check-in, stress & mood screen, guided breathing; helplines after 5 low days
 
@@ -68,7 +68,7 @@ The phone test can start now (see [§4](#4-when-to-test)).
 - [ ] Move the remaining hard-coded UI text into `strings.xml` so the Hindi UI is complete; add Hindi screenshot tests
 - [ ] Release setup: signing key, public HTTPS domain, `ANDROID_CERT_SHA256` for App Links, `fitagent.inviteHost`
 - [ ] Live-model checks once API keys are in `fitagent/.env`: `evals.run_evals` against LangSmith; food photo estimates on real meals
-- [ ] 10 more library exercises (to reach the 40 the spec asked for)
+- [x] 10 more library exercises (40 total: donkey kick, bird dog, dead bug, flutter kicks, reverse crunch, sumo squat, pike push-up, low lunge, arm circles, jump lunges)
 - [ ] Wear OS module (W1–W4) and rep counter (G6): see §1
 
 ## 3. Needs you (can't be done from this machine)
