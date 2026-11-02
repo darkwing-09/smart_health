@@ -1,6 +1,6 @@
 # FitAgent Phase 2 — Smartwatch-first, chart-first
 
-**Status:** specification complete — ready to build M0.
+**Status:** 27 of 32 features built and tested on this machine. **Ready for phone testing:** see [STATUS.md](STATUS.md) (progress, ticked) and [../TESTING.md](../TESTING.md) (phone test plan).
 
 | # | Document | Contents |
 |---|---|---|
@@ -12,6 +12,8 @@
 | 05 | [Algorithms & agents](05-agents-and-algorithms.md) | Readiness v2, zones, sleep score, stress, new coach tools, planner rules, food graph, evals |
 | 06 | [Test plan](06-test-plan.md) | Automated suites, device scenarios D1–D10, release gates |
 | 07 | [Build plan](07-build-plan.md) | Milestones M0–M6 with file lists and owner decisions |
+| — | [STATUS.md](STATUS.md) | **Progress tracker**: every feature ticked when built, open work, verification results |
+| — | [../TESTING.md](../TESTING.md) | **Phone test plan** (A–I) with checkboxes |
 | — | [../DEVICE_TEST_MATRIX.md](../DEVICE_TEST_MATRIX.md) | Fill in per watch while testing |
 
 ## Ready-to-build checklist
@@ -21,5 +23,5 @@
 - [x] Algorithms specified with shared Kotlin/Python fixtures (05)
 - [x] Test plan and device matrix (06)
 - [x] Milestones with file lists (07)
-- [ ] Owner: list of watch brands to support first
+- [x] Owner: list of watch brands to support first (Noise, boAt)
 - [ ] Owner: physical watch available for M1/M2 testing (emulator covers development)
