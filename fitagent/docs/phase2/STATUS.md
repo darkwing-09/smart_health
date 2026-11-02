@@ -62,8 +62,9 @@ The phone test can start now (see [§4](#4-when-to-test)).
 
 ## 2. Engineering work still open
 
-- [ ] Extend CI: run `ruff check .` (not just agents/backend), the Phase 2 smoke test against Postgres, and the 7 Room auto-migrations as an instrumented test
-- [ ] Update the root `fitagent/README.md` for Phase 2 (features, screenshots, new endpoints, `/admin`, `make_admin.py`)
+- [x] Extend CI: `ruff check .`, shared-fixture drift check, Phase 2 smoke test against `docker compose` (Postgres)
+- [ ] Room auto-migration instrumented test on an emulator (migrations are compile-time checked against the exported schemas today)
+- [x] Update the root `fitagent/README.md` for Phase 2 (features, screenshots, new endpoints, `/admin`, `make_admin.py`)
 - [ ] Move the remaining hard-coded UI text into `strings.xml` so the Hindi UI is complete; add Hindi screenshot tests
 - [ ] Release setup: signing key, public HTTPS domain, `ANDROID_CERT_SHA256` for App Links, `fitagent.inviteHost`
 - [ ] Live-model checks once API keys are in `fitagent/.env`: `evals.run_evals` against LangSmith; food photo estimates on real meals
