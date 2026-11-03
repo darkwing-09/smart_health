@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">FitAgent</string>
+    <string name="widget_description">Readiness, goal rings and today\'s coach tip</string>
+    <string name="tab_today">Today</string>
+    <string name="tab_train">Train</string>
+    <string name="tab_coach">Coach</string>
+    <string name="tab_squad">Squad</string>
+    <string name="tab_you">You</string>
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="channel_reminders">Goal reminders</string>
+    <string name="channel_morning">Morning readiness</string>
+    <string name="channel_study">Study breaks</string>
+    <string name="study_break_title">Time for a study break</string>
+    <string name="study_break_text">You\'ve been still for a while. Stand up for a 3-minute stretch — your focus will thank you.</string>
+    <string name="coach_language">Coach language</string>
+</resources>

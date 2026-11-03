@@ -1,0 +1,8248 @@
+[
+ {
+  "name": "no data",
+  "today": "2026-10-30",
+  "days": [],
+  "workouts": [],
+  "expected": {
+   "score": 60,
+   "band": "STEADY",
+   "components": {
+    "load": 60
+   }
+  }
+ },
+ {
+  "name": "sleep only, 8h",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 480
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 100,
+   "band": "PUSH",
+   "components": {
+    "sleep": 100
+   }
+  }
+ },
+ {
+  "name": "sleep only, 5h",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 300
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 63,
+   "band": "STEADY",
+   "components": {
+    "sleep": 63
+   }
+  }
+ },
+ {
+  "name": "very short sleep is capped",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 6652,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 399,
+    "hrv_ms": 64.5
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 4593,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 485,
+    "hrv_ms": 56.0
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 4475,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 496,
+    "hrv_ms": 46.1
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 7552,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 433,
+    "hrv_ms": 52.2
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8514,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 434,
+    "hrv_ms": 69.8
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 5014,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 408,
+    "hrv_ms": 62.3
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7249,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 386,
+    "hrv_ms": 46.4
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 5090,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 417,
+    "hrv_ms": 49.3
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 4964,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 453,
+    "hrv_ms": 61.8
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 9586,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 403,
+    "hrv_ms": 62.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 9233,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 404,
+    "hrv_ms": 47.9
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 9833,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 388,
+    "hrv_ms": 63.6
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8066,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 467,
+    "hrv_ms": 68.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 7814,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 454,
+    "hrv_ms": 55.8
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 200,
+    "hrv_ms": 70
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 55,
+   "band": "STEADY",
+   "components": {
+    "sleep": 42,
+    "hrv": 100,
+    "resting_hr": 100
+   }
+  }
+ },
+ {
+  "name": "sleep with stages",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 450,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 100,
+    "sleep_light_min": 270,
+    "sleep_awake_min": 20
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 84,
+   "band": "PUSH",
+   "components": {
+    "sleep": 94,
+    "sleep_quality": 60
+   }
+  }
+ },
+ {
+  "name": "poor stages",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 420,
+    "sleep_deep_min": 20,
+    "sleep_rem_min": 40,
+    "sleep_light_min": 360,
+    "sleep_awake_min": 70
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 63,
+   "band": "STEADY",
+   "components": {
+    "sleep": 88,
+    "sleep_quality": 0
+   }
+  }
+ },
+ {
+  "name": "rhr with 3 baseline days",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-27",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 430
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 79,
+   "band": "PUSH",
+   "components": {
+    "sleep": 90,
+    "resting_hr": 65
+   }
+  }
+ },
+ {
+  "name": "rhr with 2 baseline days is ignored",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-29",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 70,
+    "sleep_minutes": 430
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 90,
+   "band": "PUSH",
+   "components": {
+    "sleep": 90
+   }
+  }
+ },
+ {
+  "name": "hrv needs 7 nights",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-25",
+    "steps": 6035,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 481,
+    "hrv_ms": 66.0
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 5999,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 390,
+    "hrv_ms": 60.8
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 6813,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 473,
+    "hrv_ms": 53.6
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 4599,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 395,
+    "hrv_ms": 49.9
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6802,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 399,
+    "hrv_ms": 57.7
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "hrv_ms": 60
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 97,
+   "band": "PUSH",
+   "components": {
+    "sleep": 94,
+    "resting_hr": 100
+   }
+  }
+ },
+ {
+  "name": "hrv high vs baseline",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 9474,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 389,
+    "hrv_ms": 55.2
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 6868,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 456,
+    "hrv_ms": 62.4
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 7737,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 388,
+    "hrv_ms": 73.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 7883,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 469,
+    "hrv_ms": 46.8
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9746,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 419,
+    "hrv_ms": 53.5
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 7160,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 493,
+    "hrv_ms": 45.7
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7782,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 425,
+    "hrv_ms": 63.3
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8044,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 387,
+    "hrv_ms": 68.0
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 5059,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 474,
+    "hrv_ms": 56.9
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8067,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 390,
+    "hrv_ms": 58.5
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8501,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 415,
+    "hrv_ms": 69.6
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 8507,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 415,
+    "hrv_ms": 74.6
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9592,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 493,
+    "hrv_ms": 73.7
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5236,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 390,
+    "hrv_ms": 49.5
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 460,
+    "hrv_ms": 85
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 99,
+   "band": "PUSH",
+   "components": {
+    "sleep": 96,
+    "hrv": 100,
+    "resting_hr": 100
+   }
+  }
+ },
+ {
+  "name": "hrv low vs baseline",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 9394,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 409,
+    "hrv_ms": 59.5
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 8826,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 403,
+    "hrv_ms": 53.5
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 5193,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 433,
+    "hrv_ms": 63.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6610,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 396,
+    "hrv_ms": 58.7
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 10389,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 491,
+    "hrv_ms": 56.9
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 7228,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 393,
+    "hrv_ms": 64.0
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 4509,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 404,
+    "hrv_ms": 74.5
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 7609,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 400,
+    "hrv_ms": 55.2
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 4430,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 393,
+    "hrv_ms": 62.0
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8395,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 392,
+    "hrv_ms": 63.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4576,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 491,
+    "hrv_ms": 63.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 5216,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 461,
+    "hrv_ms": 73.7
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8933,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 426,
+    "hrv_ms": 48.7
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 10954,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 442,
+    "hrv_ms": 59.4
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 460,
+    "hrv_ms": 35
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 60,
+   "band": "STEADY",
+   "components": {
+    "sleep": 96,
+    "hrv": 0,
+    "resting_hr": 91
+   }
+  }
+ },
+ {
+  "name": "elevated rhr + low hrv",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 6554,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 390,
+    "hrv_ms": 48.1
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 6806,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 474,
+    "hrv_ms": 59.4
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 9669,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 400,
+    "hrv_ms": 51.2
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 8327,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 426,
+    "hrv_ms": 65.7
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 4221,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 477,
+    "hrv_ms": 74.4
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 4745,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 469,
+    "hrv_ms": 60.6
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 5368,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 425,
+    "hrv_ms": 61.0
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 10382,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 444,
+    "hrv_ms": 64.1
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 9023,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 483,
+    "hrv_ms": 69.2
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 10703,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 431,
+    "hrv_ms": 51.0
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8036,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 425,
+    "hrv_ms": 74.7
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10472,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 415,
+    "hrv_ms": 52.8
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9673,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 457,
+    "hrv_ms": 58.4
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 9923,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 424,
+    "hrv_ms": 47.4
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 68,
+    "sleep_minutes": 400,
+    "hrv_ms": 38
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 30,
+   "band": "RECOVER",
+   "components": {
+    "sleep": 83,
+    "hrv": 0,
+    "resting_hr": 0
+   }
+  }
+ },
+ {
+  "name": "fever-like signals capped",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 4836,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 409,
+    "hrv_ms": 50.9,
+    "resp_rate": 13.6
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 9112,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 495,
+    "hrv_ms": 59.4,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10550,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 462,
+    "hrv_ms": 70.0,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 7182,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 480,
+    "hrv_ms": 59.3,
+    "resp_rate": 13.5
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 10464,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 461,
+    "hrv_ms": 47.6,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 9913,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 430,
+    "hrv_ms": 57.0,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9937,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 400,
+    "hrv_ms": 74.8,
+    "resp_rate": 13.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8839,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 495,
+    "hrv_ms": 69.2,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 10770,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 456,
+    "hrv_ms": 64.7,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8494,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 450,
+    "hrv_ms": 45.6,
+    "resp_rate": 15.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 9950,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 463,
+    "hrv_ms": 60.8,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7553,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 491,
+    "hrv_ms": 69.8,
+    "resp_rate": 13.6
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6063,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 407,
+    "hrv_ms": 60.0,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6670,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 413,
+    "hrv_ms": 70.0,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 66,
+    "sleep_minutes": 470,
+    "hrv_ms": 62,
+    "resp_rate": 18.5,
+    "skin_temp_delta": 1.3
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 45,
+   "band": "STEADY",
+   "components": {
+    "sleep": 98,
+    "hrv": 79,
+    "resting_hr": 14,
+    "nightly": 60
+   }
+  }
+ },
+ {
+  "name": "low spo2 overnight",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 10061,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 425,
+    "hrv_ms": 64.9
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 10676,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 495,
+    "hrv_ms": 69.8
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 8109,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 396,
+    "hrv_ms": 60.7
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 4153,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 491,
+    "hrv_ms": 68.3
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8985,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 380,
+    "hrv_ms": 50.2
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 7878,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 459,
+    "hrv_ms": 61.7
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 6670,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 467,
+    "hrv_ms": 68.5
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 4869,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 493,
+    "hrv_ms": 52.5
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 6268,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 385,
+    "hrv_ms": 60.2
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8601,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 383,
+    "hrv_ms": 58.3
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 9017,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 444,
+    "hrv_ms": 65.8
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7705,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 445,
+    "hrv_ms": 60.2
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6028,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 469,
+    "hrv_ms": 72.7
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5659,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 487,
+    "hrv_ms": 49.1
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "hrv_ms": 60,
+    "spo2_avg": 92.5
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 85,
+   "band": "PUSH",
+   "components": {
+    "sleep": 94,
+    "hrv": 71,
+    "resting_hr": 94,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "normal nightly signals",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 4996,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 430,
+    "hrv_ms": 54.5,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 7508,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 389,
+    "hrv_ms": 65.1,
+    "resp_rate": 15.4
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10364,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 399,
+    "hrv_ms": 49.3,
+    "resp_rate": 15.6
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 7831,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 408,
+    "hrv_ms": 56.9,
+    "resp_rate": 14.5
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9470,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 486,
+    "hrv_ms": 49.8,
+    "resp_rate": 14.3
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8223,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 431,
+    "hrv_ms": 57.6,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 4755,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 472,
+    "hrv_ms": 45.6,
+    "resp_rate": 14.7
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 7608,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 470,
+    "hrv_ms": 56.5,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 6420,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 445,
+    "hrv_ms": 48.4,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 5872,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 492,
+    "hrv_ms": 47.5,
+    "resp_rate": 13.8
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 10381,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 403,
+    "hrv_ms": 67.7,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10959,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 496,
+    "hrv_ms": 57.2,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8217,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 453,
+    "hrv_ms": 66.0,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 4471,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 482,
+    "hrv_ms": 57.8,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "hrv_ms": 60,
+    "spo2_avg": 97,
+    "resp_rate": 14.2,
+    "skin_temp_delta": 0.1
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 92,
+   "band": "PUSH",
+   "components": {
+    "sleep": 94,
+    "hrv": 92,
+    "resting_hr": 89,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "load spike",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-10",
+    "steps": 4137,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 461,
+    "hrv_ms": 69.0
+   },
+   {
+    "day": "2026-10-11",
+    "steps": 4686,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 457,
+    "hrv_ms": 47.0
+   },
+   {
+    "day": "2026-10-12",
+    "steps": 4996,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 438,
+    "hrv_ms": 55.2
+   },
+   {
+    "day": "2026-10-13",
+    "steps": 8530,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 433,
+    "hrv_ms": 63.7
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 4353,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 447,
+    "hrv_ms": 73.1
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 5322,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 413,
+    "hrv_ms": 50.4
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 6555,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 460,
+    "hrv_ms": 60.9
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 5686,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 417,
+    "hrv_ms": 60.0
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 5457,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 414,
+    "hrv_ms": 69.1
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6051,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 384,
+    "hrv_ms": 45.6
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8142,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "hrv_ms": 60.4
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 6012,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 499,
+    "hrv_ms": 48.2
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 10708,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 463,
+    "hrv_ms": 64.7
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8472,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 486,
+    "hrv_ms": 74.1
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 6521,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 468,
+    "hrv_ms": 74.5
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 6807,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 405,
+    "hrv_ms": 57.1
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 6847,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 386,
+    "hrv_ms": 45.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 9123,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 474,
+    "hrv_ms": 57.9
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 4453,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 390,
+    "hrv_ms": 71.1
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 9493,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 416,
+    "hrv_ms": 65.8
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "hrv_ms": 60
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 66,
+   "band": "STEADY",
+   "components": {
+    "sleep": 94,
+    "hrv": 74,
+    "resting_hr": 96,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "load only, history < 14 days",
+  "today": "2026-10-30",
+  "days": [],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 30,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 30,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 30,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 30,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 30,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 60,
+   "band": "STEADY",
+   "components": {
+    "load": 60
+   }
+  }
+ },
+ {
+  "name": "load only, steady month",
+  "today": "2026-10-30",
+  "days": [],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 90,
+   "band": "PUSH",
+   "components": {
+    "load": 90
+   }
+  }
+ },
+ {
+  "name": "stages + all signals, good night",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 4370,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 438,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 27,
+    "hrv_ms": 49.7,
+    "resp_rate": 14.3
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 6650,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 411,
+    "sleep_deep_min": 72,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 20,
+    "hrv_ms": 74.0,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 7126,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 390,
+    "sleep_deep_min": 65,
+    "sleep_rem_min": 102,
+    "sleep_light_min": 249,
+    "sleep_awake_min": 10,
+    "hrv_ms": 53.4,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 4744,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 413,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 219,
+    "sleep_awake_min": 19,
+    "hrv_ms": 49.3,
+    "resp_rate": 14.8
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9158,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 409,
+    "sleep_deep_min": 98,
+    "sleep_rem_min": 79,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 38,
+    "hrv_ms": 62.6,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 9865,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 480,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 79,
+    "sleep_light_min": 218,
+    "sleep_awake_min": 33,
+    "hrv_ms": 67.9,
+    "resp_rate": 15.2
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9068,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 462,
+    "sleep_deep_min": 82,
+    "sleep_rem_min": 110,
+    "sleep_light_min": 227,
+    "sleep_awake_min": 33,
+    "hrv_ms": 46.3,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 9743,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 483,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 252,
+    "sleep_awake_min": 31,
+    "hrv_ms": 72.3,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 8784,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 482,
+    "sleep_deep_min": 90,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 206,
+    "sleep_awake_min": 22,
+    "hrv_ms": 47.6,
+    "resp_rate": 13.1
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 10847,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 437,
+    "sleep_deep_min": 93,
+    "sleep_rem_min": 85,
+    "sleep_light_min": 231,
+    "sleep_awake_min": 18,
+    "hrv_ms": 63.8,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4027,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 438,
+    "sleep_deep_min": 84,
+    "sleep_rem_min": 75,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 26,
+    "hrv_ms": 67.4,
+    "resp_rate": 14.5
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 4541,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 475,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 85,
+    "sleep_light_min": 246,
+    "sleep_awake_min": 34,
+    "hrv_ms": 52.6,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 5681,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 409,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 113,
+    "sleep_light_min": 218,
+    "sleep_awake_min": 34,
+    "hrv_ms": 59.8,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 4382,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 458,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 111,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 32,
+    "hrv_ms": 47.3,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 54,
+    "sleep_minutes": 490,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 115,
+    "sleep_light_min": 280,
+    "sleep_awake_min": 15,
+    "hrv_ms": 78,
+    "spo2_avg": 97.5,
+    "resp_rate": 13.8,
+    "skin_temp_delta": -0.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 97,
+   "band": "PUSH",
+   "components": {
+    "sleep": 100,
+    "sleep_quality": 73,
+    "hrv": 100,
+    "resting_hr": 100,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "no today row",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 6493,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 459,
+    "hrv_ms": 45.4
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 4496,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 442,
+    "hrv_ms": 74.2
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 4815,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 468,
+    "hrv_ms": 65.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6382,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 470,
+    "hrv_ms": 58.9
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 7820,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 478,
+    "hrv_ms": 74.8
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8498,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 405,
+    "hrv_ms": 74.3
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7874,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 382,
+    "hrv_ms": 58.8
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 10716,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 444,
+    "hrv_ms": 74.8
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 7169,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 406,
+    "hrv_ms": 47.2
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 4739,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 398,
+    "hrv_ms": 73.6
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 5086,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 457,
+    "hrv_ms": 71.6
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 9761,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 426,
+    "hrv_ms": 59.9
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7982,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 430,
+    "hrv_ms": 49.8
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 8027,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 467,
+    "hrv_ms": 57.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 90,
+   "band": "PUSH",
+   "components": {
+    "load": 90
+   }
+  }
+ },
+ {
+  "name": "random mix 1",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-23",
+    "steps": 6658,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 476,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 115,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 38,
+    "hrv_ms": 70.2,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 10061,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 417,
+    "sleep_deep_min": 87,
+    "sleep_rem_min": 74,
+    "sleep_light_min": 223,
+    "sleep_awake_min": 39,
+    "hrv_ms": 56.2,
+    "resp_rate": 14.2
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 7506,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 476,
+    "sleep_deep_min": 53,
+    "sleep_rem_min": 112,
+    "sleep_light_min": 218,
+    "sleep_awake_min": 30,
+    "hrv_ms": 70.6,
+    "resp_rate": 13.8
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 5219,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 411,
+    "sleep_deep_min": 99,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 250,
+    "sleep_awake_min": 40,
+    "hrv_ms": 58.1,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7504,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 493,
+    "sleep_deep_min": 85,
+    "sleep_rem_min": 105,
+    "sleep_light_min": 213,
+    "sleep_awake_min": 33,
+    "hrv_ms": 69.4,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 4660,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 386,
+    "sleep_deep_min": 91,
+    "sleep_rem_min": 88,
+    "sleep_light_min": 231,
+    "sleep_awake_min": 11,
+    "hrv_ms": 58.5,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 8506,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 396,
+    "sleep_deep_min": 69,
+    "sleep_rem_min": 86,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 33,
+    "hrv_ms": 59.2,
+    "resp_rate": 14.0
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 313,
+    "hrv_ms": 46.1,
+    "resp_rate": 12.6,
+    "skin_temp_delta": 0.66
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 37,
+   "band": "STEADY",
+   "components": {
+    "sleep": 65,
+    "hrv": 0,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 2",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-17",
+    "steps": 10141,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 491,
+    "hrv_ms": 56.5
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10109,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 447,
+    "hrv_ms": 56.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6770,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 476,
+    "hrv_ms": 59.9
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8704,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 426,
+    "hrv_ms": 65.6
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8335,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 460,
+    "hrv_ms": 47.8
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 6035,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 429,
+    "hrv_ms": 64.4
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 7537,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 419,
+    "hrv_ms": 48.8
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 7483,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 470,
+    "hrv_ms": 74.0
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8012,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 380,
+    "hrv_ms": 56.7
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 10763,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 447,
+    "hrv_ms": 74.2
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 6035,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 480,
+    "hrv_ms": 51.7
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 5245,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 446,
+    "hrv_ms": 73.2
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 9912,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 469,
+    "hrv_ms": 47.6
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "hrv_ms": 70.2,
+    "spo2_avg": 98.7,
+    "resp_rate": 16.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 19,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 48,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 77,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 34,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 59,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 43,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 38,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 10,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-22",
+    "minutes": 11,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 78,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-20",
+    "minutes": 48,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 68,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 45,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 50,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 41,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-14",
+    "minutes": 77,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 40,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 80,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 41,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 13,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 62,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-08",
+    "minutes": 49,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 17,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 12,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 34,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 73,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 100,
+   "band": "PUSH",
+   "components": {
+    "hrv": 100,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "random mix 3",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-25",
+    "steps": 4279,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 469,
+    "sleep_deep_min": 73,
+    "sleep_rem_min": 113,
+    "sleep_light_min": 225,
+    "sleep_awake_min": 16,
+    "hrv_ms": 66.5
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4055,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 482,
+    "sleep_deep_min": 82,
+    "sleep_rem_min": 74,
+    "sleep_light_min": 213,
+    "sleep_awake_min": 25,
+    "hrv_ms": 67.2
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 5641,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 419,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 86,
+    "sleep_light_min": 248,
+    "sleep_awake_min": 38,
+    "hrv_ms": 51.9
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6416,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 393,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 226,
+    "sleep_awake_min": 39,
+    "hrv_ms": 63.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 9450,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 387,
+    "sleep_deep_min": 53,
+    "sleep_rem_min": 83,
+    "sleep_light_min": 201,
+    "sleep_awake_min": 29,
+    "hrv_ms": 72.7
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_deep_min": 14,
+    "sleep_rem_min": 59,
+    "sleep_light_min": 320,
+    "sleep_awake_min": 53,
+    "hrv_ms": 56.5,
+    "resp_rate": 19.5,
+    "skin_temp_delta": -0.1
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 52,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 66,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 31,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 23,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 10,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 20,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 45,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 20,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 54,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 66,
+   "band": "STEADY",
+   "components": {
+    "resting_hr": 100,
+    "nightly": 100,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 4",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-24",
+    "steps": 6528,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 485,
+    "hrv_ms": 47.6,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 5603,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 427,
+    "hrv_ms": 50.8,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 7887,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 383,
+    "hrv_ms": 52.4,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7315,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 385,
+    "hrv_ms": 46.0,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 4507,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 412,
+    "hrv_ms": 67.4,
+    "resp_rate": 15.7
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6777,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 426,
+    "hrv_ms": 55.0,
+    "resp_rate": 15.9
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 546,
+    "sleep_deep_min": 42,
+    "sleep_rem_min": 75,
+    "sleep_light_min": 276,
+    "sleep_awake_min": 21,
+    "resp_rate": 12.9,
+    "skin_temp_delta": 1.5
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 33,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 11,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-22",
+    "minutes": 48,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 29,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-14",
+    "minutes": 40,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 51,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 50,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 87,
+   "band": "PUSH",
+   "components": {
+    "sleep": 100,
+    "sleep_quality": 33,
+    "resting_hr": 100,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 5",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 5310,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 411,
+    "sleep_deep_min": 54,
+    "sleep_rem_min": 111,
+    "sleep_light_min": 202,
+    "sleep_awake_min": 25
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 8526,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 449,
+    "sleep_deep_min": 60,
+    "sleep_rem_min": 97,
+    "sleep_light_min": 256,
+    "sleep_awake_min": 13
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 4591,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 413,
+    "sleep_deep_min": 63,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 226,
+    "sleep_awake_min": 25
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 9814,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 437,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 78,
+    "sleep_light_min": 226,
+    "sleep_awake_min": 24
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9081,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 494,
+    "sleep_deep_min": 97,
+    "sleep_rem_min": 104,
+    "sleep_light_min": 254,
+    "sleep_awake_min": 34
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 9442,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 477,
+    "sleep_deep_min": 99,
+    "sleep_rem_min": 88,
+    "sleep_light_min": 218,
+    "sleep_awake_min": 18
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 8643,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 414,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 117,
+    "sleep_light_min": 216,
+    "sleep_awake_min": 16
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 7599,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 411,
+    "sleep_deep_min": 65,
+    "sleep_rem_min": 85,
+    "sleep_light_min": 209,
+    "sleep_awake_min": 19
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 8737,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 404,
+    "sleep_deep_min": 54,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 216,
+    "sleep_awake_min": 17
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8156,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 447,
+    "sleep_deep_min": 91,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 241,
+    "sleep_awake_min": 24
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4303,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 393,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 84,
+    "sleep_light_min": 253,
+    "sleep_awake_min": 24
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7062,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 385,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 203,
+    "sleep_awake_min": 16
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8919,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 485,
+    "sleep_deep_min": 54,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 232,
+    "sleep_awake_min": 37
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5456,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 437,
+    "sleep_deep_min": 99,
+    "sleep_rem_min": 119,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 40
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 506,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 106,
+    "sleep_light_min": 245,
+    "sleep_awake_min": 28,
+    "spo2_avg": 90.4,
+    "skin_temp_delta": 1.21
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 19,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 36,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 14,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 73,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 80,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 71,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 18,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 62,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 22,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 84,
+   "band": "PUSH",
+   "components": {
+    "sleep": 100,
+    "sleep_quality": 54,
+    "nightly": 60
+   }
+  }
+ },
+ {
+  "name": "random mix 6",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-10",
+    "steps": 6221,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 432,
+    "sleep_deep_min": 76,
+    "sleep_rem_min": 73,
+    "sleep_light_min": 219,
+    "sleep_awake_min": 33,
+    "hrv_ms": 65.0
+   },
+   {
+    "day": "2026-10-11",
+    "steps": 8640,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 493,
+    "sleep_deep_min": 51,
+    "sleep_rem_min": 119,
+    "sleep_light_min": 251,
+    "sleep_awake_min": 21,
+    "hrv_ms": 57.4
+   },
+   {
+    "day": "2026-10-12",
+    "steps": 9279,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 405,
+    "sleep_deep_min": 63,
+    "sleep_rem_min": 70,
+    "sleep_light_min": 227,
+    "sleep_awake_min": 38,
+    "hrv_ms": 66.8
+   },
+   {
+    "day": "2026-10-13",
+    "steps": 5282,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 434,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 106,
+    "sleep_light_min": 256,
+    "sleep_awake_min": 21,
+    "hrv_ms": 69.6
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 7775,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 478,
+    "sleep_deep_min": 53,
+    "sleep_rem_min": 105,
+    "sleep_light_min": 209,
+    "sleep_awake_min": 30,
+    "hrv_ms": 48.9
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 10606,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 496,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 26,
+    "hrv_ms": 47.7
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 5406,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 398,
+    "sleep_deep_min": 83,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 259,
+    "sleep_awake_min": 12,
+    "hrv_ms": 53.5
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 4891,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 429,
+    "sleep_deep_min": 100,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 219,
+    "sleep_awake_min": 14,
+    "hrv_ms": 67.6
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10859,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 500,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 90,
+    "sleep_light_min": 203,
+    "sleep_awake_min": 29,
+    "hrv_ms": 74.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 9213,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 429,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 114,
+    "sleep_light_min": 252,
+    "sleep_awake_min": 38,
+    "hrv_ms": 72.1
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 5312,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 461,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 253,
+    "sleep_awake_min": 25,
+    "hrv_ms": 63.6
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 5498,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 452,
+    "sleep_deep_min": 83,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 224,
+    "sleep_awake_min": 21,
+    "hrv_ms": 46.3
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 5008,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 399,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 72,
+    "sleep_light_min": 256,
+    "sleep_awake_min": 27,
+    "hrv_ms": 74.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 10901,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 476,
+    "sleep_deep_min": 70,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 224,
+    "sleep_awake_min": 29,
+    "hrv_ms": 65.0
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 7733,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 450,
+    "sleep_deep_min": 69,
+    "sleep_rem_min": 107,
+    "sleep_light_min": 215,
+    "sleep_awake_min": 23,
+    "hrv_ms": 64.5
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 7188,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 464,
+    "sleep_deep_min": 78,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 201,
+    "sleep_awake_min": 10,
+    "hrv_ms": 58.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 9069,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 442,
+    "sleep_deep_min": 98,
+    "sleep_rem_min": 109,
+    "sleep_light_min": 249,
+    "sleep_awake_min": 36,
+    "hrv_ms": 52.1
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7754,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 487,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 204,
+    "sleep_awake_min": 14,
+    "hrv_ms": 69.3
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6937,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 435,
+    "sleep_deep_min": 78,
+    "sleep_rem_min": 102,
+    "sleep_light_min": 232,
+    "sleep_awake_min": 31,
+    "hrv_ms": 47.8
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 4333,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 385,
+    "sleep_deep_min": 96,
+    "sleep_rem_min": 90,
+    "sleep_light_min": 249,
+    "sleep_awake_min": 33,
+    "hrv_ms": 47.5
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 207,
+    "resp_rate": 13.5
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 53,
+   "band": "STEADY",
+   "components": {
+    "sleep": 43,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "random mix 7",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-17",
+    "steps": 6278,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 466,
+    "hrv_ms": 71.9
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 5382,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 481,
+    "hrv_ms": 48.5
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 8347,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 386,
+    "hrv_ms": 74.0
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 7711,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 451,
+    "hrv_ms": 52.6
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8388,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 460,
+    "hrv_ms": 67.1
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7043,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 413,
+    "hrv_ms": 74.7
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8729,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 398,
+    "hrv_ms": 54.9
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 4666,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 436,
+    "hrv_ms": 50.3
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 10091,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 386,
+    "hrv_ms": 69.6
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 6077,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 419,
+    "hrv_ms": 67.0
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10120,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 384,
+    "hrv_ms": 49.5
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9046,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 460,
+    "hrv_ms": 57.5
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6982,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 494,
+    "hrv_ms": 49.0
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 36,
+    "sleep_rem_min": 66,
+    "sleep_light_min": 309,
+    "sleep_awake_min": 65,
+    "hrv_ms": 25.2,
+    "spo2_avg": 92.7,
+    "resp_rate": 16.3
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 27,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 11,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 41,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 29,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-22",
+    "minutes": 67,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-20",
+    "minutes": 22,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 18,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 28,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-14",
+    "minutes": 44,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 61,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 43,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-08",
+    "minutes": 11,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 17,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 54,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 13,
+   "band": "RECOVER",
+   "components": {
+    "hrv": 0,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 8",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-11",
+    "steps": 8354,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 383,
+    "sleep_deep_min": 61,
+    "sleep_rem_min": 85,
+    "sleep_light_min": 210,
+    "sleep_awake_min": 11
+   },
+   {
+    "day": "2026-10-12",
+    "steps": 10380,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 393,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 105,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 40
+   },
+   {
+    "day": "2026-10-13",
+    "steps": 5615,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 398,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 103,
+    "sleep_light_min": 238,
+    "sleep_awake_min": 30
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 8152,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 462,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 232,
+    "sleep_awake_min": 19
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 4522,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 418,
+    "sleep_deep_min": 96,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 230,
+    "sleep_awake_min": 32
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 8410,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 380,
+    "sleep_deep_min": 77,
+    "sleep_rem_min": 117,
+    "sleep_light_min": 258,
+    "sleep_awake_min": 24
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 4659,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 474,
+    "sleep_deep_min": 61,
+    "sleep_rem_min": 84,
+    "sleep_light_min": 206,
+    "sleep_awake_min": 18
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 5902,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 462,
+    "sleep_deep_min": 57,
+    "sleep_rem_min": 91,
+    "sleep_light_min": 257,
+    "sleep_awake_min": 33
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 9694,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 500,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 73,
+    "sleep_light_min": 217,
+    "sleep_awake_min": 30
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8536,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 466,
+    "sleep_deep_min": 93,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 258,
+    "sleep_awake_min": 26
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 6173,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 417,
+    "sleep_deep_min": 55,
+    "sleep_rem_min": 102,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 15
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 6132,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 495,
+    "sleep_deep_min": 97,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 260,
+    "sleep_awake_min": 15
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 10112,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 497,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 94,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 29
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 5959,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 428,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 103,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 10
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 4217,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 435,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 89,
+    "sleep_light_min": 250,
+    "sleep_awake_min": 16
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 7207,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 459,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 209,
+    "sleep_awake_min": 11
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 4220,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 394,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 14
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9740,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 383,
+    "sleep_deep_min": 52,
+    "sleep_rem_min": 78,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 30
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 9192,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 385,
+    "sleep_deep_min": 97,
+    "sleep_rem_min": 72,
+    "sleep_light_min": 204,
+    "sleep_awake_min": 37
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "hrv_ms": 86.6
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 30,
+   "band": "RECOVER",
+   "components": {
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 9",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-27",
+    "steps": 6628,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 478,
+    "hrv_ms": 73.9,
+    "resp_rate": 14.5
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 10974,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 416,
+    "hrv_ms": 63.5,
+    "resp_rate": 13.1
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 7382,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 383,
+    "hrv_ms": 58.1,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 107,
+    "sleep_rem_min": 116,
+    "sleep_light_min": 163,
+    "sleep_awake_min": 5,
+    "spo2_avg": 95.2,
+    "skin_temp_delta": 0.6
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 43,
+   "band": "STEADY",
+   "components": {
+    "nightly": 80,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 10",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-21",
+    "steps": 10281,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 390,
+    "resp_rate": 15.4
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9711,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 451,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 6913,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 392,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 10104,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 391,
+    "resp_rate": 15.7
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 4206,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 427,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 7506,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 495,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 9167,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 409,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8866,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 476,
+    "resp_rate": 14.0
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6676,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 446,
+    "resp_rate": 15.6
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 463,
+    "sleep_deep_min": 48,
+    "sleep_rem_min": 116,
+    "sleep_light_min": 308,
+    "sleep_awake_min": 24,
+    "hrv_ms": 55.7,
+    "skin_temp_delta": 0.57
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 88,
+   "band": "PUSH",
+   "components": {
+    "sleep": 96,
+    "sleep_quality": 46,
+    "resting_hr": 100,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 11",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-23",
+    "steps": 9226,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 496,
+    "sleep_deep_min": 67,
+    "sleep_rem_min": 83,
+    "sleep_light_min": 256,
+    "sleep_awake_min": 22
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 7800,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 384,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 227,
+    "sleep_awake_min": 32
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 5822,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 444,
+    "sleep_deep_min": 79,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 209,
+    "sleep_awake_min": 18
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8945,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 474,
+    "sleep_deep_min": 50,
+    "sleep_rem_min": 117,
+    "sleep_light_min": 215,
+    "sleep_awake_min": 39
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10986,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 435,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 112,
+    "sleep_light_min": 246,
+    "sleep_awake_min": 30
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 10341,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 462,
+    "sleep_deep_min": 93,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 241,
+    "sleep_awake_min": 13
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 7718,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 435,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 110,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 13
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 304,
+    "hrv_ms": 42.5,
+    "resp_rate": 17.0
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 69,
+   "band": "PUSH",
+   "components": {
+    "sleep": 63,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "random mix 12",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-11",
+    "steps": 7897,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 445,
+    "sleep_deep_min": 100,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 233,
+    "sleep_awake_min": 20,
+    "hrv_ms": 45.5
+   },
+   {
+    "day": "2026-10-12",
+    "steps": 7361,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 474,
+    "sleep_deep_min": 63,
+    "sleep_rem_min": 113,
+    "sleep_light_min": 211,
+    "sleep_awake_min": 22,
+    "hrv_ms": 73.4
+   },
+   {
+    "day": "2026-10-13",
+    "steps": 8208,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 477,
+    "sleep_deep_min": 96,
+    "sleep_rem_min": 109,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 30,
+    "hrv_ms": 73.0
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 4463,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 412,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 73,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 12,
+    "hrv_ms": 53.2
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 7429,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 497,
+    "sleep_deep_min": 94,
+    "sleep_rem_min": 113,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 28,
+    "hrv_ms": 57.6
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 6172,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 393,
+    "sleep_deep_min": 97,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 260,
+    "sleep_awake_min": 40,
+    "hrv_ms": 51.7
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 8317,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 408,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 99,
+    "sleep_light_min": 213,
+    "sleep_awake_min": 15,
+    "hrv_ms": 74.8
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 5059,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 498,
+    "sleep_deep_min": 90,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 230,
+    "sleep_awake_min": 30,
+    "hrv_ms": 68.3
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 8604,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 472,
+    "sleep_deep_min": 59,
+    "sleep_rem_min": 92,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 30,
+    "hrv_ms": 51.8
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 10805,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 484,
+    "sleep_deep_min": 76,
+    "sleep_rem_min": 99,
+    "sleep_light_min": 218,
+    "sleep_awake_min": 34,
+    "hrv_ms": 68.9
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8491,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 463,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 92,
+    "sleep_light_min": 250,
+    "sleep_awake_min": 37,
+    "hrv_ms": 48.8
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 5887,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 414,
+    "sleep_deep_min": 93,
+    "sleep_rem_min": 86,
+    "sleep_light_min": 227,
+    "sleep_awake_min": 31,
+    "hrv_ms": 66.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 5522,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 441,
+    "sleep_deep_min": 96,
+    "sleep_rem_min": 87,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 17,
+    "hrv_ms": 45.1
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 9360,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 418,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 97,
+    "sleep_light_min": 239,
+    "sleep_awake_min": 30,
+    "hrv_ms": 54.6
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 4699,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 464,
+    "sleep_deep_min": 59,
+    "sleep_rem_min": 89,
+    "sleep_light_min": 254,
+    "sleep_awake_min": 22,
+    "hrv_ms": 71.9
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4467,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 390,
+    "sleep_deep_min": 70,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 260,
+    "sleep_awake_min": 14,
+    "hrv_ms": 69.8
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 8347,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 486,
+    "sleep_deep_min": 87,
+    "sleep_rem_min": 70,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 10,
+    "hrv_ms": 55.4
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 5718,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 389,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 108,
+    "sleep_light_min": 206,
+    "sleep_awake_min": 28,
+    "hrv_ms": 64.7
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5169,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 489,
+    "sleep_deep_min": 99,
+    "sleep_rem_min": 98,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 35,
+    "hrv_ms": 52.0
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 35,
+    "sleep_light_min": 217,
+    "sleep_awake_min": 58,
+    "hrv_ms": 71.8,
+    "resp_rate": 16.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 66,
+   "band": "STEADY",
+   "components": {
+    "hrv": 100,
+    "nightly": 100,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 13",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-13",
+    "steps": 7488,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 433,
+    "sleep_deep_min": 91,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 201,
+    "sleep_awake_min": 29,
+    "hrv_ms": 50.4,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 4375,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 467,
+    "sleep_deep_min": 80,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 248,
+    "sleep_awake_min": 38,
+    "hrv_ms": 69.3,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 5183,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 384,
+    "sleep_deep_min": 71,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 255,
+    "sleep_awake_min": 31,
+    "hrv_ms": 66.5,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 6999,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 423,
+    "sleep_deep_min": 63,
+    "sleep_rem_min": 88,
+    "sleep_light_min": 227,
+    "sleep_awake_min": 20,
+    "hrv_ms": 68.4,
+    "resp_rate": 14.7
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 7460,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 412,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 26,
+    "hrv_ms": 69.8,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 6225,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 491,
+    "sleep_deep_min": 100,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 16,
+    "hrv_ms": 74.2,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6597,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 471,
+    "sleep_deep_min": 55,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 202,
+    "sleep_awake_min": 22,
+    "hrv_ms": 48.8,
+    "resp_rate": 15.9
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9920,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 450,
+    "sleep_deep_min": 69,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 11,
+    "hrv_ms": 61.4,
+    "resp_rate": 13.1
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 5555,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 485,
+    "sleep_deep_min": 100,
+    "sleep_rem_min": 102,
+    "sleep_light_min": 258,
+    "sleep_awake_min": 27,
+    "hrv_ms": 63.3,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9011,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 428,
+    "sleep_deep_min": 88,
+    "sleep_rem_min": 113,
+    "sleep_light_min": 205,
+    "sleep_awake_min": 16,
+    "hrv_ms": 63.8,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 4323,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 465,
+    "sleep_deep_min": 92,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 255,
+    "sleep_awake_min": 11,
+    "hrv_ms": 63.8,
+    "resp_rate": 13.5
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 7453,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 479,
+    "sleep_deep_min": 73,
+    "sleep_rem_min": 78,
+    "sleep_light_min": 250,
+    "sleep_awake_min": 19,
+    "hrv_ms": 72.4,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8604,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 470,
+    "sleep_deep_min": 52,
+    "sleep_rem_min": 90,
+    "sleep_light_min": 201,
+    "sleep_awake_min": 23,
+    "hrv_ms": 70.9,
+    "resp_rate": 13.6
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8639,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 462,
+    "sleep_deep_min": 57,
+    "sleep_rem_min": 119,
+    "sleep_light_min": 251,
+    "sleep_awake_min": 23,
+    "hrv_ms": 59.9,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 8713,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 469,
+    "sleep_deep_min": 74,
+    "sleep_rem_min": 108,
+    "sleep_light_min": 237,
+    "sleep_awake_min": 40,
+    "hrv_ms": 58.4,
+    "resp_rate": 13.0
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9401,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 399,
+    "sleep_deep_min": 55,
+    "sleep_rem_min": 111,
+    "sleep_light_min": 230,
+    "sleep_awake_min": 16,
+    "hrv_ms": 68.1,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5243,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 460,
+    "sleep_deep_min": 92,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 254,
+    "sleep_awake_min": 12,
+    "hrv_ms": 57.8,
+    "resp_rate": 13.0
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 103,
+    "sleep_rem_min": 117,
+    "sleep_light_min": 171,
+    "sleep_awake_min": 42,
+    "resp_rate": 19.4
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 80,
+   "band": "PUSH",
+   "components": {
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 14",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-15",
+    "steps": 7984,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 457,
+    "hrv_ms": 54.5,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 9961,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 436,
+    "hrv_ms": 65.3,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 10531,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 394,
+    "hrv_ms": 73.6,
+    "resp_rate": 13.5
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10568,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 433,
+    "hrv_ms": 56.6,
+    "resp_rate": 15.4
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6228,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 480,
+    "hrv_ms": 53.8,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9332,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 470,
+    "hrv_ms": 71.1,
+    "resp_rate": 15.2
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 4126,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 486,
+    "hrv_ms": 63.0,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7510,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 493,
+    "hrv_ms": 56.3,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8929,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 478,
+    "hrv_ms": 69.2,
+    "resp_rate": 13.8
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 4013,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 421,
+    "hrv_ms": 53.0,
+    "resp_rate": 13.5
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 10684,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 477,
+    "hrv_ms": 53.7,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8685,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 398,
+    "hrv_ms": 74.3,
+    "resp_rate": 15.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 8487,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 467,
+    "hrv_ms": 55.4,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 8535,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 442,
+    "hrv_ms": 51.0,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5917,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 419,
+    "hrv_ms": 65.3,
+    "resp_rate": 14.4
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_deep_min": 71,
+    "sleep_rem_min": 84,
+    "sleep_light_min": 300,
+    "sleep_awake_min": 30,
+    "hrv_ms": 62.8,
+    "resp_rate": 15.2,
+    "skin_temp_delta": 1.36
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 71,
+   "band": "PUSH",
+   "components": {
+    "hrv": 81,
+    "resting_hr": 56,
+    "nightly": 80
+   }
+  }
+ },
+ {
+  "name": "random mix 15",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 6825,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 415,
+    "hrv_ms": 47.8,
+    "resp_rate": 13.6
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 8632,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 442,
+    "hrv_ms": 52.8,
+    "resp_rate": 15.3
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 7489,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 392,
+    "hrv_ms": 68.0,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 5072,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 412,
+    "hrv_ms": 55.2,
+    "resp_rate": 16.0
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 7098,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 390,
+    "hrv_ms": 46.5,
+    "resp_rate": 14.7
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 9780,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 438,
+    "hrv_ms": 73.4,
+    "resp_rate": 15.7
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 4525,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 490,
+    "hrv_ms": 72.7,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 4736,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 412,
+    "hrv_ms": 61.9,
+    "resp_rate": 14.9
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 9486,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 444,
+    "hrv_ms": 50.5,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 7038,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 410,
+    "hrv_ms": 50.2,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 6883,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 387,
+    "hrv_ms": 70.1,
+    "resp_rate": 13.1
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10441,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 445,
+    "hrv_ms": 46.7,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 10184,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 380,
+    "hrv_ms": 65.3,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 8845,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 436,
+    "hrv_ms": 59.1,
+    "resp_rate": 14.1
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 371,
+    "sleep_deep_min": 38,
+    "sleep_rem_min": 29,
+    "sleep_light_min": 308,
+    "sleep_awake_min": 52
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 55,
+   "band": "STEADY",
+   "components": {
+    "sleep": 77,
+    "sleep_quality": 0
+   }
+  }
+ },
+ {
+  "name": "random mix 16",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-26",
+    "steps": 5223,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 414,
+    "sleep_deep_min": 59,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 217,
+    "sleep_awake_min": 28,
+    "hrv_ms": 57.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 10877,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 417,
+    "sleep_deep_min": 66,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 206,
+    "sleep_awake_min": 20,
+    "hrv_ms": 69.1
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7737,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 495,
+    "sleep_deep_min": 82,
+    "sleep_rem_min": 73,
+    "sleep_light_min": 240,
+    "sleep_awake_min": 38,
+    "hrv_ms": 48.4
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 10452,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 465,
+    "sleep_deep_min": 68,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 216,
+    "sleep_awake_min": 34,
+    "hrv_ms": 61.8
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 366,
+    "sleep_deep_min": 28,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 154,
+    "sleep_awake_min": 61,
+    "spo2_avg": 93.5,
+    "skin_temp_delta": 1.25
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 60,
+   "band": "STEADY",
+   "components": {
+    "sleep": 76,
+    "sleep_quality": 18,
+    "nightly": 60
+   }
+  }
+ },
+ {
+  "name": "random mix 17",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-14",
+    "steps": 10311,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 409,
+    "sleep_deep_min": 55,
+    "sleep_rem_min": 108,
+    "sleep_light_min": 246,
+    "sleep_awake_min": 25,
+    "hrv_ms": 50.9,
+    "resp_rate": 13.2
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 10236,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 415,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 110,
+    "sleep_light_min": 251,
+    "sleep_awake_min": 16,
+    "hrv_ms": 51.2,
+    "resp_rate": 14.8
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 8775,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 419,
+    "sleep_deep_min": 83,
+    "sleep_rem_min": 96,
+    "sleep_light_min": 253,
+    "sleep_awake_min": 33,
+    "hrv_ms": 45.3,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 4453,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 446,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 75,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 23,
+    "hrv_ms": 55.1,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 10250,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 441,
+    "sleep_deep_min": 61,
+    "sleep_rem_min": 106,
+    "sleep_light_min": 253,
+    "sleep_awake_min": 21,
+    "hrv_ms": 71.2,
+    "resp_rate": 13.8
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 4300,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 400,
+    "sleep_deep_min": 72,
+    "sleep_rem_min": 103,
+    "sleep_light_min": 259,
+    "sleep_awake_min": 24,
+    "hrv_ms": 62.2,
+    "resp_rate": 15.6
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 8224,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 389,
+    "sleep_deep_min": 70,
+    "sleep_rem_min": 119,
+    "sleep_light_min": 245,
+    "sleep_awake_min": 37,
+    "hrv_ms": 55.7,
+    "resp_rate": 13.7
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 7124,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 453,
+    "sleep_deep_min": 96,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 228,
+    "sleep_awake_min": 26,
+    "hrv_ms": 53.7,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 4210,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 447,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 109,
+    "sleep_light_min": 211,
+    "sleep_awake_min": 15,
+    "hrv_ms": 45.6,
+    "resp_rate": 15.9
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 4841,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 419,
+    "sleep_deep_min": 51,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 259,
+    "sleep_awake_min": 32,
+    "hrv_ms": 61.7,
+    "resp_rate": 15.9
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 10051,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 404,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 99,
+    "sleep_light_min": 233,
+    "sleep_awake_min": 17,
+    "hrv_ms": 45.5,
+    "resp_rate": 14.8
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 9756,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 436,
+    "sleep_deep_min": 61,
+    "sleep_rem_min": 72,
+    "sleep_light_min": 217,
+    "sleep_awake_min": 13,
+    "hrv_ms": 55.5,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 7808,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 443,
+    "sleep_deep_min": 58,
+    "sleep_rem_min": 104,
+    "sleep_light_min": 237,
+    "sleep_awake_min": 17,
+    "hrv_ms": 48.3,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 5859,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 398,
+    "sleep_deep_min": 51,
+    "sleep_rem_min": 110,
+    "sleep_light_min": 224,
+    "sleep_awake_min": 32,
+    "hrv_ms": 67.4,
+    "resp_rate": 13.5
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7444,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 456,
+    "sleep_deep_min": 99,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 22,
+    "hrv_ms": 56.9,
+    "resp_rate": 15.8
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5969,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 487,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 90,
+    "sleep_light_min": 252,
+    "sleep_awake_min": 22,
+    "hrv_ms": 66.5,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 207,
+    "hrv_ms": 92.1,
+    "spo2_avg": 92.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 55,
+   "band": "STEADY",
+   "components": {
+    "sleep": 43,
+    "hrv": 100,
+    "nightly": 80,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 18",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-16",
+    "steps": 8208,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 495,
+    "hrv_ms": 47.5
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 8835,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 448,
+    "hrv_ms": 58.2
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 8191,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 396,
+    "hrv_ms": 72.5
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 8729,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 416,
+    "hrv_ms": 52.3
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 4719,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 474,
+    "hrv_ms": 70.2
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 8996,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 468,
+    "hrv_ms": 64.5
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 5648,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 450,
+    "hrv_ms": 58.8
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8489,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 418,
+    "hrv_ms": 59.1
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 6543,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 383,
+    "hrv_ms": 55.0
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 5546,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 445,
+    "hrv_ms": 74.1
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 7247,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 381,
+    "hrv_ms": 49.9
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 5954,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 421,
+    "hrv_ms": 59.7
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6333,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 492,
+    "hrv_ms": 53.9
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 10325,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 382,
+    "hrv_ms": 61.5
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 358,
+    "hrv_ms": 61.2,
+    "skin_temp_delta": 0.38
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 45,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 76,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 22,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-22",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-20",
+    "minutes": 44,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 26,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 62,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-14",
+    "minutes": 23,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 10,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 62,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-08",
+    "minutes": 80,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 25,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 73,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 80,
+   "band": "PUSH",
+   "components": {
+    "sleep": 75,
+    "hrv": 81,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "random mix 19",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-23",
+    "steps": 7109,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 489,
+    "hrv_ms": 65.8
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 6359,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 472,
+    "hrv_ms": 53.8
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 7200,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 447,
+    "hrv_ms": 64.4
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 4055,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 480,
+    "hrv_ms": 56.4
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 6457,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 403,
+    "hrv_ms": 69.1
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7568,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 453,
+    "hrv_ms": 62.4
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 4720,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 485,
+    "hrv_ms": 54.7
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 304,
+    "spo2_avg": 90.2,
+    "resp_rate": 16.5,
+    "skin_temp_delta": 0.13
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 66,
+   "band": "STEADY",
+   "components": {
+    "sleep": 63,
+    "resting_hr": 100,
+    "nightly": 80,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 20",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-13",
+    "steps": 7067,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 444,
+    "sleep_deep_min": 91,
+    "sleep_rem_min": 105,
+    "sleep_light_min": 259,
+    "sleep_awake_min": 28
+   },
+   {
+    "day": "2026-10-14",
+    "steps": 5263,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 492,
+    "sleep_deep_min": 76,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 225,
+    "sleep_awake_min": 24
+   },
+   {
+    "day": "2026-10-15",
+    "steps": 10285,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 459,
+    "sleep_deep_min": 94,
+    "sleep_rem_min": 103,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 36
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 4755,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 401,
+    "sleep_deep_min": 70,
+    "sleep_rem_min": 93,
+    "sleep_light_min": 204,
+    "sleep_awake_min": 36
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 6544,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 445,
+    "sleep_deep_min": 57,
+    "sleep_rem_min": 111,
+    "sleep_light_min": 257,
+    "sleep_awake_min": 19
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 9651,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 423,
+    "sleep_deep_min": 90,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 233,
+    "sleep_awake_min": 19
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 10686,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 445,
+    "sleep_deep_min": 82,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 226,
+    "sleep_awake_min": 15
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 4492,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 460,
+    "sleep_deep_min": 72,
+    "sleep_rem_min": 106,
+    "sleep_light_min": 240,
+    "sleep_awake_min": 30
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 9921,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 385,
+    "sleep_deep_min": 50,
+    "sleep_rem_min": 120,
+    "sleep_light_min": 200,
+    "sleep_awake_min": 19
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9821,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 468,
+    "sleep_deep_min": 69,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 253,
+    "sleep_awake_min": 13
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 8802,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 381,
+    "sleep_deep_min": 62,
+    "sleep_rem_min": 81,
+    "sleep_light_min": 231,
+    "sleep_awake_min": 34
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 8532,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 452,
+    "sleep_deep_min": 91,
+    "sleep_rem_min": 104,
+    "sleep_light_min": 232,
+    "sleep_awake_min": 14
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8706,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 405,
+    "sleep_deep_min": 88,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 209,
+    "sleep_awake_min": 15
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8246,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 477,
+    "sleep_deep_min": 51,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 204,
+    "sleep_awake_min": 15
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 8280,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 442,
+    "sleep_deep_min": 89,
+    "sleep_rem_min": 97,
+    "sleep_light_min": 251,
+    "sleep_awake_min": 35
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 4508,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 55,
+    "sleep_minutes": 463,
+    "sleep_deep_min": 93,
+    "sleep_rem_min": 119,
+    "sleep_light_min": 237,
+    "sleep_awake_min": 20
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 5179,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 471,
+    "sleep_deep_min": 72,
+    "sleep_rem_min": 87,
+    "sleep_light_min": 210,
+    "sleep_awake_min": 11
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 41,
+    "sleep_rem_min": 48,
+    "sleep_light_min": 161,
+    "sleep_awake_min": 25,
+    "hrv_ms": 56.5
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-30",
+    "minutes": 50,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 10,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 68,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 48,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-22",
+    "minutes": 63,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-20",
+    "minutes": 42,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-18",
+    "minutes": 73,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 18,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-14",
+    "minutes": 41,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-12",
+    "minutes": 59,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 38,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-08",
+    "minutes": 62,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-06",
+    "minutes": 49,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 61,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 90,
+   "band": "PUSH",
+   "components": {
+    "load": 90
+   }
+  }
+ },
+ {
+  "name": "random mix 21",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-27",
+    "steps": 5528,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 380,
+    "sleep_deep_min": 73,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 221,
+    "sleep_awake_min": 27,
+    "resp_rate": 14.2
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7158,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 422,
+    "sleep_deep_min": 57,
+    "sleep_rem_min": 97,
+    "sleep_light_min": 252,
+    "sleep_awake_min": 39,
+    "resp_rate": 15.0
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6877,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 450,
+    "sleep_deep_min": 79,
+    "sleep_rem_min": 88,
+    "sleep_light_min": 222,
+    "sleep_awake_min": 17,
+    "resp_rate": 14.2
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_deep_min": 40,
+    "sleep_rem_min": 40,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 50,
+    "spo2_avg": 90.8,
+    "skin_temp_delta": 0.67
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-29",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-23",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-21",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-17",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-15",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-11",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-09",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-05",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-03",
+    "minutes": 35,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 60,
+   "band": "STEADY",
+   "components": {
+    "nightly": 60
+   }
+  }
+ },
+ {
+  "name": "random mix 22",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-15",
+    "steps": 8202,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 391,
+    "sleep_deep_min": 98,
+    "sleep_rem_min": 94,
+    "sleep_light_min": 201,
+    "sleep_awake_min": 31,
+    "hrv_ms": 67.1
+   },
+   {
+    "day": "2026-10-16",
+    "steps": 9883,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 452,
+    "sleep_deep_min": 74,
+    "sleep_rem_min": 115,
+    "sleep_light_min": 205,
+    "sleep_awake_min": 32,
+    "hrv_ms": 54.3
+   },
+   {
+    "day": "2026-10-17",
+    "steps": 5450,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 479,
+    "sleep_deep_min": 92,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 204,
+    "sleep_awake_min": 27,
+    "hrv_ms": 54.6
+   },
+   {
+    "day": "2026-10-18",
+    "steps": 6961,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 483,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 89,
+    "sleep_light_min": 205,
+    "sleep_awake_min": 17,
+    "hrv_ms": 50.8
+   },
+   {
+    "day": "2026-10-19",
+    "steps": 6363,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 396,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 99,
+    "sleep_light_min": 249,
+    "sleep_awake_min": 30,
+    "hrv_ms": 53.5
+   },
+   {
+    "day": "2026-10-20",
+    "steps": 9149,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 490,
+    "sleep_deep_min": 61,
+    "sleep_rem_min": 71,
+    "sleep_light_min": 223,
+    "sleep_awake_min": 31,
+    "hrv_ms": 73.1
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 10548,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 464,
+    "sleep_deep_min": 51,
+    "sleep_rem_min": 112,
+    "sleep_light_min": 245,
+    "sleep_awake_min": 32,
+    "hrv_ms": 71.9
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 7789,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 411,
+    "sleep_deep_min": 90,
+    "sleep_rem_min": 76,
+    "sleep_light_min": 211,
+    "sleep_awake_min": 19,
+    "hrv_ms": 55.6
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 4943,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 414,
+    "sleep_deep_min": 52,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 202,
+    "sleep_awake_min": 29,
+    "hrv_ms": 66.4
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 5327,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 435,
+    "sleep_deep_min": 59,
+    "sleep_rem_min": 94,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 11,
+    "hrv_ms": 67.7
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 8524,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 419,
+    "sleep_deep_min": 64,
+    "sleep_rem_min": 106,
+    "sleep_light_min": 231,
+    "sleep_awake_min": 32,
+    "hrv_ms": 61.9
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 8266,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "sleep_minutes": 412,
+    "sleep_deep_min": 86,
+    "sleep_rem_min": 92,
+    "sleep_light_min": 259,
+    "sleep_awake_min": 10,
+    "hrv_ms": 65.1
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 4916,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 486,
+    "sleep_deep_min": 87,
+    "sleep_rem_min": 108,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 11,
+    "hrv_ms": 72.0
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 6002,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 467,
+    "sleep_deep_min": 70,
+    "sleep_rem_min": 83,
+    "sleep_light_min": 249,
+    "sleep_awake_min": 39,
+    "hrv_ms": 46.1
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6831,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 475,
+    "sleep_deep_min": 97,
+    "sleep_rem_min": 95,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 29,
+    "hrv_ms": 57.5
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 61,
+    "hrv_ms": 56.0,
+    "spo2_avg": 96.2
+   }
+  ],
+  "workouts": [
+   {
+    "date": "2026-10-22",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-19",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-16",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-13",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-10",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-07",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-04",
+    "minutes": 35,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-30",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-29",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-28",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-27",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-26",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-25",
+    "minutes": 70,
+    "type": "RUN"
+   },
+   {
+    "date": "2026-10-24",
+    "minutes": 70,
+    "type": "RUN"
+   }
+  ],
+  "expected": {
+   "score": 57,
+   "band": "STEADY",
+   "components": {
+    "hrv": 62,
+    "resting_hr": 59,
+    "nightly": 100,
+    "load": 30
+   }
+  }
+ },
+ {
+  "name": "random mix 23",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-20",
+    "steps": 9214,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 57,
+    "sleep_minutes": 419,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 101,
+    "sleep_light_min": 242,
+    "sleep_awake_min": 25,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-21",
+    "steps": 5948,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 58,
+    "sleep_minutes": 470,
+    "sleep_deep_min": 94,
+    "sleep_rem_min": 98,
+    "sleep_light_min": 208,
+    "sleep_awake_min": 39,
+    "resp_rate": 13.0
+   },
+   {
+    "day": "2026-10-22",
+    "steps": 9250,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 59,
+    "sleep_minutes": 424,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 79,
+    "sleep_light_min": 237,
+    "sleep_awake_min": 28,
+    "resp_rate": 13.4
+   },
+   {
+    "day": "2026-10-23",
+    "steps": 5972,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 422,
+    "sleep_deep_min": 98,
+    "sleep_rem_min": 80,
+    "sleep_light_min": 243,
+    "sleep_awake_min": 31,
+    "resp_rate": 14.6
+   },
+   {
+    "day": "2026-10-24",
+    "steps": 5268,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 456,
+    "sleep_deep_min": 75,
+    "sleep_rem_min": 83,
+    "sleep_light_min": 207,
+    "sleep_awake_min": 32,
+    "resp_rate": 15.5
+   },
+   {
+    "day": "2026-10-25",
+    "steps": 6370,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 381,
+    "sleep_deep_min": 52,
+    "sleep_rem_min": 73,
+    "sleep_light_min": 257,
+    "sleep_awake_min": 18,
+    "resp_rate": 14.5
+   },
+   {
+    "day": "2026-10-26",
+    "steps": 6489,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 56,
+    "sleep_minutes": 405,
+    "sleep_deep_min": 78,
+    "sleep_rem_min": 77,
+    "sleep_light_min": 210,
+    "sleep_awake_min": 20,
+    "resp_rate": 15.1
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 7646,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 60,
+    "sleep_minutes": 439,
+    "sleep_deep_min": 85,
+    "sleep_rem_min": 74,
+    "sleep_light_min": 202,
+    "sleep_awake_min": 10,
+    "resp_rate": 13.9
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 7838,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 476,
+    "sleep_deep_min": 95,
+    "sleep_rem_min": 91,
+    "sleep_light_min": 247,
+    "sleep_awake_min": 28,
+    "resp_rate": 13.3
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 6166,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 62,
+    "sleep_minutes": 393,
+    "sleep_deep_min": 81,
+    "sleep_rem_min": 82,
+    "sleep_light_min": 250,
+    "sleep_awake_min": 27,
+    "resp_rate": 15.9
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 70,
+    "sleep_deep_min": 28,
+    "sleep_rem_min": 57,
+    "sleep_light_min": 244,
+    "sleep_awake_min": 28,
+    "hrv_ms": 68.9,
+    "skin_temp_delta": -0.45
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 20,
+   "band": "RECOVER",
+   "components": {
+    "resting_hr": 0,
+    "nightly": 100
+   }
+  }
+ },
+ {
+  "name": "random mix 24",
+  "today": "2026-10-30",
+  "days": [
+   {
+    "day": "2026-10-26",
+    "steps": 7303,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 495,
+    "hrv_ms": 46.5
+   },
+   {
+    "day": "2026-10-27",
+    "steps": 5773,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 443,
+    "hrv_ms": 57.7
+   },
+   {
+    "day": "2026-10-28",
+    "steps": 9986,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 400,
+    "hrv_ms": 74.9
+   },
+   {
+    "day": "2026-10-29",
+    "steps": 8936,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "sleep_minutes": 454,
+    "hrv_ms": 63.8
+   },
+   {
+    "day": "2026-10-30",
+    "steps": 0,
+    "distance_m": 0.0,
+    "active_kcal": 0,
+    "workout_minutes": 0,
+    "resting_hr": 54,
+    "sleep_deep_min": 10,
+    "sleep_rem_min": 24,
+    "sleep_light_min": 306,
+    "sleep_awake_min": 70,
+    "hrv_ms": 69.6,
+    "resp_rate": 18.8,
+    "skin_temp_delta": -0.1
+   }
+  ],
+  "workouts": [],
+  "expected": {
+   "score": 100,
+   "band": "PUSH",
+   "components": {
+    "nightly": 100
+   }
+  }
+ }
+]
