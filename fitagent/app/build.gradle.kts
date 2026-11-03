@@ -126,6 +126,10 @@ dependencies {
     // ML Kit pulls an old androidx.fragment via Play services; Activity Result APIs need ≥ 1.3.
     implementation(libs.fragment.ktx)
 
+    // Wear OS companion: workouts recorded on the watch arrive through the Data Layer (W1–W4).
+    implementation(libs.play.wearable)
+    implementation(libs.coroutines.play)
+
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)

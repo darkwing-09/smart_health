@@ -288,6 +288,18 @@ class FitnessRepository(
         return entity.copy(id = id).toDomain()
     }
 
+    /** Saves a workout recorded on the watch. Idempotent: the same uid is stored once, however often it's delivered. */
+    suspend fun saveWatchWorkout(uid: String, type: WorkoutType, startMs: Long, endMs: Long, activeSeconds: Long, kcal: Double, hr: HrSummary?) {
+        val entity = WorkoutEntity(
+            uid = uid, type = type.name, title = null, startMs = startMs, endMs = endMs, activeSeconds = activeSeconds,
+            kcal = if (kcal > 0) kcal else workoutKcal(type, profiles.profile.value.weightKg, activeSeconds),
+            source = WorkoutSource.APP.name, healthConnectId = null,
+            avgHr = hr?.avg, maxHr = hr?.max, zoneSeconds = hr?.zoneSeconds?.joinToString(","),
+        )
+        dao.insertImported(listOf(entity))
+        onDataChanged()
+    }
+
     suspend fun deleteWorkout(id: Long) {
         val w = dao.getWorkout(id) ?: return
         if (w.source == WorkoutSource.APP.name) {
