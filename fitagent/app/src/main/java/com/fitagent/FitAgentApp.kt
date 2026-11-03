@@ -28,7 +28,10 @@ class AppContainer(context: Context) {
     val phoneSteps = PhoneStepCounter(context)
     val db = AppDatabase.create(context)
     val fitness = FitnessRepository(context.applicationContext, db, health, phoneSteps, profiles, auth, syncState).apply {
-        onDataChanged = { FitAgentWidget.refresh(context.applicationContext) }
+        onDataChanged = {
+            FitAgentWidget.refresh(context.applicationContext)
+            publishToWatch(context.applicationContext, this)
+        }
     }
     val timetable = TimetableStore(context)
     val heartRate = BleHeartRateMonitor(context.applicationContext)
@@ -51,3 +54,16 @@ class FitAgentApp : Application() {
 }
 
 val Context.container: AppContainer get() = (applicationContext as FitAgentApp).container
+
+
+/** Sends today's readiness and steps to a paired Wear OS watch (tile, complication, watch app). */
+private suspend fun publishToWatch(context: Context, fitness: FitnessRepository) {
+    val (days, workouts) = fitness.snapshot()
+    val today = java.time.LocalDate.now()
+    val day = days.lastOrNull { it.date == today } ?: return
+    val profile = context.container.profiles.profile.value
+    val zone = java.time.ZoneId.systemDefault()
+    val r = com.fitagent.domain.computeReadiness(days, workouts, today, zone)
+    val streak = com.fitagent.domain.computeStreak(days, profile.goals, today)
+    com.fitagent.wearsync.WearSyncService.publishSummary(context, r.score, r.band, day.steps, profile.goals.dailySteps, streak.current)
+}

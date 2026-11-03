@@ -75,6 +75,14 @@
         android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.FitAgent">
 
+        <!-- Workouts recorded on a Wear OS watch (Data Layer). -->
+        <service android:name=".wearsync.WearSyncService" android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/fitagent/workout/" />
+            </intent-filter>
+        </service>
+
         <service
             android:name=".service.RouteService"
             android:exported="false"
