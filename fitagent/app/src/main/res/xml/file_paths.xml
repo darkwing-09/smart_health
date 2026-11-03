@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- The weekly recap image (shared) and meal photos (camera output, deleted after the estimate). -->
+    <cache-path name="shared" path="shared/" />
+    <cache-path name="photos" path="photos/" />
+</paths>
