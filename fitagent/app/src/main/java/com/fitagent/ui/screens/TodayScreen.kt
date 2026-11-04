@@ -134,7 +134,7 @@ fun TodayScreen(
 private fun Header(state: HomeState, onRefresh: () -> Unit, onOpen: (Detail) -> Unit) {
     val clock = LocalClock.current
     val hour = remember(clock) { LocalTime.now(clock).hour }
-    val greeting = stringResource(when (hour) { in 5..11 -> R.string.greeting_morning; in 12..16 -> R.string.greeting_afternoon; else -> R.string.greeting_evening })
+    val greeting = stringResource(when (hour) { in 5..11 -> R.string.greeting_morning; in 12..16 -> R.string.greeting_afternoon; in 17..23 -> R.string.greeting_evening; else -> R.string.greeting_late })
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(state.today.format(DateTimeFormatter.ofPattern("EEEE, d MMM")).uppercase(),

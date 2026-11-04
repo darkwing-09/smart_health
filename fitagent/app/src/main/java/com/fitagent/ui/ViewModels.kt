@@ -295,6 +295,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Called every minute while the app is on screen; pulls new watch data as soon as the watch app writes it. */
+    fun liveTick() {
+        viewModelScope.launch {
+            if (c.fitness.liveCheck() && c.auth.account.value != null) Scheduler.syncSoon(getApplication())
+        }
+    }
+
     fun refresh() {
         if (refreshing.value) return
         today.value = LocalDate.now()

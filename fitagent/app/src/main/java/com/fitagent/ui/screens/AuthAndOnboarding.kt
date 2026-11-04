@@ -138,9 +138,10 @@ private enum class Level(val label: String, val goals: Goals) {
 fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (Profile) -> Unit) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var name by rememberSaveable { mutableStateOf(initial.name) }
-    var age by rememberSaveable { mutableStateOf(initial.ageYears.toString()) }
-    var height by rememberSaveable { mutableStateOf(initial.heightCm.toString()) }
-    var weight by rememberSaveable { mutableStateOf(initial.weightKg.toInt().toString()) }
+    // Start empty on first run: no made-up body numbers (they drive calorie estimates).
+    var age by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.ageYears.toString() else "") }
+    var height by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.heightCm.toString() else "") }
+    var weight by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.weightKg.toInt().toString() else "") }
     var level by rememberSaveable { mutableStateOf(Level.ACTIVE) }
     var gender by rememberSaveable { mutableStateOf(initial.gender) }
     var city by rememberSaveable { mutableStateOf(initial.city) }
@@ -148,7 +149,8 @@ fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (P
     var reports by rememberSaveable { mutableStateOf(initial.whatsappReports || initial.whatsappNumber.isBlank()) }
     val normalized = com.fitagent.domain.normalizeWhatsapp(if (whatsapp.trim() == "+91") "" else whatsapp)
     val canContinue = when (step) {
-        1 -> name.isNotBlank() && (age.toIntOrNull() ?: 0) in 13..99
+        1 -> name.isNotBlank() && (age.toIntOrNull() ?: 0) in 13..99 && (height.toIntOrNull() ?: 0) in 120..230 &&
+            (weight.toDoubleOrNull() ?: 0.0) in 30.0..250.0
         2 -> normalized != null && (!reports || normalized.isNotEmpty())
         else -> true
     }
@@ -182,8 +184,8 @@ fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (P
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         NumberField("Age *", age, { age = it }, Modifier.weight(1f))
-                        NumberField("Height cm", height, { height = it }, Modifier.weight(1f))
-                        NumberField("Weight kg", weight, { weight = it }, Modifier.weight(1f))
+                        NumberField("Height cm *", height, { height = it }, Modifier.weight(1f))
+                        NumberField("Weight kg *", weight, { weight = it }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(20.dp))
                     Text("How active are you now?", style = MaterialTheme.typography.titleMedium)

@@ -254,6 +254,20 @@ class FitnessRepository(
         result.onFailure { Log.w(TAG, "refresh failed", it) }
     }
 
+    /**
+     * Cheap check for the foreground "live" loop: peeks at the Health Connect changes feed (without consuming the
+     * token) and runs a normal refresh only when a watch app wrote something new. Returns true if it refreshed.
+     */
+    suspend fun liveCheck(): Boolean {
+        if (refreshLock.isLocked) return false
+        val s = refreshStatus()
+        if (!s.connected) return false
+        val token = syncState.changesToken ?: return refresh().isSuccess
+        val poll = runCatching { health.pollChanges(token, s.granted) }.getOrNull() ?: return false
+        val fresh = poll.expired || poll.origins.values.any { it.records > 0 }
+        return if (fresh) refresh().isSuccess else false
+    }
+
     /** Samples only the phone's step sensor (used in the background when Health Connect can't be read). */
     suspend fun samplePhoneOnly() = refreshLock.withLock {
         val started = System.currentTimeMillis()

@@ -80,6 +80,9 @@ import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.WorkoutSummaryDialog
 import com.fitagent.ui.screens.YouScreen
 import com.fitagent.ui.theme.FitAgentTheme
+import kotlinx.coroutines.launch
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.lifecycleScope
 
 private enum class Tab(@StringRes val label: Int, val icon: ImageVector) {
     TODAY(R.string.tab_today, Icons.Rounded.Today),
@@ -156,6 +159,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) handleInvite(intent)
+        // Near-real-time watch data: while the app is visible, check Health Connect for new records every minute.
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                while (true) {
+                    kotlinx.coroutines.delay(60_000)
+                    main.liveTick()
+                }
+            }
+        }
         setContent {
             val choice by main.profile.collectAsStateWithLifecycle()
             val dark = com.fitagent.ui.theme.isDarkTheme(choice.theme)

@@ -32,6 +32,8 @@ object AppLabels {
 
     fun label(context: Context, id: String): String {
         if (id == PHONE_SENSOR_SOURCE) return "This phone's step sensor"
+        // Android 14+ records the phone's own steps into Health Connect under a generated package name.
+        if (id.startsWith("com.android.healthconnect.phone")) return "This phone (Android step counter)"
         return runCatching {
             val pm = context.packageManager
             @Suppress("DEPRECATION") // the flags overload is API 33+; minSdk is 28

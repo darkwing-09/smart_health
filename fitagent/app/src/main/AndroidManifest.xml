@@ -60,6 +60,9 @@
         <package android:name="com.xiaomi.wearable" />
         <package android:name="com.xiaomi.hm.health" />
         <package android:name="com.mi.health" />
+        <!-- Daily report: open WhatsApp directly with the PDF. -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
     </queries>
 
     <application
