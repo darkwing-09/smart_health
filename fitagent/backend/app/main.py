@@ -13,7 +13,7 @@ from sqlalchemy import text
 from . import __version__
 from .config import get_settings
 from .db import Base, engine
-from .routers import admin, auth, campus, challenges, coach, food, invites, me, rewards
+from .routers import admin, auth, campus, challenges, coach, food, invites, me, reports, rewards
 from .services.agents import get_runtime
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
 
     # admin.students_router (/v1/challenges/official) must be registered before challenges.router's /{challenge_id}.
     for r in (auth.router, me.router, admin.students_router, challenges.router, coach.router, campus.router, food.router,
-              rewards.router, admin.router, admin.public, invites.router):
+              rewards.router, admin.router, admin.public, invites.router, reports.router):
         app.include_router(r)
     return app
 

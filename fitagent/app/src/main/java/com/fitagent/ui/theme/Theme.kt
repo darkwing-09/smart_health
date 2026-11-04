@@ -191,6 +191,14 @@ private val AppShapes = Shapes(
     extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(36.dp),
 )
 
+/** Resolves the user's theme choice ("system" | "light" | "dark") to dark or not. */
+@Composable
+fun isDarkTheme(choice: String): Boolean = when (choice) {
+    "light" -> false
+    "dark" -> true
+    else -> isSystemInDarkTheme()
+}
+
 @Composable
 fun FitAgentTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalFitColors provides if (dark) DarkFit else LightFit) {

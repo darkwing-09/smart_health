@@ -56,6 +56,13 @@ class User(Base):
     # "student" or "admin". Admins manage official challenges and perks for their own college only.
     role: Mapped[str] = mapped_column(String(10), default="student", server_default="student")
     language: Mapped[str] = mapped_column(String(5), default="en", server_default="en")
+    # Daily WhatsApp report (opt-in). Number in E.164 (+919876543210); city is free text, never GPS.
+    city: Mapped[str | None] = mapped_column(String(80))
+    gender: Mapped[str | None] = mapped_column(String(20))
+    whatsapp_number: Mapped[str | None] = mapped_column(String(20))
+    whatsapp_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    # Local hour (0–23) at which the daily report goes out.
+    report_hour: Mapped[int] = mapped_column(Integer, default=21, server_default="21")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     days: Mapped[list[DailyActivity]] = relationship(back_populates="user", cascade="all, delete-orphan",
@@ -232,4 +239,17 @@ class Redemption(Base):
     perk_id: Mapped[str] = mapped_column(ForeignKey("perks.id", ondelete="CASCADE"))
     code: Mapped[str] = mapped_column(String(12), unique=True)
     points: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ReportDelivery(Base):
+    """One row per user per day once the daily report was sent (or tried): makes the daily job idempotent."""
+    __tablename__ = "report_deliveries"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    # sent | dry_run | failed | skipped
+    status: Mapped[str] = mapped_column(String(12))
+    channel: Mapped[str] = mapped_column(String(12), default="whatsapp")
+    detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

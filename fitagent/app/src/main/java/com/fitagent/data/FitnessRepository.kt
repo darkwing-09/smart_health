@@ -66,7 +66,33 @@ data class DataSource(
     val lastDataMs: Long,
     val recordsReceived: Long,
     val dataTypes: List<String>,
+    /** Data came from a watch/band (not the phone's own pedometer). */
+    val wearable: Boolean = false,
 )
+
+/**
+ * Whether a real watch is feeding FitAgent. Every screen and notification that shows body data checks this —
+ * FitAgent never shows numbers that didn't come from the watch (or, if you opt in, the phone's step sensor).
+ */
+sealed interface WatchState {
+    /** No wearable has ever delivered data. */
+    data object None : WatchState
+    /** A wearable delivered data, but nothing new for [STALE_AFTER_HOURS]. */
+    data class Stale(val label: String, val lastDataMs: Long) : WatchState
+    data class Connected(val label: String, val device: String?, val lastDataMs: Long) : WatchState
+
+    val hasWatch: Boolean get() = this !is None
+
+    companion object {
+        const val STALE_AFTER_HOURS = 24L
+
+        fun from(sources: List<DataSource>, nowMs: Long): WatchState {
+            val watch = sources.filter { it.wearable && it.lastDataMs > 0 }.maxByOrNull { it.lastDataMs } ?: return None
+            return if (nowMs - watch.lastDataMs > STALE_AFTER_HOURS * 3_600_000) Stale(watch.label, watch.lastDataMs)
+            else Connected(watch.label, watch.device, watch.lastDataMs)
+        }
+    }
+}
 
 data class SyncEvent(val timeMs: Long, val kind: String, val ok: Boolean, val records: Int, val message: String?)
 
@@ -90,21 +116,50 @@ class FitnessRepository(
     /** Called after new data lands (e.g. to refresh the home-screen widget). Set by the app container. */
     var onDataChanged: suspend () -> Unit = {}
 
-    /** Watch days with the phone's own step count filling days no watch app reported. */
+    val sources: Flow<List<DataSource>> = healthDao.observeSources().map { rows ->
+        rows.map {
+            val tags = it.dataTypes.split('|').filter(String::isNotBlank)
+            DataSource(
+                id = it.id,
+                label = it.label,
+                device = tags.firstOrNull { t -> t.startsWith(DEVICE_PREFIX) }?.removePrefix(DEVICE_PREFIX),
+                lastDataMs = it.lastDataMs,
+                recordsReceived = it.recordsReceived,
+                dataTypes = tags.filterNot { t -> t.startsWith(DEVICE_PREFIX) || t == WEARABLE_TAG },
+                wearable = WEARABLE_TAG in tags,
+            )
+        }
+    }
+
+    /** Watch connection state, re-evaluated every minute so "connected" turns "stale" on its own. */
+    val watchState: Flow<WatchState> = combine(sources, kotlinx.coroutines.flow.flow {
+        while (true) { emit(System.currentTimeMillis()); kotlinx.coroutines.delay(60_000) }
+    }) { list, now -> WatchState.from(list, now) }
+
+    suspend fun watchStateNow(): WatchState = WatchState.from(sources.first(), System.currentTimeMillis())
+
+    /**
+     * Device data the app may show: watch days (and, only if you opted in, phone-sensor steps for days without
+     * watch steps). With no watch connected this is empty — FitAgent never shows numbers the watch didn't measure.
+     */
     val deviceDays: Flow<Map<LocalDate, DeviceDay>> =
-        combine(dao.observeDays(), healthDao.observePhoneDaily()) { rows, phoneRows ->
-            mergePhoneSteps(
+        combine(dao.observeDays(), healthDao.observePhoneDaily(), watchState, profiles.profile) { rows, phoneRows, watch, profile ->
+            visibleDays(
                 rows.associate { LocalDate.ofEpochDay(it.epochDay) to it.toDomain() },
                 phoneRows.associate { LocalDate.ofEpochDay(it.epochDay) to it.steps },
+                watch, profile.usePhoneSteps,
             )
         }
     val workouts: Flow<List<Workout>> = dao.observeWorkouts().map { rows -> rows.map { it.toDomain() } }
 
     /** Steps per hour for [date] (watch first, phone sensor otherwise). Always 24 entries. */
     fun hourlySteps(date: LocalDate): Flow<List<Long>> =
-        combine(healthDao.observeHourly(date.toEpochDay()), healthDao.observePhoneHourly(date.toEpochDay())) { watch, ph ->
-            val byHour = if (watch.any { it.steps > 0 }) watch.associate { it.hour to it.steps }
-            else ph.associate { it.hour to it.steps }
+        combine(healthDao.observeHourly(date.toEpochDay()), healthDao.observePhoneHourly(date.toEpochDay()), watchState, profiles.profile) { w, ph, state, profile ->
+            val byHour = when {
+                state.hasWatch && w.any { it.steps > 0 } -> w.associate { it.hour to it.steps }
+                profile.usePhoneSteps -> ph.associate { it.hour to it.steps }
+                else -> emptyMap()
+            }
             List(24) { byHour[it] ?: 0L }
         }
 
@@ -129,19 +184,6 @@ class FitnessRepository(
             rows.map { SleepSegment(it.startMs, it.endMs, SleepStage.valueOf(it.stage)) }
         }
 
-    val sources: Flow<List<DataSource>> = healthDao.observeSources().map { rows ->
-        rows.map {
-            val tags = it.dataTypes.split('|').filter(String::isNotBlank)
-            DataSource(
-                id = it.id,
-                label = it.label,
-                device = tags.firstOrNull { t -> t.startsWith(DEVICE_PREFIX) }?.removePrefix(DEVICE_PREFIX),
-                lastDataMs = it.lastDataMs,
-                recordsReceived = it.recordsReceived,
-                dataTypes = tags.filterNot { t -> t.startsWith(DEVICE_PREFIX) },
-            )
-        }
-    }
 
     fun syncLog(limit: Int = 60): Flow<List<SyncEvent>> =
         healthDao.observeLog(limit).map { rows -> rows.map { SyncEvent(it.timeMs, it.kind, it.ok, it.records, it.message) } }
@@ -162,7 +204,7 @@ class FitnessRepository(
         val started = System.currentTimeMillis()
         var records = 0
         val result = runCatching {
-            records += samplePhoneSteps()
+            if (profiles.profile.value.usePhoneSteps) records += samplePhoneSteps()
             val s = refreshStatus()
             if (!s.connected) return@runCatching
             val zone = ZoneId.systemDefault()
@@ -172,7 +214,8 @@ class FitnessRepository(
             syncState.changesToken = poll.token
             for ((pkg, activity) in poll.origins) {
                 records += activity.records
-                recordSource(pkg, started, activity.records.toLong(), activity.types, activity.device)
+                recordSource(pkg, activity.latestMs.takeIf { it > 0 } ?: started, activity.records.toLong(), activity.types,
+                    activity.device, activity.wearable)
             }
 
             val stale = started - syncState.lastFullReadMs > FULL_READ_INTERVAL_MS
@@ -196,7 +239,7 @@ class FitnessRepository(
                     SleepSegmentEntity(it.startMs, it.endMs, it.stage.name, date.toEpochDay())
                 })
             }
-            for ((pkg, types) in readout.origins) recordSource(pkg, null, 0, types, null)
+            for ((pkg, o) in readout.origins) recordSource(pkg, o.latestMs, 0, o.types, o.device, o.wearable)
 
             val since = from.atStartOfDay(zone).toInstant()
             val imported = health.readWorkouts(since, s.granted, profiles.profile.value.weightKg)
@@ -214,6 +257,7 @@ class FitnessRepository(
     /** Samples only the phone's step sensor (used in the background when Health Connect can't be read). */
     suspend fun samplePhoneOnly() = refreshLock.withLock {
         val started = System.currentTimeMillis()
+        if (!profiles.profile.value.usePhoneSteps) return@withLock
         val result = runCatching { samplePhoneSteps() }
         if (result.getOrDefault(0) > 0 || result.isFailure) {
             log(KIND_PHONE, started, result.isSuccess, result.getOrDefault(0), result.exceptionOrNull()?.let(::describeError))
@@ -231,16 +275,17 @@ class FitnessRepository(
         val day = t.toLocalDate().toEpochDay()
         val existing = healthDao.phoneSteps(day, t.hour)?.steps ?: 0
         healthDao.upsertPhoneSteps(PhoneStepsEntity(day, t.hour, existing + steps))
-        recordSource(PHONE_SENSOR_SOURCE, now, steps, setOf("Steps"), null)
+        recordSource(PHONE_SENSOR_SOURCE, now, steps, setOf("Steps"), null, wearable = false)
         return 1
     }
 
-    private suspend fun recordSource(id: String, dataAtMs: Long?, records: Long, types: Set<String>, device: String?) {
+    private suspend fun recordSource(id: String, dataAtMs: Long?, records: Long, types: Set<String>, device: String?, wearable: Boolean) {
         val now = System.currentTimeMillis()
         val old = healthDao.source(id)
         val oldTags = old?.dataTypes?.split('|')?.filter(String::isNotBlank).orEmpty()
         val deviceTag = device?.let { DEVICE_PREFIX + it } ?: oldTags.firstOrNull { it.startsWith(DEVICE_PREFIX) }
-        val merged = (oldTags.filterNot { it.startsWith(DEVICE_PREFIX) } + types).distinct().sorted()
+        val isWearable = wearable || WEARABLE_TAG in oldTags
+        val merged = (oldTags.filterNot { it.startsWith(DEVICE_PREFIX) || it == WEARABLE_TAG } + types).distinct().sorted()
         healthDao.upsertSource(
             SourceEntity(
                 id = id,
@@ -248,7 +293,7 @@ class FitnessRepository(
                 firstSeenMs = old?.firstSeenMs ?: now,
                 lastDataMs = maxOf(old?.lastDataMs ?: 0, dataAtMs ?: 0),
                 recordsReceived = (old?.recordsReceived ?: 0) + records,
-                dataTypes = (listOfNotNull(deviceTag) + merged).joinToString("|"),
+                dataTypes = (listOfNotNull(deviceTag, WEARABLE_TAG.takeIf { isWearable }) + merged).joinToString("|"),
             )
         )
     }
@@ -316,9 +361,10 @@ class FitnessRepository(
     suspend fun snapshot(): Pair<List<DayActivity>, List<Workout>> {
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
-        val device = mergePhoneSteps(
+        val device = visibleDays(
             dao.getDays().associate { LocalDate.ofEpochDay(it.epochDay) to it.toDomain() },
             healthDao.phoneDaily().associate { LocalDate.ofEpochDay(it.epochDay) to it.steps },
+            watchStateNow(), profiles.profile.value.usePhoneSteps,
         )
         val workouts = dao.getWorkouts().map { it.toDomain() }
         val from = listOfNotNull(device.keys.minOrNull(), today.minusDays(29)).min()
@@ -327,10 +373,17 @@ class FitnessRepository(
 
     companion object {
         private const val TAG = "FitnessRepository"
+
+        /** The no-dummy-data rule in one place (unit-tested). */
+        fun visibleDays(watchDays: Map<LocalDate, DeviceDay>, phoneSteps: Map<LocalDate, Long>, watch: WatchState, usePhoneSteps: Boolean): Map<LocalDate, DeviceDay> {
+            val base = if (watch.hasWatch) watchDays else emptyMap()
+            return if (usePhoneSteps) mergePhoneSteps(base, phoneSteps) else base
+        }
         const val KIND_WATCH = "watch"
         const val KIND_CLOUD = "cloud"
         const val KIND_PHONE = "phone"
         private const val DEVICE_PREFIX = "device:"
+        private const val WEARABLE_TAG = "kind:wearable"
         private const val HR_RETENTION_DAYS = 90L
         private val FULL_READ_INTERVAL_MS = Duration.ofHours(12).toMillis()
 

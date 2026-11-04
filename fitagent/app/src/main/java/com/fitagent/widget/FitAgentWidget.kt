@@ -66,6 +66,7 @@ class FitAgentWidget : GlanceAppWidget() {
 
     private suspend fun load(context: Context): WidgetData? = runCatching {
         val c = context.container
+        if (!c.fitness.watchStateNow().hasWatch) return@runCatching null // no watch → no numbers, just the connect prompt
         val (days, workouts) = c.fitness.snapshot()
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
