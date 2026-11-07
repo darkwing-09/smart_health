@@ -3,6 +3,7 @@ package com.fitagent.data
 import com.fitagent.data.prefs.AuthStore
 import com.fitagent.data.prefs.ProfileStore
 import com.fitagent.data.remote.ApiClient
+import com.fitagent.data.remote.userMessage
 import com.fitagent.data.remote.dto.ChallengeCreateReq
 import com.fitagent.data.remote.dto.ChallengeRes
 import com.fitagent.data.remote.dto.ChatReq
@@ -48,6 +49,25 @@ class CloudRepository(
 ) {
     private val api get() = client.api
 
+    private val _server = kotlinx.coroutines.flow.MutableStateFlow<ServerStatus>(ServerStatus.Checking)
+    /** Whether the FitAgent server answers /health. Coach, squad, cloud sync and WhatsApp reports need it. */
+    val server: kotlinx.coroutines.flow.StateFlow<ServerStatus> = _server
+
+    suspend fun checkServer(): ServerStatus {
+        val s = runCatching { api.health() }.fold(
+            { if (it.status == "ok") ServerStatus.Online else ServerStatus.Offline("The server is up but not healthy (${it.status}).") },
+            { ServerStatus.Offline(it.userMessage()) },
+        )
+        _server.value = s
+        return s
+    }
+
+    /** Asks the server to send today's PDF report to the user's WhatsApp now. */
+    suspend fun sendReportNow(): Result<com.fitagent.data.remote.dto.SendReportRes> = runCatching {
+        pushProfile().getOrThrow() // the server needs the current number first
+        api.sendReport()
+    }
+
     suspend fun register(email: String, password: String, name: String): Result<Unit> = runCatching {
         val tokens = api.register(RegisterReq(email.trim(), password, name.trim(), ZoneId.systemDefault().id))
         completeSignIn(tokens, pushProfile = true)
@@ -66,6 +86,9 @@ class CloudRepository(
             profiles.update {
                 it.copy(
                     name = it.name.ifBlank { me.displayName },
+                    city = it.city.ifBlank { me.city.orEmpty() },
+                    whatsappNumber = it.whatsappNumber.ifBlank { me.whatsappNumber.orEmpty() },
+                    whatsappReports = it.whatsappReports || me.whatsappOptIn == true,
                     goals = it.goals.copy(
                         dailySteps = me.goals.dailySteps,
                         dailyActiveKcal = me.goals.dailyActiveKcal,
@@ -93,6 +116,11 @@ class CloudRepository(
         batch = p.batch.trim(),
         showOnCampus = p.showOnCampus,
         language = p.language,
+        city = p.city.trim(),
+        gender = p.gender.ifBlank { null },
+        whatsappNumber = p.whatsappNumber,
+        whatsappOptIn = p.whatsappReports && p.whatsappNumber.isNotBlank(),
+        reportHour = p.reportHour.coerceIn(0, 23),
     )
 
     fun signOut() = auth.signOut()
@@ -227,4 +255,10 @@ class CloudRepository(
         val r = api.leave(id)
         if (!r.isSuccessful) throw retrofit2.HttpException(r)
     }
+}
+
+sealed interface ServerStatus {
+    data object Checking : ServerStatus
+    data object Online : ServerStatus
+    data class Offline(val message: String) : ServerStatus
 }

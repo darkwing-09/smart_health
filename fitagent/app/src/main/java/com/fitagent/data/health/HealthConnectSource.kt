@@ -10,6 +10,7 @@ import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.FloorsClimbedRecord
@@ -35,6 +36,7 @@ import com.fitagent.domain.DeviceDay
 import com.fitagent.domain.HealthReadout
 import com.fitagent.domain.HrBucket
 import com.fitagent.domain.NightSignals
+import com.fitagent.domain.OriginInfo
 import com.fitagent.domain.SleepSegment
 import com.fitagent.domain.SleepSession
 import com.fitagent.domain.nightOf
@@ -60,7 +62,7 @@ data class HealthType(val label: String, val type: KClass<out Record>)
 data class CompatibilityRow(val type: HealthType, val countsByApp: Map<String, Int>, val truncated: Boolean)
 
 /** One app's contribution seen through the Changes API since the last poll. */
-data class OriginActivity(val records: Int, val types: Set<String>, val device: String?)
+data class OriginActivity(val records: Int, val types: Set<String>, val device: String?, val wearable: Boolean, val latestMs: Long)
 
 data class ChangesPoll(val token: String?, val origins: Map<String, OriginActivity>, val expired: Boolean)
 
@@ -79,6 +81,8 @@ class HealthConnectSource(private val context: Context) {
         HealthType("Steps", StepsRecord::class),
         HealthType("Distance", DistanceRecord::class),
         HealthType("Active calories", ActiveCaloriesBurnedRecord::class),
+        // NoiseFit, Google Fit and many watch apps write only total energy (active + basal).
+        HealthType("Total calories", TotalCaloriesBurnedRecord::class),
         HealthType("Floors", FloorsClimbedRecord::class),
         HealthType("Workouts", ExerciseSessionRecord::class),
         HealthType("Heart rate", HeartRateRecord::class),
@@ -136,17 +140,43 @@ class HealthConnectSource(private val context: Context) {
     // ── Reading ──────────────────────────────────────────────────────────────────────────────────
 
     /** Reads everything for [from]..[to]; intraday detail (hourly steps, HR buckets) only for [detailFrom]..[to]. */
-    suspend fun read(from: LocalDate, to: LocalDate, detailFrom: LocalDate, granted: Set<String>, zone: ZoneId): HealthReadout {
-        val origins = mutableMapOf<String, MutableSet<String>>()
-        fun saw(pkg: String, label: String) { origins.getOrPut(pkg) { mutableSetOf() } += label }
+    suspend fun read(
+        from: LocalDate, to: LocalDate, detailFrom: LocalDate, granted: Set<String>, zone: ZoneId,
+        bmrKcalPerDay: Double? = null,
+    ): HealthReadout {
+        val origins = mutableMapOf<String, OriginInfo>()
+        fun saw(r: Record, label: String, time: Instant) {
+            val pkg = r.metadata.dataOrigin.packageName
+            if (pkg == context.packageName) return
+            val old = origins[pkg]
+            origins[pkg] = OriginInfo(
+                types = old?.types.orEmpty() + label,
+                latestMs = maxOf(old?.latestMs ?: 0, time.toEpochMilli()),
+                wearable = (old?.wearable ?: false) || isWearable(r),
+                device = old?.device ?: describe(r.metadata.device),
+            )
+        }
 
-        val days = readDailyAggregates(from, to, granted, zone).toMutableMap()
+        // Which apps (and which kinds of device) supplied steps and heart rate: a small sample of raw records.
+        // Aggregates merge sources, so this is how a watch is told apart from the phone's own pedometer.
+        val sampleWindow = TimeRangeFilter.after(from.atStartOfDay(zone).toInstant())
+        if (granted(granted, StepsRecord::class)) {
+            sample(StepsRecord::class, sampleWindow).forEach { saw(it, "Steps", it.endTime) }
+        }
+        if (granted(granted, HeartRateRecord::class)) {
+            sample(HeartRateRecord::class, sampleWindow).forEach { saw(it, "Heart rate", it.endTime) }
+        }
+        if (granted(granted, ExerciseSessionRecord::class)) {
+            sample(ExerciseSessionRecord::class, sampleWindow).forEach { saw(it, "Workouts", it.endTime) }
+        }
+
+        val days = readDailyAggregates(from, to, granted, zone, bmrKcalPerDay).toMutableMap()
 
         // Sleep: a night belongs to the date it ends on. Read from 18:00 the evening before the window.
         val nights = if (granted(granted, SleepSessionRecord::class)) {
             val start = from.minusDays(1).atTime(18, 0).atZone(zone).toInstant()
             val sessions = readAll(SleepSessionRecord::class, TimeRangeFilter.after(start))
-            sessions.forEach { saw(it.metadata.dataOrigin.packageName, "Sleep") }
+            sessions.forEach { saw(it, "Sleep", it.endTime) }
             pickNights(sessions.map { it.toSession() }, zone).filterKeys { !it.isBefore(from) && !it.isAfter(to) }
         } else emptyMap()
         for ((date, night) in nights) {
@@ -172,25 +202,25 @@ class HealthConnectSource(private val context: Context) {
         }
         if (granted(granted, HeartRateVariabilityRmssdRecord::class)) {
             readAll(HeartRateVariabilityRmssdRecord::class, window).forEach {
-                saw(it.metadata.dataOrigin.packageName, "Heart rate variability")
+                saw(it, "Heart rate variability", it.time)
                 acc(it.time)?.hrv?.add(it.heartRateVariabilityMillis)
             }
         }
         if (granted(granted, OxygenSaturationRecord::class)) {
             readAll(OxygenSaturationRecord::class, window).forEach {
-                saw(it.metadata.dataOrigin.packageName, "Blood oxygen")
+                saw(it, "Blood oxygen", it.time)
                 acc(it.time)?.spo2?.add(it.percentage.value)
             }
         }
         if (granted(granted, RespiratoryRateRecord::class)) {
             readAll(RespiratoryRateRecord::class, window).forEach {
-                saw(it.metadata.dataOrigin.packageName, "Respiratory rate")
+                saw(it, "Respiratory rate", it.time)
                 acc(it.time)?.resp?.add(it.rate)
             }
         }
         if (granted(granted, SkinTemperatureRecord::class)) {
             readAll(SkinTemperatureRecord::class, window).forEach { r ->
-                saw(r.metadata.dataOrigin.packageName, "Skin temperature")
+                saw(r, "Skin temperature", r.endTime)
                 r.deltas.forEach { d -> acc(d.time)?.skinTemp?.add(d.delta.inCelsius) }
             }
         }
@@ -202,7 +232,7 @@ class HealthConnectSource(private val context: Context) {
         if (granted(granted, Vo2MaxRecord::class)) {
             val vo2Window = TimeRangeFilter.between(from.atStartOfDay(zone).toInstant(), nightEnd)
             readAll(Vo2MaxRecord::class, vo2Window).forEach {
-                saw(it.metadata.dataOrigin.packageName, "VO₂ max")
+                saw(it, "VO₂ max", it.time)
                 val date = it.time.atZone(zone).toLocalDate()
                 days[date] = (days[date] ?: DeviceDay(date)).copy(vo2max = it.vo2MillilitersPerMinuteKilogram)
             }
@@ -214,11 +244,12 @@ class HealthConnectSource(private val context: Context) {
         if (!detailFrom.isAfter(to)) {
             val detail = TimeRangeFilter.between(
                 detailFrom.atStartOfDay(zone).toInstant(),
-                to.plusDays(1).atStartOfDay(zone).toInstant(),
+                minOf(to.plusDays(1).atStartOfDay(zone).toInstant(), Instant.now()), // see readDailyAggregates
             )
             val metrics = buildSet<AggregateMetric<*>> {
                 if (granted(granted, StepsRecord::class)) add(StepsRecord.COUNT_TOTAL)
                 if (granted(granted, ActiveCaloriesBurnedRecord::class)) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
+                if (granted(granted, TotalCaloriesBurnedRecord::class)) add(TotalCaloriesBurnedRecord.ENERGY_TOTAL)
             }
             if (metrics.isNotEmpty()) {
                 val buckets = client.aggregateGroupByDuration(AggregateGroupByDurationRequest(metrics, detail, Duration.ofHours(1)))
@@ -227,9 +258,11 @@ class HealthConnectSource(private val context: Context) {
                 for (b in buckets) {
                     val t = b.startTime.atZone(zone)
                     b.result[StepsRecord.COUNT_TOTAL]?.let { steps.getOrPut(t.toLocalDate()) { mutableListOf() } += t.hour to it }
-                    b.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.let {
-                        kcal.getOrPut(t.toLocalDate()) { mutableMapOf() }[t.hour] = it.inKilocalories
+                    val active = b.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories?.takeIf { it > 0 }
+                    val fromTotal = b.result[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories?.let { total ->
+                        bmrKcalPerDay?.let { activeFromTotal(total, it, 1.0 / 24) }
                     }
+                    (active ?: fromTotal)?.let { kcal.getOrPut(t.toLocalDate()) { mutableMapOf() }[t.hour] = it }
                 }
                 hourly += steps
                 hourlyKcal += kcal
@@ -263,11 +296,14 @@ class HealthConnectSource(private val context: Context) {
         )
     }
 
-    private suspend fun readDailyAggregates(from: LocalDate, to: LocalDate, granted: Set<String>, zone: ZoneId): Map<LocalDate, DeviceDay> {
+    private suspend fun readDailyAggregates(
+        from: LocalDate, to: LocalDate, granted: Set<String>, zone: ZoneId, bmrKcalPerDay: Double? = null,
+    ): Map<LocalDate, DeviceDay> {
         val metrics = buildSet<AggregateMetric<*>> {
             if (granted(granted, StepsRecord::class)) add(StepsRecord.COUNT_TOTAL)
             if (granted(granted, DistanceRecord::class)) add(DistanceRecord.DISTANCE_TOTAL)
             if (granted(granted, ActiveCaloriesBurnedRecord::class)) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
+            if (granted(granted, TotalCaloriesBurnedRecord::class)) add(TotalCaloriesBurnedRecord.ENERGY_TOTAL)
             if (granted(granted, FloorsClimbedRecord::class)) add(FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL)
             if (granted(granted, RestingHeartRateRecord::class)) add(RestingHeartRateRecord.BPM_AVG)
             if (granted(granted, HeartRateRecord::class)) {
@@ -282,7 +318,10 @@ class HealthConnectSource(private val context: Context) {
         val buckets = client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
                 metrics = metrics,
-                timeRangeFilter = TimeRangeFilter.between(from.atStartOfDay(), to.plusDays(1).atStartOfDay()),
+                // End at "now", not midnight: Health Connect fills total-calorie gaps with basal energy for the whole
+                // window, so asking for all of today would count the basal energy of hours that haven't happened yet.
+                timeRangeFilter = TimeRangeFilter.between(from.atStartOfDay(),
+                    minOf(to.plusDays(1).atStartOfDay(), java.time.LocalDateTime.now(zone))),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
@@ -294,7 +333,10 @@ class HealthConnectSource(private val context: Context) {
                 date = d,
                 steps = steps,
                 distanceMeters = r[DistanceRecord.DISTANCE_TOTAL]?.inMeters ?: 0.0,
-                activeKcal = r[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories,
+                activeKcal = r[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories?.takeIf { it > 0 }
+                    ?: r[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories?.let { total ->
+                        bmrKcalPerDay?.let { activeFromTotal(total, it, dayFraction(d, zone)) }
+                    },
                 restingHr = r[RestingHeartRateRecord.BPM_AVG]?.toInt(),
                 avgHr = r[HeartRateRecord.BPM_AVG]?.toInt(),
                 hrMin = r[HeartRateRecord.BPM_MIN]?.toInt(),
@@ -345,6 +387,8 @@ class HealthConnectSource(private val context: Context) {
         val counts = mutableMapOf<String, Int>()
         val typesByApp = mutableMapOf<String, MutableSet<String>>()
         val devices = mutableMapOf<String, String>()
+        val wearable = mutableSetOf<String>()
+        val latest = mutableMapOf<String, Long>()
         var next: String = token
         while (true) {
             val response = client.getChanges(next)
@@ -357,11 +401,15 @@ class HealthConnectSource(private val context: Context) {
                 counts[pkg] = (counts[pkg] ?: 0) + 1
                 labels[r::class]?.let { typesByApp.getOrPut(pkg) { mutableSetOf() } += it }
                 describe(r.metadata.device)?.let { devices.putIfAbsent(pkg, it) }
+                if (isWearable(r)) wearable += pkg
+                recordTime(r)?.let { t -> latest[pkg] = maxOf(latest[pkg] ?: 0, t) }
             }
             next = response.nextChangesToken
             if (!response.hasMore) break
         }
-        val origins = counts.mapValues { (pkg, n) -> OriginActivity(n, typesByApp[pkg].orEmpty(), devices[pkg]) }
+        val origins = counts.mapValues { (pkg, n) ->
+            OriginActivity(n, typesByApp[pkg].orEmpty(), devices[pkg], pkg in wearable, latest[pkg] ?: 0)
+        }
         return ChangesPoll(next, origins, expired = false)
     }
 
@@ -405,6 +453,12 @@ class HealthConnectSource(private val context: Context) {
             .onFailure { Log.w(TAG, "delete workout failed", it) }
     }
 
+    /** One page of the newest records — enough to identify which apps and devices write a type. */
+    private suspend fun <T : Record> sample(type: KClass<T>, filter: TimeRangeFilter): List<T> =
+        runCatching { client.readRecords(ReadRecordsRequest(type, filter, ascendingOrder = false, pageSize = SAMPLE_PAGE)).records }
+            .onFailure { Log.w(TAG, "sample read failed for ${type.simpleName}", it) }
+            .getOrDefault(emptyList())
+
     private suspend fun <T : Record> readAll(type: KClass<T>, filter: TimeRangeFilter): List<T> {
         val out = mutableListOf<T>()
         var token: String? = null
@@ -419,6 +473,61 @@ class HealthConnectSource(private val context: Context) {
     companion object {
         private const val TAG = "HealthConnect"
         private const val COMPAT_PAGE = 1000
+        private const val SAMPLE_PAGE = 200
+
+        /** Devices that count as "a watch" for FitAgent; phones and scales don't. */
+        private val WEARABLE_TYPES = setOf(Device.TYPE_WATCH, Device.TYPE_FITNESS_BAND, Device.TYPE_RING, Device.TYPE_CHEST_STRAP)
+
+        /**
+         * A record is from a wearable when its device says so, or when it was written by a dedicated watch companion
+         * app (NoiseFit, boAt Crest, …) — many of those don't fill in the device field. Multi-purpose apps such as
+         * Samsung Health or Google Fit also count phone-pedometer steps, so for them only the device field counts.
+         */
+        /**
+         * Active energy from a total-energy reading: total minus the basal energy for the part of the day it covers.
+         * Never negative. (Google Fit / NoiseFit report total calories only.)
+         */
+        fun activeFromTotal(totalKcal: Double, bmrKcalPerDay: Double, fractionOfDay: Double): Double =
+            (totalKcal - bmrKcalPerDay * fractionOfDay.coerceIn(0.0, 1.0)).coerceAtLeast(0.0)
+
+        /** 1.0 for past days; the elapsed part of today. */
+        fun dayFraction(d: LocalDate, zone: ZoneId, now: java.time.ZonedDateTime = java.time.ZonedDateTime.now(zone)): Double =
+            if (d.isBefore(now.toLocalDate())) 1.0
+            else Duration.between(d.atStartOfDay(zone), now).toMinutes().coerceAtLeast(0) / 1440.0
+
+        fun isWearable(pkg: String, device: Device?): Boolean =
+            (device != null && device.type in WEARABLE_TYPES) || pkg in AppLabels.WATCH_COMPANIONS
+
+        /**
+         * Heart rate, resting heart rate, HRV and SpO₂ are measured by something worn on the body; a phone can't. So
+         * any app that delivers them is relaying a wearable — e.g. Google Fit passing on NoiseFit's watch data.
+         */
+        fun measuredOnlyByWearables(type: kotlin.reflect.KClass<out Record>): Boolean = type in WEARABLE_ONLY_TYPES
+
+        private val WEARABLE_ONLY_TYPES = setOf(
+            HeartRateRecord::class, RestingHeartRateRecord::class, HeartRateVariabilityRmssdRecord::class,
+            OxygenSaturationRecord::class,
+        )
+
+        fun isWearable(r: Record): Boolean =
+            isWearable(r.metadata.dataOrigin.packageName, r.metadata.device) || measuredOnlyByWearables(r::class)
+
+        fun recordTime(r: Record): Long? = when (r) {
+            is StepsRecord -> r.endTime
+            is DistanceRecord -> r.endTime
+            is ActiveCaloriesBurnedRecord -> r.endTime
+            is FloorsClimbedRecord -> r.endTime
+            is HeartRateRecord -> r.endTime
+            is SleepSessionRecord -> r.endTime
+            is ExerciseSessionRecord -> r.endTime
+            is SkinTemperatureRecord -> r.endTime
+            is RestingHeartRateRecord -> r.time
+            is HeartRateVariabilityRmssdRecord -> r.time
+            is OxygenSaturationRecord -> r.time
+            is RespiratoryRateRecord -> r.time
+            is Vo2MaxRecord -> r.time
+            else -> null
+        }?.toEpochMilli()
         const val HR_BUCKET_MINUTES = 10L
         const val PROVIDER_PACKAGE = "com.google.android.apps.healthdata"
 

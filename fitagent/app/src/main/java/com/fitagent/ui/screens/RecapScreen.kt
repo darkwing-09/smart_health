@@ -63,6 +63,16 @@ fun RecapScreen(state: HomeState, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     DetailScaffold("Weekly recap", "Share your week — you choose what's on it", onBack) {
+        if (!state.watch.hasWatch && !state.profile.usePhoneSteps) {
+            item {
+                com.fitagent.ui.components.AppCard {
+                    Text("No recap yet", style = MaterialTheme.typography.titleMedium)
+                    Text("Your weekly recap is built from your watch's data. Connect your watch and it appears after your first synced day.",
+                        style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+                }
+            }
+            return@DetailScaffold
+        }
         item {
             Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp)
                 .drawWithContent { layer.record { this@drawWithContent.drawContent() }; drawLayer(layer) }) {

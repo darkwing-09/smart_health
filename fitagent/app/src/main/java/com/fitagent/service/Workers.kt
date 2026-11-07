@@ -22,7 +22,9 @@ import androidx.work.WorkerParameters
 import com.fitagent.R
 import com.fitagent.container
 import com.fitagent.domain.Profile
+import com.fitagent.data.WatchState
 import com.fitagent.domain.NudgeKind
+import com.fitagent.domain.watchReminder
 import com.fitagent.domain.bedtimeMessage
 import com.fitagent.domain.bedtimeTarget
 import com.fitagent.domain.canPost
@@ -191,6 +193,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val profile = c.profiles.profile.value
         if (!profile.remindersEnabled || !profile.onboarded) return Result.success()
         c.fitness.refresh()
+        if (c.fitness.watchStateNow() !is WatchState.Connected && !profile.usePhoneSteps) return Result.success()
         val (days, _) = c.fitness.snapshot()
         val today = LocalDate.now()
         val day = days.lastOrNull { it.date == today } ?: return Result.success()
@@ -211,6 +214,15 @@ class MorningWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val profile = c.profiles.profile.value
         if (!profile.remindersEnabled || !profile.onboarded) return Result.success()
         c.fitness.refresh()
+        val watch = c.fitness.watchStateNow()
+        if (watch !is WatchState.Connected) {
+            // No made-up readiness: remind (once a day) to connect or sync the watch instead.
+            val (label, last) = when (watch) { is WatchState.Stale -> watch.label to watch.lastDataMs; else -> null to null }
+            watchReminder(label, last, System.currentTimeMillis(), WatchState.STALE_AFTER_HOURS)?.let { (title, text) ->
+                Notifications.post(applicationContext, NudgeKind.WATCH, 1005, title, text)
+            }
+            return Result.success()
+        }
         val (days, workouts) = c.fitness.snapshot()
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
@@ -247,6 +259,8 @@ class StudyBreakWorker(context: Context, params: WorkerParameters) : CoroutineWo
         if (!c.profiles.profile.value.remindersEnabled) return Result.success()
         val timetable = c.timetable.timetable.value
         if (timetable.busy.isEmpty()) return Result.success()
+        // Without live step data "no steps" just means "no data" — never nudge on that.
+        if (c.fitness.watchStateNow() !is WatchState.Connected && !c.profiles.profile.value.usePhoneSteps) return Result.success()
         c.fitness.samplePhoneOnly()
         val zone = ZoneId.systemDefault()
         val now = LocalDateTime.now(zone)

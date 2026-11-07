@@ -35,7 +35,6 @@ import com.fitagent.data.DataSource
 import com.fitagent.data.FitnessRepository
 import com.fitagent.data.HealthStatus
 import com.fitagent.data.SyncEvent
-import com.fitagent.domain.PHONE_SENSOR_SOURCE
 import com.fitagent.domain.formatCount
 import com.fitagent.ui.CompatibilityState
 import com.fitagent.ui.LocalClock
@@ -71,7 +70,13 @@ fun DevicesScreen(
             AppCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        StatusDot(freshnessColor(lastWatchSync, now), "Watch → phone: ${agoText(lastWatchSync, now)}")
+                        when (val w = com.fitagent.data.WatchState.from(sources, now)) {
+                            com.fitagent.data.WatchState.None -> StatusDot(fc.recover, "No watch data yet — turn on Health Connect in your watch app")
+                            is com.fitagent.data.WatchState.Stale -> StatusDot(fc.steady, "${w.label}: last watch data ${agoText(w.lastDataMs, now)}")
+                            is com.fitagent.data.WatchState.Connected -> StatusDot(fc.push, "${w.label}: watch data ${agoText(w.lastDataMs, now)}")
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        StatusDot(freshnessColor(lastWatchSync, now), "Health Connect read: ${agoText(lastWatchSync, now)}")
                         Spacer(Modifier.height(6.dp))
                         if (signedIn) StatusDot(freshnessColor(lastCloudSync, now), "Phone → cloud: ${agoText(lastCloudSync, now)}")
                         else StatusDot(fc.muted, "Cloud backup off (not signed in)")
@@ -132,7 +137,7 @@ private fun SourceCard(s: DataSource, now: Long) {
     val fc = Fit.colors
     AppCard(padding = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(if (s.id == PHONE_SENSOR_SOURCE) Icons.Rounded.PhoneAndroid else Icons.Rounded.Watch, null, tint = fc.workout)
+            Icon(if (s.wearable) Icons.Rounded.Watch else Icons.Rounded.PhoneAndroid, null, tint = if (s.wearable) fc.workout else fc.muted)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text(s.label, style = MaterialTheme.typography.titleMedium)

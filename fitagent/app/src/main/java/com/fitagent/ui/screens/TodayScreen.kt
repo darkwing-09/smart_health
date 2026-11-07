@@ -1,6 +1,8 @@
 package com.fitagent.ui.screens
 
 import com.fitagent.ui.LocalClock
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,6 +91,7 @@ fun TodayScreen(
     todayMood: MoodEntry? = null,
     onSaveMood: (Int, Set<String>) -> Unit = { _, _ -> },
     foods: List<com.fitagent.domain.FoodEntry> = emptyList(),
+    heartToday: List<com.fitagent.domain.HrBucket> = emptyList(),
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -98,15 +101,27 @@ fun TodayScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item { Header(state, onRefresh, onOpen) }
-        if (!state.health.connected) item { ConnectHealthCard(state, onConnectHealth) }
-        item { ReadinessCard(state) { onOpen(Detail.READINESS) } }
-        item { RingsCard(state, hourly) }
-        item { CoachCard(state, onStart) }
-        item { Tiles(state, onOpen) }
-        item { SleepCard(state, lastNight) { onOpen(Detail.SLEEP) } }
-        item { MoodCheckInCard(todayMood, onSaveMood) { onOpen(Detail.MOOD) } }
-        item { FoodTodayCard(foods, state.today, state.profile.weightKg) { onOpen(Detail.FOOD) } }
-        item { WeekStrip(state) }
+        val watch = state.watch
+        if (watch == com.fitagent.data.WatchState.None) {
+            // No watch, no numbers: only the setup checklist plus things you enter yourself.
+            item { WatchSetupCard(state.health, watch, onConnectHealth, onRefresh) { onOpen(Detail.DEVICES) } }
+            item { SectionTitle("While you set up") }
+            item { MoodCheckInCard(todayMood, onSaveMood) { onOpen(Detail.MOOD) } }
+            item { FoodTodayCard(foods, state.today, state.profile.weightKg) { onOpen(Detail.FOOD) } }
+        } else {
+            if (watch is com.fitagent.data.WatchState.Stale) item { StaleWatchBanner(watch, onRefresh) }
+            item { if (state.hasReadiness) ReadinessCard(state) { onOpen(Detail.READINESS) } else ReadinessPendingCard() }
+            item { RingsCard(state, hourly) }
+            if (heartToday.isNotEmpty()) item { HeartNowCard(heartToday) { onOpen(Detail.HEART) } }
+            item { CoachCard(state, onStart) }
+            item { SectionTitle("Body") }
+            item { Tiles(state, onOpen) }
+            item { SleepCard(state, lastNight) { onOpen(Detail.SLEEP) } }
+            item { SectionTitle("You") }
+            item { MoodCheckInCard(todayMood, onSaveMood) { onOpen(Detail.MOOD) } }
+            item { FoodTodayCard(foods, state.today, state.profile.weightKg) { onOpen(Detail.FOOD) } }
+            item { WeekStrip(state) }
+        }
         val todays = state.workouts.filter {
             java.time.Instant.ofEpochMilli(it.startMs).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == state.today
         }
@@ -121,20 +136,17 @@ fun TodayScreen(
 private fun Header(state: HomeState, onRefresh: () -> Unit, onOpen: (Detail) -> Unit) {
     val clock = LocalClock.current
     val hour = remember(clock) { LocalTime.now(clock).hour }
-    val greeting = stringResource(when (hour) { in 5..11 -> R.string.greeting_morning; in 12..16 -> R.string.greeting_afternoon; else -> R.string.greeting_evening })
+    val greeting = stringResource(when (hour) { in 5..11 -> R.string.greeting_morning; in 12..16 -> R.string.greeting_afternoon; in 17..23 -> R.string.greeting_evening; else -> R.string.greeting_late })
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(state.today.format(DateTimeFormatter.ofPattern("EEEE, d MMM")).uppercase(),
                 style = MaterialTheme.typography.labelSmall, color = Fit.colors.muted)
             Text(if (state.profile.name.isBlank()) greeting else "$greeting, ${state.profile.name.substringBefore(' ')}",
                 style = MaterialTheme.typography.headlineMedium)
-            if (state.health.connected) {
-                val now = clock.millis()
-                StatusDot(freshnessColor(state.lastWatchSync, now), "Watch data ${agoText(state.lastWatchSync, now)}",
-                    Modifier.padding(top = 2.dp).clickable { onOpen(Detail.DEVICES) })
-            }
+            Spacer(Modifier.height(6.dp))
+            WatchChip(state.watch) { onOpen(Detail.DEVICES) }
         }
-        if (state.streak.current > 0) {
+        if (state.watch.hasWatch && state.streak.current > 0) {
             Pill("${state.streak.current}", if (state.streak.todayDone) Fit.colors.move else Fit.colors.muted,
                 icon = Icons.Rounded.LocalFireDepartment)
         }
@@ -146,36 +158,16 @@ private fun Header(state: HomeState, onRefresh: () -> Unit, onOpen: (Detail) -> 
 }
 
 @Composable
-private fun ConnectHealthCard(state: HomeState, onConnect: () -> Unit) {
-    AppCard(color = MaterialTheme.colorScheme.secondaryContainer) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Watch, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Track steps automatically", style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text(
-                    when (state.health.availability) {
-                        HealthAvailability.AVAILABLE -> "Connect Health Connect to bring in steps, sleep and heart rate from your phone or watch."
-                        HealthAvailability.UPDATE_REQUIRED -> "Health Connect needs an update before FitAgent can read your activity."
-                        HealthAvailability.NOT_INSTALLED -> "Install Health Connect to sync steps, sleep and heart rate from your phone or watch."
-                    },
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = onConnect, modifier = Modifier.fillMaxWidth()) {
-            Text(if (state.health.availability == HealthAvailability.AVAILABLE) "Connect" else "Get Health Connect")
-        }
-    }
-}
-
-@Composable
 private fun ReadinessCard(state: HomeState, onOpen: () -> Unit) {
     val r = state.readiness
     val color = Fit.colors.band(r.band)
-    AppCard(Modifier.clickable(onClick = onOpen)) {
+    val base = MaterialTheme.colorScheme.surfaceContainer
+    AppCard(
+        Modifier.clip(MaterialTheme.shapes.large)
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(color.copy(alpha = 0.18f), base, base)))
+            .clickable(onClick = onOpen),
+        color = androidx.compose.ui.graphics.Color.Transparent,
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ReadinessGauge(r.score, color, Modifier.size(116.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from typing import Literal
 from zoneinfo import available_timezones
@@ -69,9 +70,30 @@ class ProfileOut(BaseModel):
     batch: str | None = None
     show_on_campus: bool = True
     language: str = "en"
+    city: str | None = None
+    gender: str | None = None
+    whatsapp_number: str | None = None
+    whatsapp_opt_in: bool = False
+    report_hour: int = 21
 
 
 Language = Literal["en", "hi", "ta", "te", "bn", "mr"]
+Gender = Literal["female", "male", "other", "prefer_not"]
+E164 = re.compile(r"^\+[1-9]\d{7,14}$")
+
+
+def normalize_whatsapp(v: str | None) -> str | None:
+    """'+91 98765-43210' → '+919876543210'; '' → '' (clears); anything else that isn't E.164 is rejected."""
+    if v is None:
+        return None
+    v = re.sub(r"[\s\-()]", "", v)
+    if v == "":
+        return ""
+    if v.startswith("00"):
+        v = "+" + v[2:]
+    if not E164.match(v):
+        raise ValueError("WhatsApp number must include the country code, e.g. +919876543210")
+    return v
 HHMM = r"^([01]\d|2[0-3]):[0-5]\d$"
 
 
@@ -107,8 +129,15 @@ class ProfileUpdate(BaseModel):
     height_cm: int | None = Field(None, ge=100, le=250)
     weight_kg: float | None = Field(None, ge=25, le=300)
     goals: GoalsModel | None = None
+    city: str | None = Field(None, max_length=80)
+    gender: Gender | None = None
+    # E.164 with country code, e.g. +919876543210. Spaces and dashes are removed; "" clears it.
+    whatsapp_number: str | None = None
+    whatsapp_opt_in: bool | None = None
+    report_hour: int | None = Field(None, ge=0, le=23)
 
     _tz = field_validator("timezone")(_check_tz)
+    _wa = field_validator("whatsapp_number")(lambda v: normalize_whatsapp(v))
 
 
 # ── Sync ────────────────────────────────────────────────────────────────────

@@ -133,19 +133,32 @@ private enum class Level(val label: String, val goals: Goals) {
     ATHLETE("Very active", Goals(11_000, 600, 45, 5)),
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (Profile) -> Unit) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var name by rememberSaveable { mutableStateOf(initial.name) }
-    var age by rememberSaveable { mutableStateOf(initial.ageYears.toString()) }
-    var height by rememberSaveable { mutableStateOf(initial.heightCm.toString()) }
-    var weight by rememberSaveable { mutableStateOf(initial.weightKg.toInt().toString()) }
+    // Start empty on first run: no made-up body numbers (they drive calorie estimates).
+    var age by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.ageYears.toString() else "") }
+    var height by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.heightCm.toString() else "") }
+    var weight by rememberSaveable { mutableStateOf(if (initial.onboarded) initial.weightKg.toInt().toString() else "") }
     var level by rememberSaveable { mutableStateOf(Level.ACTIVE) }
+    var gender by rememberSaveable { mutableStateOf(initial.gender) }
+    var city by rememberSaveable { mutableStateOf(initial.city) }
+    var whatsapp by rememberSaveable { mutableStateOf(initial.whatsappNumber.ifBlank { "+91 " }) }
+    var reports by rememberSaveable { mutableStateOf(initial.whatsappReports || initial.whatsappNumber.isBlank()) }
+    val normalized = com.fitagent.domain.normalizeWhatsapp(if (whatsapp.trim() == "+91") "" else whatsapp)
+    val canContinue = when (step) {
+        1 -> name.isNotBlank() && (age.toIntOrNull() ?: 0) in 13..99 && (height.toIntOrNull() ?: 0) in 120..230 &&
+            (weight.toDoubleOrNull() ?: 0.0) in 30.0..250.0
+        2 -> normalized != null && (!reports || normalized.isNotEmpty())
+        else -> true
+    }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(Modifier.safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(3) { i ->
+                repeat(4) { i ->
                     Surface(Modifier.weight(1f).height(4.dp), shape = MaterialTheme.shapes.extraSmall,
                         color = if (i <= step) MaterialTheme.colorScheme.primary else Fit.colors.track) {}
                 }
@@ -157,13 +170,22 @@ fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (P
                     Text("About you", style = MaterialTheme.typography.headlineLarge)
                     Text("Used for calorie estimates and to personalise your coach.", color = Fit.colors.muted)
                     Spacer(Modifier.height(20.dp))
-                    OutlinedTextField(name, { if (it.length <= 40) name = it }, label = { Text("First name") },
+                    OutlinedTextField(name, { if (it.length <= 40) name = it }, label = { Text("Name *") },
                         singleLine = true, modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(city, { if (it.length <= 60) city = it }, label = { Text("City / campus location") },
+                        placeholder = { Text("e.g. Pune") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(12.dp))
+                    Text("Gender", style = MaterialTheme.typography.labelLarge, color = Fit.colors.muted)
+                    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("female" to "Female", "male" to "Male", "other" to "Other", "prefer_not" to "Prefer not to say")
+                            .forEach { (k, l) -> FilterChip(gender == k, { gender = k }, label = { Text(l) }) }
+                    }
+                    Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        NumberField("Age", age, { age = it }, Modifier.weight(1f))
-                        NumberField("Height cm", height, { height = it }, Modifier.weight(1f))
-                        NumberField("Weight kg", weight, { weight = it }, Modifier.weight(1f))
+                        NumberField("Age *", age, { age = it }, Modifier.weight(1f))
+                        NumberField("Height cm *", height, { height = it }, Modifier.weight(1f))
+                        NumberField("Weight kg *", weight, { weight = it }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(20.dp))
                     Text("How active are you now?", style = MaterialTheme.typography.titleMedium)
@@ -171,6 +193,30 @@ fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (P
                     Level.entries.forEach { l ->
                         FilterChip(level == l, { level = l }, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                             label = { Text("${l.label} · ${l.goals.dailySteps / 1000}k steps · ${l.goals.weeklyWorkouts} workouts/week") })
+                    }
+                }
+                2 -> {
+                    Text("Daily report", style = MaterialTheme.typography.headlineLarge)
+                    Text("Get a one-page PDF of your day — readiness, steps, sleep, heart rate and workouts — on WhatsApp " +
+                        "every evening.", color = Fit.colors.muted)
+                    Spacer(Modifier.height(20.dp))
+                    OutlinedTextField(whatsapp, { if (it.length <= 20) whatsapp = it }, label = { Text("WhatsApp number") },
+                        singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone),
+                        isError = normalized == null,
+                        supportingText = { Text(if (normalized == null) "Include the country code, e.g. +91 98765 43210" else "With country code") })
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                        androidx.compose.material3.Checkbox(reports, { reports = it })
+                        Column {
+                            Text("Send me the daily PDF report on WhatsApp", style = MaterialTheme.typography.bodyMedium)
+                            Text("Health data goes to this number only. Turn it off any time in You → Daily report.",
+                                style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+                        }
+                    }
+                    if (reports && normalized == "") {
+                        Text("Add your number, or untick to skip.", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error)
                     }
                 }
                 else -> {
@@ -190,18 +236,22 @@ fun OnboardingScreen(initial: Profile, onConnectHealth: () -> Unit, onFinish: (P
             Row {
                 if (step > 0) TextButton(onClick = { step-- }) { Text("Back") }
                 Spacer(Modifier.weight(1f))
-                Button(onClick = {
-                    if (step < 2) step++ else onFinish(
+                Button(enabled = canContinue, onClick = {
+                    if (step < 3) step++ else onFinish(
                         initial.copy(
                             name = name.trim(),
                             ageYears = age.toIntOrNull()?.coerceIn(13, 99) ?: initial.ageYears,
                             heightCm = height.toIntOrNull()?.coerceIn(120, 230) ?: initial.heightCm,
                             weightKg = weight.toDoubleOrNull()?.coerceIn(30.0, 250.0) ?: initial.weightKg,
                             goals = level.goals,
+                            city = city.trim(),
+                            gender = gender,
+                            whatsappNumber = normalized.orEmpty(),
+                            whatsappReports = reports && !normalized.isNullOrEmpty(),
                         )
                     )
                 }, contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp)) {
-                    Text(when (step) { 0 -> "Get started"; 1 -> "Continue"; else -> "Let's go" })
+                    Text(when (step) { 0 -> "Get started"; 1, 2 -> "Continue"; else -> "Let's go" })
                 }
             }
         }

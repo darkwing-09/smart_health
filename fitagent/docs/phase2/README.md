@@ -1,6 +1,6 @@
 # FitAgent Phase 2 — Smartwatch-first, chart-first
 
-**Status:** 27 of 32 features built and tested on this machine. **Ready for phone testing:** see [STATUS.md](STATUS.md) (progress, ticked) and [../TESTING.md](../TESTING.md) (phone test plan).
+**Status:** 31 of 32 features built and tested on this machine. **Ready for phone testing:** see [STATUS.md](STATUS.md) (progress, ticked) and [../TESTING.md](../TESTING.md) (phone test plan).
 
 | # | Document | Contents |
 |---|---|---|

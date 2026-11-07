@@ -23,8 +23,18 @@ object AppLabels {
         "com.google.android.apps.healthdata" to "Health Connect",
     )
 
+    /** Apps that exist only to sync a watch/band, so anything they write came from the wearable. */
+    val WATCH_COMPANIONS: Set<String> = setOf(
+        "com.noisefit", "com.noisefit.prime", "com.crrepa.band.noise", "com.zjw.noisefitsync", "com.coveiot.android.boat",
+        "com.fitbit.FitbitMobile", "com.garmin.android.apps.connectmobile", "com.huami.watch.hmwatchmanager",
+        "com.xiaomi.wearable", "com.xiaomi.hm.health", "com.mi.health",
+    )
+
     fun label(context: Context, id: String): String {
         if (id == PHONE_SENSOR_SOURCE) return "This phone's step sensor"
+        // Android 14+ records the phone's own steps into Health Connect under a generated package name.
+        if (id.startsWith("com.android.healthconnect.phone")) return "This phone (Android step counter)"
+        if (id == "com.google.android.apps.fitness") return "Google Fit"
         return runCatching {
             val pm = context.packageManager
             @Suppress("DEPRECATION") // the flags overload is API 33+; minSdk is 28

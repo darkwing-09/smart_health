@@ -80,6 +80,9 @@ import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.WorkoutSummaryDialog
 import com.fitagent.ui.screens.YouScreen
 import com.fitagent.ui.theme.FitAgentTheme
+import kotlinx.coroutines.launch
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.lifecycleScope
 
 private enum class Tab(@StringRes val label: Int, val icon: ImageVector) {
     TODAY(R.string.tab_today, Icons.Rounded.Today),
@@ -156,7 +159,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) handleInvite(intent)
-        setContent { FitAgentTheme { App() } }
+        // Near-real-time watch data: while the app is visible, check Health Connect for new records every minute.
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                while (true) {
+                    kotlinx.coroutines.delay(60_000)
+                    main.liveTick()
+                }
+            }
+        }
+        setContent {
+            val choice by main.profile.collectAsStateWithLifecycle()
+            val dark = com.fitagent.ui.theme.isDarkTheme(choice.theme)
+            // Status/navigation bar icons follow the app theme, not just the phone's.
+            androidx.compose.runtime.LaunchedEffect(dark) {
+                val t = android.graphics.Color.TRANSPARENT
+                enableEdgeToEdge(
+                    statusBarStyle = if (dark) androidx.activity.SystemBarStyle.dark(t) else androidx.activity.SystemBarStyle.light(t, t),
+                    navigationBarStyle = if (dark) androidx.activity.SystemBarStyle.dark(t) else androidx.activity.SystemBarStyle.light(t, t),
+                )
+            }
+            FitAgentTheme(dark) { App() }
+        }
     }
 
     override fun onResume() {
@@ -245,6 +269,7 @@ class MainActivity : ComponentActivity() {
         val moods by main.moods.collectAsStateWithLifecycle()
         val foods by main.foods.collectAsStateWithLifecycle()
         val heartRate by main.heartRate.collectAsStateWithLifecycle()
+        val heartTodayList by main.heartToday.collectAsStateWithLifecycle()
         val liveHr by main.liveHr.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
@@ -271,6 +296,9 @@ class MainActivity : ComponentActivity() {
         Box(Modifier.fillMaxSize()) {
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbar) },
+                topBar = {
+                    com.fitagent.ui.components.ServerBanner(cloudState.server, cloudState.serverUrl, cloud::retryServer) { tab = Tab.YOU }
+                },
                 bottomBar = {
                     Column {
                         session?.let { s -> if (!playerOpen) MiniSessionBar(s) { playerOpen = true } }
@@ -287,7 +315,8 @@ class MainActivity : ComponentActivity() {
             ) { padding ->
                 when (tab) {
                     Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
-                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods)
+                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods,
+                        heartToday = heartTodayList)
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = { t, i -> startWorkout(t, i) }, onLog = main::logPastWorkout,
@@ -310,7 +339,7 @@ class MainActivity : ComponentActivity() {
                         onDeleteAccount = { cloud.deleteAccount() }, onServerUrl = cloud::setServerUrl,
                         onPrivacy = { startActivity(Intent(this@MainActivity, PrivacyPolicyActivity::class.java)) },
                         onOpenDevices = { detail = Detail.DEVICES }, onOpenRecap = { detail = Detail.RECAP },
-                        onOpenRewards = { detail = Detail.REWARDS })
+                        onOpenRewards = { detail = Detail.REWARDS }, onSendReport = cloud::sendReportNow)
                 }
             }
 

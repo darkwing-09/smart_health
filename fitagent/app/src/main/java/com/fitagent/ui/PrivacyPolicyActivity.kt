@@ -17,6 +17,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.fitagent.container
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fitagent.ui.theme.FitAgentTheme
@@ -29,7 +32,10 @@ class PrivacyPolicyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent { FitAgentTheme { PrivacyPolicy(onClose = ::finish) } }
+        setContent {
+            val p by applicationContext.container.profiles.profile.collectAsState()
+            FitAgentTheme(com.fitagent.ui.theme.isDarkTheme(p.theme)) { PrivacyPolicy(onClose = ::finish) }
+        }
     }
 }
 

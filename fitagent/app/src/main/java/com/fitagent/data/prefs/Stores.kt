@@ -40,6 +40,13 @@ class ProfileStore(context: Context) {
             .putString("batch", next.batch)
             .putBoolean("show_on_campus", next.showOnCampus)
             .putString("language", next.language)
+            .putBoolean("use_phone_steps", next.usePhoneSteps)
+            .putString("theme", next.theme)
+            .putString("city", next.city)
+            .putString("gender", next.gender)
+            .putString("whatsapp_number", next.whatsappNumber)
+            .putBoolean("whatsapp_reports", next.whatsappReports)
+            .putInt("report_hour", next.reportHour)
             .apply()
         _profile.value = next
     }
@@ -66,6 +73,13 @@ class ProfileStore(context: Context) {
             batch = prefs.getString("batch", "").orEmpty(),
             showOnCampus = prefs.getBoolean("show_on_campus", true),
             language = prefs.getString("language", null) ?: d.language,
+            usePhoneSteps = prefs.getBoolean("use_phone_steps", false),
+            theme = prefs.getString("theme", "system") ?: "system",
+            city = prefs.getString("city", "").orEmpty(),
+            gender = prefs.getString("gender", "").orEmpty(),
+            whatsappNumber = prefs.getString("whatsapp_number", "").orEmpty(),
+            whatsappReports = prefs.getBoolean("whatsapp_reports", false),
+            reportHour = prefs.getInt("report_hour", 21),
         )
     }
 }

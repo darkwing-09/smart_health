@@ -71,6 +71,20 @@ data class Profile(
     val showOnCampus: Boolean = true,
     /** Coach reply language (ISO 639-1). Defaults to the phone's language when supported. */
     val language: String = defaultLanguage(),
+    /** Count steps with the phone's own sensor when no watch app shares them. Off by default: watch data only. */
+    val usePhoneSteps: Boolean = false,
+    /** App theme: "system" (follow the phone), "light" or "dark". */
+    val theme: String = "system",
+    /** Asked during onboarding. City is typed by the user (never GPS). */
+    val city: String = "",
+    /** "female" | "male" | "other" | "prefer_not" | "" (not answered). */
+    val gender: String = "",
+    /** WhatsApp number in E.164 (+919876543210), or "" if not given. */
+    val whatsappNumber: String = "",
+    /** Opt-in for the daily PDF report on WhatsApp. */
+    val whatsappReports: Boolean = false,
+    /** Local hour the daily report is sent. */
+    val reportHour: Int = 21,
 ) {
     val bmi: Double
         get() = if (heightCm > 0) weightKg / ((heightCm / 100.0) * (heightCm / 100.0)) else 0.0
@@ -143,7 +157,8 @@ data class DayActivity(
     fun goalMet(goals: Goals): Boolean = steps >= goals.dailySteps || workoutMinutes >= goals.dailyWorkoutMinutes
 
     val hasData: Boolean
-        get() = steps > 0 || workoutCount > 0 || sleepMinutes != null || restingHr != null || !night.isEmpty
+        get() = steps > 0 || workoutCount > 0 || sleepMinutes != null || restingHr != null || avgHr != null ||
+            hrMin != null || !night.isEmpty
 }
 
 /** Hypnogram stages. [ASLEEP] = asleep but the watch didn't say which stage. */
@@ -162,10 +177,28 @@ data class HealthReadout(
     val hourlyKcal: Map<java.time.LocalDate, Map<Int, Double>>,
     val hr: List<HrBucket>,
     val sleepNights: Map<java.time.LocalDate, List<SleepSegment>>,
-    /** App package → the data types it supplied in this window. */
-    val origins: Map<String, Set<String>>,
+    /** App package → what it supplied in this window. */
+    val origins: Map<String, OriginInfo>,
 )
+
+/** What one app wrote to Health Connect: data types, newest record time, and whether it came from a wearable. */
+data class OriginInfo(val types: Set<String>, val latestMs: Long, val wearable: Boolean, val device: String?)
 
 val COACH_LANGUAGES = listOf("en" to "English", "hi" to "हिन्दी", "ta" to "தமிழ்", "te" to "తెలుగు", "bn" to "বাংলা", "mr" to "मराठी")
 
 fun defaultLanguage(): String = java.util.Locale.getDefault().language.takeIf { code -> COACH_LANGUAGES.any { it.first == code } } ?: "en"
+
+/** '+91 98765-43210' → '+919876543210'. Returns null when it isn't a plausible E.164 number. Mirrors the server. */
+fun normalizeWhatsapp(raw: String): String? {
+    var v = raw.filterNot { it == ' ' || it == '-' || it == '(' || it == ')' }
+    if (v.isEmpty()) return ""
+    if (v.startsWith("00")) v = "+" + v.drop(2)
+    if (!v.startsWith("+")) v = if (v.length == 10) "+91$v" else "+$v" // 10 digits → assume India
+    return v.takeIf { Regex("^\\+[1-9]\\d{7,14}$").matches(it) }
+}
+
+/** Mifflin–St Jeor resting energy per day. Gender unknown/other → the midpoint of the two constants. */
+fun basalKcalPerDay(weightKg: Double, heightCm: Int, ageYears: Int, gender: String): Double {
+    val base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears
+    return base + when (gender) { "male" -> 5.0; "female" -> -161.0; else -> -78.0 }
+}
