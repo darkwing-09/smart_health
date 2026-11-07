@@ -225,7 +225,9 @@ class FitnessRepository(
                 else -> 3L
             }
             val from = today.minusDays(daysBack - 1)
-            val readout = health.read(from, today, today.minusDays(1), s.granted, zone)
+            val p = profiles.profile.value
+            val readout = health.read(from, today, today.minusDays(1), s.granted, zone,
+                bmrKcalPerDay = com.fitagent.domain.basalKcalPerDay(p.weightKg, p.heightCm, p.ageYears, p.gender))
 
             dao.upsertDays(readout.days.values.map(DailyDeviceEntity::from))
             healthDao.upsertHourly(readout.hourly.flatMap { (date, hours) ->

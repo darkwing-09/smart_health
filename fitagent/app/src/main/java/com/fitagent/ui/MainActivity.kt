@@ -269,6 +269,7 @@ class MainActivity : ComponentActivity() {
         val moods by main.moods.collectAsStateWithLifecycle()
         val foods by main.foods.collectAsStateWithLifecycle()
         val heartRate by main.heartRate.collectAsStateWithLifecycle()
+        val heartTodayList by main.heartToday.collectAsStateWithLifecycle()
         val liveHr by main.liveHr.collectAsStateWithLifecycle()
         var playerOpen by rememberSaveable { mutableStateOf(true) }
         val snackbar = remember { SnackbarHostState() }
@@ -314,7 +315,8 @@ class MainActivity : ComponentActivity() {
             ) { padding ->
                 when (tab) {
                     Tab.TODAY -> TodayScreen(state, padding, main::refresh, ::connectHealth, start, hourly, lastNight,
-                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods)
+                        onOpen = { detail = it }, todayMood = moods.lastOrNull { it.date == state.today }, onSaveMood = main::saveMood, foods = foods,
+                        heartToday = heartTodayList)
                     Tab.TRAIN -> {
                         val timetable by main.timetable.collectAsStateWithLifecycle()
                         TrainScreen(state, padding, onStart = { t, i -> startWorkout(t, i) }, onLog = main::logPastWorkout,

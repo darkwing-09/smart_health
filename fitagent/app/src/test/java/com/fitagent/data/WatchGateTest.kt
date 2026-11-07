@@ -62,6 +62,10 @@ class WatchGateTest {
     @Test fun wearableDetection() {
         assertTrue(HealthConnectSource.isWearable("com.noisefit", null))
         assertFalse(HealthConnectSource.isWearable("com.google.android.apps.fitness", null))
+        // Google Fit relaying a watch: heart rate / SpO₂ can only come from a wearable; steps alone could be the phone.
+        assertTrue(HealthConnectSource.measuredOnlyByWearables(androidx.health.connect.client.records.HeartRateRecord::class))
+        assertTrue(HealthConnectSource.measuredOnlyByWearables(androidx.health.connect.client.records.OxygenSaturationRecord::class))
+        assertFalse(HealthConnectSource.measuredOnlyByWearables(androidx.health.connect.client.records.StepsRecord::class))
     }
 
     @Test fun reminders() {

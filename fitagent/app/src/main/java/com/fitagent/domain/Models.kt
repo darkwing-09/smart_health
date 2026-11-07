@@ -157,7 +157,8 @@ data class DayActivity(
     fun goalMet(goals: Goals): Boolean = steps >= goals.dailySteps || workoutMinutes >= goals.dailyWorkoutMinutes
 
     val hasData: Boolean
-        get() = steps > 0 || workoutCount > 0 || sleepMinutes != null || restingHr != null || !night.isEmpty
+        get() = steps > 0 || workoutCount > 0 || sleepMinutes != null || restingHr != null || avgHr != null ||
+            hrMin != null || !night.isEmpty
 }
 
 /** Hypnogram stages. [ASLEEP] = asleep but the watch didn't say which stage. */
@@ -194,4 +195,10 @@ fun normalizeWhatsapp(raw: String): String? {
     if (v.startsWith("00")) v = "+" + v.drop(2)
     if (!v.startsWith("+")) v = if (v.length == 10) "+91$v" else "+$v" // 10 digits → assume India
     return v.takeIf { Regex("^\\+[1-9]\\d{7,14}$").matches(it) }
+}
+
+/** Mifflin–St Jeor resting energy per day. Gender unknown/other → the midpoint of the two constants. */
+fun basalKcalPerDay(weightKg: Double, heightCm: Int, ageYears: Int, gender: String): Double {
+    val base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears
+    return base + when (gender) { "male" -> 5.0; "female" -> -161.0; else -> -78.0 }
 }

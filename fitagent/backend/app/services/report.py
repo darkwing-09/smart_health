@@ -71,7 +71,7 @@ def _num(v: float | None, unit: str = "", fmt: str = "{:,.0f}") -> str:
 def _has_watch_data(d: ActivityDay | None) -> bool:
     if d is None:
         return False
-    return bool(d.steps or d.sleep_minutes or d.resting_hr or d.avg_hr or d.active_kcal)
+    return bool(d.steps or d.sleep_minutes or d.resting_hr or d.avg_hr or d.hr_min or d.active_kcal)
 
 
 def _tile(label: str, value: str, sub: str, color: colors.Color) -> Table:
@@ -178,8 +178,10 @@ def build_daily_report(ctx: UserContext, day: date, person: ReportPerson) -> Dai
         _tile("Distance", _num(today.distance_m / 1000 if today.distance_m else None, "km", "{:.2f}"), "", LIME),
         _tile("Sleep", _hm(today.sleep_minutes),
               "deep " + _hm(today.sleep_deep_min) if today.sleep_deep_min is not None else "", VIOLET),
-        _tile("Resting HR", _num(today.resting_hr, "bpm"),
-              f"range {today.hr_min}–{today.hr_max}" if today.hr_min and today.hr_max else "", CORAL),
+        _tile("Heart rate", _num(today.avg_hr or today.resting_hr, "bpm"),
+              " · ".join(x for x in [f"resting {today.resting_hr}" if today.resting_hr else "",
+                                     f"range {today.hr_min}–{today.hr_max}" if today.hr_min and today.hr_max else ""] if x),
+              CORAL),
         _tile("HRV", _num(today.hrv_ms, "ms"), "", VIOLET),
         _tile("Blood oxygen", _num(today.spo2_avg, "%", "{:.0f}"), "", CYAN),
     ]

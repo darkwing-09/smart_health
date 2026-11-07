@@ -1,6 +1,7 @@
 package com.fitagent.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Watch
 import androidx.compose.material.icons.rounded.WatchOff
@@ -137,7 +139,7 @@ fun WatchChip(watch: WatchState, onClick: () -> Unit) {
     val (color, text) = when (watch) {
         WatchState.None -> fc.muted to "No watch connected"
         is WatchState.Stale -> fc.steady to "${watch.label} · ${agoText(watch.lastDataMs, now)}"
-        is WatchState.Connected -> fc.push to "${watch.device ?: watch.label} · ${agoText(watch.lastDataMs, now)}"
+        is WatchState.Connected -> fc.push to "${watchName(watch.label, watch.device)} · ${agoText(watch.lastDataMs, now)}"
     }
     Surface(onClick = onClick, shape = CircleShape, color = color.copy(alpha = 0.14f), contentColor = color) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -173,4 +175,41 @@ internal fun sharingHint(context: android.content.Context): String {
         else -> "In your watch app (NoiseFit, boAt Crest, Samsung Health, Fitbit…) open settings → Health Connect " +
             "(or Google Fit) → allow. Then sync the watch."
     }
+}
+
+/** Latest heart rate the watch shared today, how fresh it is, and today's range. Real readings only. */
+@Composable
+fun HeartNowCard(buckets: List<com.fitagent.domain.HrBucket>, onOpen: () -> Unit) {
+    val fc = Fit.colors
+    val now = LocalClock.current.millis()
+    val last = buckets.maxBy { it.startMs }
+    com.fitagent.ui.components.AppCard(Modifier.clickable(onClick = onOpen)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(androidx.compose.material.icons.Icons.Rounded.Favorite, null, tint = fc.move)
+            Spacer(Modifier.width(8.dp))
+            Text("Heart rate", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(agoText(last.startMs, now), style = MaterialTheme.typography.labelMedium, color = fc.muted)
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("${last.avg}", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+            Text(" bpm", style = MaterialTheme.typography.titleMedium, color = fc.muted, modifier = Modifier.padding(bottom = 6.dp))
+            Spacer(Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.End) {
+                Text("Today ${buckets.minOf { it.min }}–${buckets.maxOf { it.max }} bpm", style = MaterialTheme.typography.bodySmall, color = fc.muted)
+                Text("${buckets.size} reading${if (buckets.size == 1) "" else "s"}", style = MaterialTheme.typography.bodySmall, color = fc.muted)
+            }
+        }
+        if (buckets.size > 1) {
+            Spacer(Modifier.height(8.dp))
+            com.fitagent.ui.charts.Sparkline(buckets.sortedBy { it.startMs }.map { it.avg.toFloat() }, fc.move,
+                Modifier.fillMaxWidth().height(40.dp))
+        }
+    }
+}
+
+/** "NoiseFit · ColorFit Pro 5", or just the app when the record's device is this phone (Google Fit tags the phone). */
+internal fun watchName(app: String, device: String?): String {
+    val phone = android.os.Build.MODEL.orEmpty()
+    return if (device.isNullOrBlank() || (phone.isNotBlank() && device.contains(phone, ignoreCase = true))) app else device
 }

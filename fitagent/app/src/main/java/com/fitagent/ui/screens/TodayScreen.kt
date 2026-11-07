@@ -91,6 +91,7 @@ fun TodayScreen(
     todayMood: MoodEntry? = null,
     onSaveMood: (Int, Set<String>) -> Unit = { _, _ -> },
     foods: List<com.fitagent.domain.FoodEntry> = emptyList(),
+    heartToday: List<com.fitagent.domain.HrBucket> = emptyList(),
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
@@ -111,6 +112,7 @@ fun TodayScreen(
             if (watch is com.fitagent.data.WatchState.Stale) item { StaleWatchBanner(watch, onRefresh) }
             item { if (state.hasReadiness) ReadinessCard(state) { onOpen(Detail.READINESS) } else ReadinessPendingCard() }
             item { RingsCard(state, hourly) }
+            if (heartToday.isNotEmpty()) item { HeartNowCard(heartToday) { onOpen(Detail.HEART) } }
             item { CoachCard(state, onStart) }
             item { SectionTitle("Body") }
             item { Tiles(state, onOpen) }
