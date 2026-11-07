@@ -78,7 +78,7 @@ fun WatchSetupCard(health: HealthStatus, watch: WatchState, onConnect: () -> Uni
             SetupStep(2, "Allow FitAgent to read your data", if (allowed) "Allowed" else "Tap Connect and allow all", allowed)
             SetupStep(3, "Turn on sharing in your watch app",
                 if (watchSharing) "Receiving from ${(watch as? WatchState.Connected)?.label ?: (watch as? WatchState.Stale)?.label}"
-                else "In NoiseFit, boAt Crest, Samsung Health, Fitbit… open settings → Health Connect (or Google Fit) → allow. Then sync the watch.",
+                else sharingHint(androidx.compose.ui.platform.LocalContext.current),
                 watchSharing)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -156,5 +156,21 @@ fun ReadinessPendingCard() {
         Text("Readiness", style = MaterialTheme.typography.titleMedium)
         Text("Wear your watch to bed tonight. Your first readiness score appears once it shares sleep or resting heart rate.",
             style = MaterialTheme.typography.bodySmall, color = fc.muted)
+    }
+}
+
+/** Step-by-step for the watch app actually installed on this phone (checked through the manifest's <queries>). */
+internal fun sharingHint(context: android.content.Context): String {
+    val installed = com.fitagent.data.health.AppLabels.WATCH_COMPANIONS.filter { pkg ->
+        runCatching { context.packageManager.getPackageInfo(pkg, 0) }.isSuccess
+    }
+    return when {
+        installed.any { it.startsWith("com.noisefit") || it == "com.crrepa.band.noise" || it == "com.zjw.noisefitsync" } ->
+            "NoiseFit: tap the watch icon (top right) → Integrations → Google fit → Connect and finish the Google sign-in " +
+                "(the row must stop saying “Pair”). Keep the watch connected, then sync."
+        "com.coveiot.android.boat" in installed ->
+            "boAt Crest: Profile → Connected apps → Health Connect → allow all, then sync the watch."
+        else -> "In your watch app (NoiseFit, boAt Crest, Samsung Health, Fitbit…) open settings → Health Connect " +
+            "(or Google Fit) → allow. Then sync the watch."
     }
 }
