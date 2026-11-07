@@ -19,7 +19,8 @@ RUN uv sync --frozen --no-dev --package fitagent-backend --no-install-workspace
 COPY agents agents
 COPY backend backend
 RUN uv sync --frozen --no-dev --package fitagent-backend \
-    && useradd --system --uid 10001 fitagent
+    && useradd --system --uid 10001 fitagent \
+    && mkdir -p /srv/backend/reports && chown fitagent /srv/backend/reports
 
 USER fitagent
 WORKDIR /srv/backend

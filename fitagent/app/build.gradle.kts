@@ -1,3 +1,5 @@
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.net.URI
 import java.util.Properties
 
@@ -19,6 +21,23 @@ val keystoreProps = Properties().apply {
 val releaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
 val apiUrl = (findProperty("fitagent.apiUrl") as String?) ?: "http://10.0.2.2:8000/"
 
+/**
+ * Debug builds talk to the laptop that built them: its Wi-Fi/LAN IPv4 (Docker bridges 172.x skipped) on the
+ * docker-compose port. Override with -Pfitagent.debugApiUrl=… ; falls back to the emulator host.
+ */
+val debugApiUrl: String = (findProperty("fitagent.debugApiUrl") as String?) ?: run {
+    val port = (findProperty("fitagent.apiPort") as String?) ?: "8010"
+    val lan = runCatching {
+        NetworkInterface.getNetworkInterfaces().toList()
+            .filter { it.isUp && !it.isLoopback && !it.isVirtual && !it.name.startsWith("docker") && !it.name.startsWith("br-") }
+            .flatMap { it.inetAddresses.toList() }
+            .filterIsInstance<Inet4Address>()
+            .map { it.hostAddress }
+            .firstOrNull { it.startsWith("192.168.") || it.startsWith("10.") }
+    }.getOrNull()
+    if (lan != null) "http://$lan:$port/" else "http://10.0.2.2:$port/"
+}
+
 android {
     namespace = "com.fitagent"
     compileSdk = 35
@@ -29,7 +48,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
-        buildConfigField("String", "DEFAULT_API_URL", "\"$apiUrl\"")
         // Host for challenge invite App Links (https://<host>/j/CODE); the backend serves assetlinks.json.
         manifestPlaceholders["inviteHost"] = (findProperty("fitagent.inviteHost") as String?)
             ?: URI(apiUrl).host.takeUnless { it == "10.0.2.2" } ?: "fitagent.app"
@@ -50,11 +68,13 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            buildConfigField("String", "DEFAULT_API_URL", "\"$debugApiUrl\"")
             // Phones (arm64) and emulators (x86_64) only: keeps the single debug APK smaller.
             if (!releaseBuild) ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         }
         release {
             isMinifyEnabled = true
+            buildConfigField("String", "DEFAULT_API_URL", "\"$apiUrl\"")
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfigs.findByName("release")?.let { signingConfig = it }

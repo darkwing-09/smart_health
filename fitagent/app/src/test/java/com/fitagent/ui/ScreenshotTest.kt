@@ -1,5 +1,7 @@
 package com.fitagent.ui
 
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,6 +59,7 @@ import com.fitagent.ui.screens.MoodScreen
 import com.fitagent.ui.screens.LibraryScreen
 import com.fitagent.ui.screens.RoutinePlayer
 import com.fitagent.ui.screens.TodayScreen
+import com.fitagent.ui.screens.reportData
 import com.fitagent.ui.screens.TrainingInsights
 import com.fitagent.ui.screens.TrainScreen
 import com.fitagent.ui.screens.YouScreen
@@ -142,6 +145,27 @@ class ScreenshotTest {
         com.fitagent.ui.screens.ChallengeDetail(cloud.challenges.first(), "https://api.fitagent.app/j/K7QM2P", {}, {}, { _, _, _ -> })
     }
     @Test fun recap() = snap { com.fitagent.ui.screens.RecapScreen(home) {} }
+    @Test fun daily_report_pdf() = paparazzi.snapshot {
+        val bmp = android.graphics.Bitmap.createBitmap(595, 842, android.graphics.Bitmap.Config.ARGB_8888)
+        com.fitagent.report.DailyReportPdf.draw(android.graphics.Canvas(bmp), home.reportData())
+        androidx.compose.foundation.Image(bmp.asImageBitmap(), null, androidx.compose.ui.Modifier.fillMaxSize())
+    }
+    @Test fun daily_report_pdf_no_watch() = paparazzi.snapshot {
+        val bmp = android.graphics.Bitmap.createBitmap(595, 842, android.graphics.Bitmap.Config.ARGB_8888)
+        com.fitagent.report.DailyReportPdf.draw(android.graphics.Canvas(bmp), home.copy(watch = com.fitagent.data.WatchState.None).reportData())
+        androidx.compose.foundation.Image(bmp.asImageBitmap(), null, androidx.compose.ui.Modifier.fillMaxSize())
+    }
+    @Test fun server_offline_banner() = snap {
+        androidx.compose.foundation.layout.Column {
+            com.fitagent.ui.components.ServerBanner(com.fitagent.data.ServerStatus.Offline(
+                "Can't reach the FitAgent server. Check your connection or the server address."), "http://192.168.1.42:8010/", {}, {})
+            TodayScreen(home, pad, {}, {}, {}, hourly, lastNight)
+        }
+    }
+    @Test fun recap_light() = snap(dark = false) { com.fitagent.ui.screens.RecapScreen(home) {} }
+    @Test fun recap_no_watch() = snap { com.fitagent.ui.screens.RecapScreen(home.copy(watch = com.fitagent.data.WatchState.None)) {} }
+    @Test fun you_light() = snap(dark = false) { YouScreen(home, cloud, pad, {}, {}, {}, {}, {}, {}, {}) }
+    @Test fun today_no_watch_light() = snap(dark = false) { TodayScreen(home.copy(watch = com.fitagent.data.WatchState.None), pad, {}, {}, {}) }
     @Test fun food() = snap {
         val m = com.fitagent.domain.Meal.entries
         val foods = (0L..6L).flatMap { ago ->
@@ -171,7 +195,13 @@ class ScreenshotTest {
             syncLog, CompatibilityState.Idle, false, {}, {}, {}, {})
     }
     @Test fun today_not_connected() = snap {
-        TodayScreen(home.copy(health = HealthStatus(HealthAvailability.NOT_INSTALLED)), pad, {}, {}, {})
+        TodayScreen(home.copy(health = HealthStatus(HealthAvailability.NOT_INSTALLED), watch = com.fitagent.data.WatchState.None), pad, {}, {}, {})
+    }
+    @Test fun today_no_watch() = snap {
+        TodayScreen(home.copy(watch = com.fitagent.data.WatchState.None), pad, {}, {}, {})
+    }
+    @Test fun today_watch_stale() = snap {
+        TodayScreen(home.copy(watch = com.fitagent.data.WatchState.Stale("boAt Crest", clock.millis() - 30 * 3_600_000L)), pad, {}, {}, {}, hourly, lastNight)
     }
     @Test fun train() = snap { TrainScreen(home, pad, { _, _ -> }, { _, _, _ -> }, {}) }
     @Test fun coach_chat() = snap { CoachScreen(home, cloud, pad, {}, {}, {}, {}, {}, {}) }
@@ -299,6 +329,7 @@ class ScreenshotTest {
                 d to computeReadiness(all.filter { !it.date.isAfter(d) }, workouts, d, zone)
             },
             lastWatchSync = clock.millis() - 4 * 60_000,
+            watch = com.fitagent.data.WatchState.Connected("NoiseFit", "ColorFit Pro 5", clock.millis() - 4 * 60_000),
         )
     }
 

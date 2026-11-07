@@ -93,6 +93,7 @@ fun YouScreen(
     onOpenDevices: () -> Unit = {},
     onOpenRecap: () -> Unit = {},
     onOpenRewards: () -> Unit = {},
+    onSendReport: () -> Unit = {},
 ) {
     var range by rememberSaveable { mutableStateOf(ChartPeriod.WEEK) }
     LazyColumn(
@@ -102,7 +103,14 @@ fun YouScreen(
     ) {
         item { ProfileHeader(state, cloud) }
         item { PeriodChips(range, { range = it }) }
-        item { ProgressCharts(state, range) }
+        item {
+            if (state.watch.hasWatch || state.profile.usePhoneSteps) ProgressCharts(state, range)
+            else AppCard {
+                Text("Progress", style = MaterialTheme.typography.titleMedium)
+                Text("Your charts fill in from your watch's data. Connect it under Settings → Health Connect.",
+                    style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+            }
+        }
         item {
             OutlinedButton(onClick = onOpenRecap, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text("Share my weekly recap")
@@ -111,6 +119,8 @@ fun YouScreen(
         if (cloud.account != null) item {
             OutlinedButton(onClick = onOpenRewards, modifier = Modifier.fillMaxWidth()) { Text("🎁  Rewards & campus perks") }
         }
+        item { SectionTitle("Daily report") }
+        item { DailyReportCard(state, cloud, onUpdateProfile, onSendReport) }
         item { SectionTitle("Achievements", trailing = {
             Text("${state.achievements.count { it.unlocked }}/${state.achievements.size}",
                 style = MaterialTheme.typography.labelMedium, color = Fit.colors.muted)
@@ -122,8 +132,9 @@ fun YouScreen(
         item { BodyCard(state.profile, onUpdateProfile) }
         item { SectionTitle("Settings") }
         item { RemindersCard(state.profile, onUpdateProfile) }
+        item { AppearanceCard(state.profile, onUpdateProfile) }
         item { LanguageCard(state.profile, onUpdateProfile) }
-        item { HealthCard(state, onManageHealth, onOpenDevices) }
+        item { HealthCard(state, onManageHealth, onOpenDevices, onUpdateProfile) }
         if (cloud.account != null) item { CampusGroupsCard(state.profile, onUpdateProfile) }
         item { AccountCard(cloud, onSignIn, onSignOut, onDeleteAccount, onServerUrl) }
         item {
@@ -313,7 +324,7 @@ private fun RemindersCard(p: Profile, onUpdate: ((Profile) -> Profile) -> Unit) 
 }
 
 @Composable
-private fun HealthCard(state: HomeState, onManage: () -> Unit, onOpenDevices: () -> Unit) {
+private fun HealthCard(state: HomeState, onManage: () -> Unit, onOpenDevices: () -> Unit, onUpdate: ((Profile) -> Profile) -> Unit) {
     val h = state.health
     AppCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -340,6 +351,15 @@ private fun HealthCard(state: HomeState, onManage: () -> Unit, onOpenDevices: ()
                 Text(if (h.connected) "Permissions" else "Connect")
             }
             Button(onClick = onOpenDevices, modifier = Modifier.weight(1f)) { Text("Data health") }
+        }
+        Spacer(Modifier.height(10.dp))
+        WatchChip(state.watch, onOpenDevices)
+        Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Count phone steps without a watch", style = MaterialTheme.typography.bodyMedium)
+                Text("Off: FitAgent shows only watch data.", style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+            }
+            Switch(state.profile.usePhoneSteps, { on -> onUpdate { it.copy(usePhoneSteps = on) } })
         }
         Text("Works with Google Fit, Samsung Health, Fitbit, Noise, boAt and any app that writes to Health Connect.",
             style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted, modifier = Modifier.padding(top = 8.dp))
@@ -435,6 +455,19 @@ private fun CampusGroupsCard(profile: Profile, onUpdate: ((Profile) -> Profile) 
 }
 
 
+@Composable
+private fun AppearanceCard(profile: Profile, onUpdate: ((Profile) -> Profile) -> Unit) {
+    AppCard {
+        Text("Appearance", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("system" to "System", "light" to "Light", "dark" to "Dark").forEach { (key, label) ->
+                androidx.compose.material3.FilterChip(profile.theme == key, { onUpdate { it.copy(theme = key) } }, label = { Text(label) })
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LanguageCard(profile: Profile, onUpdate: ((Profile) -> Profile) -> Unit) {
@@ -447,6 +480,87 @@ private fun LanguageCard(profile: Profile, onUpdate: ((Profile) -> Profile) -> U
             com.fitagent.domain.COACH_LANGUAGES.forEach { (code, name) ->
                 androidx.compose.material3.FilterChip(profile.language == code, { onUpdate { it.copy(language = code) } }, label = { Text(name) })
             }
+        }
+    }
+}
+
+/** Report data from what's on screen — only real watch data (see [com.fitagent.report.DailyReportData.hasData]). */
+fun HomeState.reportData(): com.fitagent.report.DailyReportData = com.fitagent.report.DailyReportData(
+    day = today,
+    profile = profile,
+    watchLabel = when (val w = watch) {
+        is com.fitagent.data.WatchState.Connected -> w.label
+        is com.fitagent.data.WatchState.Stale -> w.label
+        com.fitagent.data.WatchState.None -> null
+    },
+    today = todayActivity.takeIf { it.date == today },
+    week = history.takeLast(7),
+    readiness = readiness.takeIf { hasReadiness },
+    workouts = workouts,
+    streak = streak.current,
+)
+
+@Composable
+private fun DailyReportCard(state: HomeState, cloud: CloudState, onUpdate: ((Profile) -> Profile) -> Unit, onSendServer: () -> Unit) {
+    val p = state.profile
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var number by remember(p.whatsappNumber) { mutableStateOf(p.whatsappNumber.ifBlank { "+91 " }) }
+    val normalized = com.fitagent.domain.normalizeWhatsapp(if (number.trim() == "+91") "" else number)
+    val online = cloud.server is com.fitagent.data.ServerStatus.Online
+    val data = state.reportData()
+    AppCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.Share, null, tint = Fit.colors.steps)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("PDF report on WhatsApp", style = MaterialTheme.typography.titleMedium)
+                Text("Readiness, steps, sleep, heart rate and workouts — one page, every evening.",
+                    style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        androidx.compose.material3.OutlinedTextField(number, { if (it.length <= 20) number = it }, singleLine = true,
+            label = { Text("WhatsApp number") }, isError = normalized == null, modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone),
+            supportingText = { Text(if (normalized == null) "Include the country code, e.g. +91 98765 43210" else "Reports go to this number only") },
+            trailingIcon = {
+                if (normalized != null && normalized != p.whatsappNumber) TextButton(onClick = {
+                    onUpdate { it.copy(whatsappNumber = normalized, whatsappReports = it.whatsappReports && normalized.isNotEmpty()) }
+                }) { Text("Save") }
+            })
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Send automatically at ${p.reportHour}:00", style = MaterialTheme.typography.bodyMedium)
+                Text(if (cloud.account == null) "Needs a FitAgent account (Settings → Cloud account)" else "Sent by the FitAgent server",
+                    style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
+            }
+            Switch(p.whatsappReports && p.whatsappNumber.isNotBlank(), { on -> onUpdate { it.copy(whatsappReports = on) } },
+                enabled = p.whatsappNumber.isNotBlank())
+        }
+        if (p.whatsappReports) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(18, 20, 21, 22).forEach { h ->
+                    androidx.compose.material3.FilterChip(p.reportHour == h, { onUpdate { it.copy(reportHour = h) } }, label = { Text("$h:00") })
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { com.fitagent.report.DailyReportPdf.view(context, com.fitagent.report.DailyReportPdf.write(context, data)) },
+                modifier = Modifier.weight(1f)) { Text("Preview PDF") }
+            Button(onClick = {
+                val f = com.fitagent.report.DailyReportPdf.write(context, data)
+                com.fitagent.report.DailyReportPdf.share(context, f, com.fitagent.report.reportSummary(data), toWhatsApp = true)
+            }, modifier = Modifier.weight(1f)) { Text("Share on WhatsApp") }
+        }
+        if (cloud.account != null) {
+            TextButton(onClick = onSendServer, enabled = online && p.whatsappNumber.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                Text(if (online) "Send today's report from the server now" else "Server offline — sharing from the phone still works")
+            }
+        }
+        if (!data.hasData) {
+            Text("No watch data yet, so the report will say so. Connect your watch to fill it.",
+                style = MaterialTheme.typography.bodySmall, color = Fit.colors.muted)
         }
     }
 }

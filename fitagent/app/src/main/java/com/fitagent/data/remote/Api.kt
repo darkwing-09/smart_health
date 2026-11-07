@@ -54,7 +54,10 @@ interface FitAgentApi {
     @POST("v1/auth/register") suspend fun register(@Body body: RegisterReq): TokenRes
     @POST("v1/auth/login") suspend fun login(@Body body: LoginReq): TokenRes
 
+    @GET("health") suspend fun health(): com.fitagent.data.remote.dto.HealthRes
     @GET("v1/me") suspend fun me(): ProfileRes
+    @POST("v1/me/report/send") suspend fun sendReport(): com.fitagent.data.remote.dto.SendReportRes
+    @GET("v1/me/report/status") suspend fun reportStatus(): com.fitagent.data.remote.dto.ReportStatusRes
     @PATCH("v1/me") suspend fun updateMe(@Body body: ProfileUpdateReq): ProfileRes
     @DELETE("v1/me") suspend fun deleteMe(): retrofit2.Response<Unit>
     @POST("v1/me/sync") suspend fun sync(@Body body: SyncReq): SyncRes

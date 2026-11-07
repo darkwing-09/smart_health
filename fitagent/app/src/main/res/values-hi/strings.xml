@@ -9,6 +9,7 @@
     <string name="greeting_morning">सुप्रभात</string>
     <string name="greeting_afternoon">नमस्ते</string>
     <string name="greeting_evening">शुभ संध्या</string>
+    <string name="greeting_late">नमस्ते</string>
     <string name="channel_reminders">लक्ष्य रिमाइंडर</string>
     <string name="channel_morning">सुबह की रेडीनेस</string>
     <string name="channel_study">पढ़ाई के बीच ब्रेक</string>

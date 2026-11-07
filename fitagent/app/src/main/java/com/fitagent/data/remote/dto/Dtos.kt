@@ -28,6 +28,11 @@ data class ProfileRes(
     val batch: String? = null,
     val showOnCampus: Boolean? = null,
     val language: String? = null,
+    val city: String? = null,
+    val gender: String? = null,
+    val whatsappNumber: String? = null,
+    val whatsappOptIn: Boolean? = null,
+    val reportHour: Int? = null,
 )
 
 data class ProfileUpdateReq(
@@ -42,6 +47,11 @@ data class ProfileUpdateReq(
     val batch: String? = null,
     val showOnCampus: Boolean? = null,
     val language: String? = null,
+    val city: String? = null,
+    val gender: String? = null,
+    val whatsappNumber: String? = null,
+    val whatsappOptIn: Boolean? = null,
+    val reportHour: Int? = null,
 )
 
 /** One day's summary for the cloud. Intraday heart rate, sleep segments and routes never leave the phone. */
@@ -182,4 +192,15 @@ data class RedeemReq(val perkId: String)
 data class OfficialChallengeDto(
     val id: String, val code: String, val name: String, val metric: String, val startDate: String, val endDate: String,
     val participants: Int, val joined: Boolean,
+)
+
+data class HealthRes(val status: String, val version: String? = null, val aiCoach: String? = null)
+data class SendReportRes(val status: String, val detail: String)
+data class ReportStatusRes(
+    val whatsappConfigured: Boolean,
+    val whatsappNumber: String?,
+    val optedIn: Boolean,
+    val reportHour: Int,
+    val lastDay: String? = null,
+    val lastStatus: String? = null,
 )

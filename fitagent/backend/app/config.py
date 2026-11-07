@@ -27,6 +27,21 @@ class Settings(BaseSettings):
     android_package: str = Field("com.fitagent.app", alias="ANDROID_PACKAGE")
     # Release signing certificate fingerprint(s) for App Links (keytool -list -v), comma-separated.
     android_cert_sha256: str = Field("", alias="ANDROID_CERT_SHA256")
+    # WhatsApp Cloud API (Meta). Empty token → reports are saved to REPORT_DIR instead of sent ("dry run").
+    whatsapp_token: str = Field("", alias="WHATSAPP_TOKEN")
+    whatsapp_phone_number_id: str = Field("", alias="WHATSAPP_PHONE_NUMBER_ID")
+    # Approved template with a DOCUMENT header and one body variable {{1}}; empty → plain document message
+    # (only delivered inside the 24-hour window after the user last messaged the business number).
+    whatsapp_template: str = Field("", alias="WHATSAPP_TEMPLATE")
+    whatsapp_template_lang: str = Field("en", alias="WHATSAPP_TEMPLATE_LANG")
+    whatsapp_api_version: str = Field("v21.0", alias="WHATSAPP_API_VERSION")
+    report_dir: str = Field("./reports", alias="REPORT_DIR")
+    # Seconds between runs of the daily report job (--loop).
+    report_job_interval_s: int = Field(600, alias="REPORT_JOB_INTERVAL_S")
+
+    @property
+    def whatsapp_configured(self) -> bool:
+        return bool(self.whatsapp_token and self.whatsapp_phone_number_id)
 
     @property
     def is_production(self) -> bool:

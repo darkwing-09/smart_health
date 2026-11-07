@@ -8,7 +8,7 @@ import java.time.LocalDateTime
  * Pure decisions; the workers in service/ only post what these functions allow.
  */
 
-enum class NudgeKind { MORNING, EVENING, STUDY_BREAK, CHALLENGE, BEDTIME }
+enum class NudgeKind { MORNING, EVENING, STUDY_BREAK, CHALLENGE, BEDTIME, WATCH }
 
 /** At most this many notifications of all kinds per day; study breaks have their own smaller cap. */
 const val DAILY_NOTIFICATION_CAP = 3
@@ -93,3 +93,19 @@ fun bedtimeTarget(timetable: Timetable, tomorrow: java.time.DayOfWeek, sleepNeed
 
 fun bedtimeMessage(targetMin: Int, firstClassMin: Int?): String =
     "Aim to be asleep by ${hhmm(targetMin)}" + (firstClassMin?.let { " — your first class is at ${hhmm(it)}." } ?: " for a full 8 hours.")
+
+/**
+ * Once-a-day reminder while no watch data arrives. [label] is the watch app that last delivered data (null = never).
+ * Returns null when the watch is fine.
+ */
+fun watchReminder(label: String?, lastDataMs: Long?, nowMs: Long, staleAfterHours: Long = 24): Pair<String, String>? {
+    if (label == null || lastDataMs == null) {
+        return "Connect your watch" to
+            "FitAgent shows only what your watch measures. Turn on Health Connect sharing in NoiseFit, boAt Crest or your watch app, then sync."
+    }
+    val hours = (nowMs - lastDataMs) / 3_600_000
+    if (hours < staleAfterHours) return null
+    val ago = if (hours < 48) "yesterday" else "${hours / 24} days ago"
+    return "$label hasn't synced since $ago" to
+        "Open $label so your watch syncs. Readiness and goals pause until new data arrives."
+}

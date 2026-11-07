@@ -29,6 +29,8 @@ def profile_out(u: User) -> ProfileOut:
         height_cm=u.height_cm, weight_kg=u.weight_kg, college=u.college, hostel=u.hostel, batch=u.batch,
         show_on_campus=u.show_on_campus if u.show_on_campus is not None else True,
         language=u.language or "en",
+        city=u.city, gender=u.gender, whatsapp_number=u.whatsapp_number,
+        whatsapp_opt_in=bool(u.whatsapp_opt_in), report_hour=u.report_hour if u.report_hour is not None else 21,
         goals=GoalsModel(daily_steps=u.goal_steps, daily_active_kcal=u.goal_active_kcal,
                          daily_workout_minutes=u.goal_workout_minutes, weekly_workouts=u.goal_weekly_workouts),
     )
@@ -45,8 +47,10 @@ async def update_me(body: ProfileUpdate, user: CurrentUser, session: SessionDep)
     goals = data.pop("goals", None)
     for key, value in data.items():
         if isinstance(value, str):
-            value = value.strip() or None if key in ("college", "hostel", "batch") else value.strip()
+            value = value.strip() or None if key in ("college", "hostel", "batch", "city", "whatsapp_number") else value.strip()
         setattr(user, key, value)
+    if not user.whatsapp_number:
+        user.whatsapp_opt_in = False  # no number, nothing to send
     if goals:
         user.goal_steps = goals["daily_steps"]
         user.goal_active_kcal = goals["daily_active_kcal"]

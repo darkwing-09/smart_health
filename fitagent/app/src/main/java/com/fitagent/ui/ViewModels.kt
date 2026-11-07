@@ -9,6 +9,7 @@ import com.fitagent.data.ble.BleState
 import com.fitagent.data.local.FoodEntity
 import com.fitagent.data.local.MoodEntity
 import com.fitagent.data.HealthStatus
+import com.fitagent.data.WatchState
 import com.fitagent.data.SyncEvent
 import com.fitagent.data.health.CompatibilityRow
 import com.fitagent.data.prefs.Account
@@ -58,6 +59,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -85,7 +87,12 @@ data class HomeState(
     val readinessHistory: List<Pair<LocalDate, Readiness>> = emptyList(),
     /** When watch data was last read successfully (0 = never). */
     val lastWatchSync: Long = 0,
-)
+    /** Whether a real watch feeds the app; nothing body-related is shown without one. */
+    val watch: WatchState = WatchState.None,
+) {
+    /** Readiness exists only when the watch measured sleep or the heart — never the "no data" default. */
+    val hasReadiness: Boolean get() = watch.hasWatch && readiness.components.keys.any { it != "load" }
+}
 
 sealed interface FoodPhotoState {
     data object Idle : FoodPhotoState
@@ -116,15 +123,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
-    private val meta = combine(c.fitness.status, refreshing, today, c.fitness.lastHealthSync) { s, r, t, sync ->
-        Meta(s, r, t, sync)
+    private val meta = combine(c.fitness.status, refreshing, today, c.fitness.lastHealthSync, c.fitness.watchState) { s, r, t, sync, watch ->
+        Meta(s, r, t, sync, watch)
     }
 
-    private data class Meta(val health: HealthStatus, val refreshing: Boolean, val today: LocalDate, val lastSync: Long)
+    private data class Meta(val health: HealthStatus, val refreshing: Boolean, val today: LocalDate, val lastSync: Long, val watch: WatchState)
 
     val state: StateFlow<HomeState?> = combine(
         c.profiles.profile, c.fitness.deviceDays, c.fitness.workouts, meta,
-    ) { profile, device, workouts, (health, isRefreshing, day, lastSync) ->
+    ) { profile, device, workouts, (health, isRefreshing, day, lastSync, watch) ->
         val zone = zone
         val first = listOfNotNull(device.keys.minOrNull(), day.minusDays(29)).min()
         val all = buildDays(first, day, device, workouts, profile.weightKg, zone)
@@ -151,6 +158,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 d to computeReadiness(all.filter { !it.date.isAfter(d) }, workouts, d, zone)
             },
             lastWatchSync = lastSync,
+            watch = watch,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -284,6 +292,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             c.fitness.refresh(full = true).onFailure { _events.tryEmit("Couldn't read watch data: ${it.message}") }
             refreshing.value = false
             if (c.auth.account.value != null) Scheduler.syncSoon(getApplication())
+        }
+    }
+
+    /** Called every minute while the app is on screen; pulls new watch data as soon as the watch app writes it. */
+    fun liveTick() {
+        viewModelScope.launch {
+            if (c.fitness.liveCheck() && c.auth.account.value != null) Scheduler.syncSoon(getApplication())
         }
     }
 
@@ -427,6 +442,7 @@ data class ChatMessage(val role: String, val text: String, val safety: String? =
 
 data class CloudState(
     val account: Account? = null,
+    val server: com.fitagent.data.ServerStatus = com.fitagent.data.ServerStatus.Checking,
     val serverUrl: String = "",
     val authBusy: Boolean = false,
     val authError: String? = null,
@@ -462,9 +478,36 @@ class CloudViewModel(app: Application) : AndroidViewModel(app) {
             combine(c.auth.account, c.auth.serverUrl) { a, u -> a to u }.collect { (a, u) ->
                 val signedOut = a == null && _state.value.account != null
                 _state.update {
-                    if (signedOut) CloudState(account = null, serverUrl = u) else it.copy(account = a, serverUrl = u)
+                    if (signedOut) CloudState(account = null, serverUrl = u, server = it.server) else it.copy(account = a, serverUrl = u)
                 }
             }
+        }
+        viewModelScope.launch { c.cloud.server.collect { st -> _state.update { it.copy(server = st) } } }
+        // Keep checking the server: every minute while online, every 15 s while it can't be reached.
+        viewModelScope.launch {
+            c.auth.serverUrl.collectLatest {
+                while (true) {
+                    val st = c.cloud.checkServer()
+                    kotlinx.coroutines.delay(if (st is com.fitagent.data.ServerStatus.Online) 60_000 else 15_000)
+                }
+            }
+        }
+    }
+
+    fun retryServer() { viewModelScope.launch { c.cloud.checkServer() } }
+
+    fun sendReportNow() {
+        viewModelScope.launch {
+            c.cloud.sendReportNow().fold(
+                onSuccess = { r ->
+                    _events.tryEmit(when (r.status) {
+                        "sent" -> "Report sent to your WhatsApp"
+                        "dry_run" -> "Server made the report, but WhatsApp isn't set up on the server yet"
+                        else -> "WhatsApp couldn't deliver it: ${r.detail}"
+                    })
+                },
+                onFailure = { e -> _events.tryEmit(e.userMessage()) },
+            )
         }
     }
 
